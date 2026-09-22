@@ -1,16 +1,247 @@
-:root {
-  --color-bg-base: #0a0c10;
-  --color-bg-surface: #141820;
-  --color-bg-card: #1c222d;
-  --color-bg-card-hover: #262e3d;
-  --color-border: #283244;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-accent: #3b82f6;
+/* ==========================================================================
+   Novus Design Tokens
+   --------------------------------------------------------------------------
+   Dark-first console surface language.
 
-  --font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+   Material model
+     Every surface is composed of: tint (translucent fill) + hairline edge
+     + specular top highlight + elevation shadow, optionally frosted.
+
+   Material density (html[data-material])
+     solid    frosting disabled, fully opaque tints          (default, low-spec)
+     frosted  tiered backdrop blur, balanced legibility
+     vivid    stronger blur + saturation for rich backdrops
+
+   Blur tiers follow surface role, never arbitrary values:
+     control 10px · panel 18px · overlay 30px
+   ========================================================================== */
+
+:root {
+  /* ---------- Space & target ---------- */
+  --spacing-unit: 8px;
   --touch-target-min: 48px;
-  --border-radius-card: 16px;
-  --border-radius-button: 12px;
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-pill: 9999px;
+
+  --border-radius-card: var(--radius-2xl);
+  --border-radius-button: var(--radius-pill);
+
+  /* ---------- Type ---------- */
+  --font-family:
+    "Segoe UI Variable Text", "Segoe UI", "Inter Variable", Inter, system-ui, -apple-system,
+    BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-display:
+    "Segoe UI Variable Display", "Segoe UI", "Inter Variable", Inter, system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "SF Mono", ui-monospace, Consolas, monospace;
+
+  /* ---------- Motion ----------
+     Duration is chosen by travel distance, easing by intent:
+       instant  state flips with no travel (checked, selected)
+       fast     direct manipulation feedback (press, hover)
+       base     surface changes the user asked for (open, expand)
+       slow     large surfaces entering (sheet, overlay)
+  */
+  --motion-instant: 90ms;
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --motion-slower: 440ms;
+
+  /* Decelerate on enter, accelerate on exit, overshoot only for toggles. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.9, 0.3);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+
+  /* Named gestures — components reference these, never raw numbers. */
+  --press-scale: 0.97;
+  --lift-distance: -4px;
+  --enter-offset: 10px;
+  --enter-scale: 0.97;
+
+  /* ---------- Material ----------
+     One continuous knob drives the whole surface language.
+     `--material-intensity` is 0..1 and is written to <html> at runtime
+     from a 0-100 user preference.
+  */
+  --material-intensity: 0;
+
+  /* Blur grows with intensity but keeps the role ratio 14 : 26 : 40. */
+  --material-blur-control: calc(var(--material-intensity) * 14px);
+  --material-blur-panel: calc(var(--material-intensity) * 26px);
+  --material-blur-overlay: calc(var(--material-intensity) * 40px);
+  --material-saturate: calc(100% + var(--material-intensity) * 80%);
+
+  /* Legibility floor: at full intensity the tint still holds 0.62 alpha,
+     so surfaces stay anchored instead of dissolving into the backdrop. */
+  --material-tint-alpha: calc(1 - var(--material-intensity) * 0.38);
+  /* Edges and shadows firm up as the fill thins, keeping panels grounded. */
+  --material-edge-boost: calc(var(--material-intensity) * 0.1);
+
+  /* ==========================================================================
+     Light theme — derived context
+     ========================================================================== */
+
+  --color-primary: #1a73e8;
+  --color-primary-hover: #1557b0;
+  --color-primary-contrast: #ffffff;
+  --color-primary-muted: rgba(26, 115, 232, 0.1);
+
+  --color-secondary: #5f6368;
+  --color-secondary-hover: #3c4043;
+  --color-secondary-contrast: #ffffff;
+
+  --color-success: #188038;
+  --color-warning: #e37400;
+  --color-danger: #d93025;
+  --color-danger-muted: rgba(217, 48, 37, 0.1);
+
+  --color-background: #eceef2;
+  --color-background-accent: #e0e3ea;
+
+  /* Ambient field behind frosted surfaces */
+  --ambient-1: rgba(26, 115, 232, 0.16);
+  --ambient-2: rgba(0, 194, 168, 0.12);
+  --ambient-3: rgba(255, 138, 76, 0.1);
+
+  /* Base tint channel — surfaces mix this with --material-tint-alpha */
+  --tint-rgb: 255, 255, 255;
+
+  --color-surface: rgba(var(--tint-rgb), var(--material-tint-alpha));
+  --color-surface-hover: rgba(245, 245, 248, var(--material-tint-alpha));
+  --color-surface-elevated: rgba(var(--tint-rgb), var(--material-tint-alpha));
+  --color-surface-sunken: rgba(0, 0, 0, 0.04);
+
+  --color-text-primary: #16171a;
+  --color-text-secondary: #62656d;
+  --color-text-disabled: #a6a9b2;
+  --color-text-inverse: #f7f8fa;
+
+  --color-border: rgba(16, 17, 20, 0.1);
+  --color-border-hover: rgba(16, 17, 20, 0.18);
+  --color-divider: rgba(16, 17, 20, 0.07);
+
+  --color-bg-base: var(--color-background);
+  --color-bg-surface: var(--color-surface);
+  --color-bg-card: var(--color-surface);
+  --color-bg-card-hover: var(--color-surface-hover);
+  --color-accent: var(--color-primary);
+
+  /* Surface composition */
+  --glass-bg: var(--color-surface);
+  --glass-bg-hover: var(--color-surface-hover);
+  --glass-bg-active: rgba(238, 239, 243, var(--material-tint-alpha));
+  --glass-border: rgba(16, 17, 20, calc(0.08 + var(--material-edge-boost)));
+  --glass-border-specular: rgba(255, 255, 255, 0.9);
+  --glass-highlight: linear-gradient(
+    90deg,
+    transparent 4%,
+    rgba(255, 255, 255, 0.95) 50%,
+    transparent 96%
+  );
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 42%);
+
+  --glass-shadow: 0 1px 2px rgba(16, 17, 20, 0.05), 0 10px 28px rgba(16, 17, 20, 0.07);
+  --glass-shadow-raised: 0 2px 6px rgba(16, 17, 20, 0.06), 0 20px 48px rgba(16, 17, 20, 0.12);
+  --glass-shadow-floating: 0 4px 12px rgba(16, 17, 20, 0.08), 0 32px 72px rgba(16, 17, 20, 0.16);
+
+  --focus-ring: 0 0 0 3px rgba(26, 115, 232, 0.35);
+  --overlay-scrim: rgba(16, 17, 20, 0.38);
+  --scrim-media: linear-gradient(180deg, transparent 28%, rgba(0, 0, 0, 0.68) 100%);
+}
+
+/* ==========================================================================
+   Dark theme — primary product context
+   ========================================================================== */
+html.dark,
+.dark {
+  --color-primary: #6aa2ff;
+  --color-primary-hover: #93bbff;
+  --color-primary-contrast: #06070a;
+  --color-primary-muted: rgba(106, 162, 255, 0.16);
+
+  --color-secondary: #9ca3af;
+  --color-secondary-hover: #d1d5db;
+  --color-secondary-contrast: #06070a;
+
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #fb7185;
+  --color-danger-muted: rgba(251, 113, 133, 0.1);
+
+  --color-background: #08090c;
+  --color-background-accent: #0e1014;
+
+  --ambient-1: rgba(80, 120, 255, 0.22);
+  --ambient-2: rgba(0, 200, 190, 0.14);
+  --ambient-3: rgba(255, 110, 80, 0.12);
+
+  --tint-rgb: 26, 28, 34;
+
+  --color-surface: rgba(var(--tint-rgb), var(--material-tint-alpha));
+  --color-surface-hover: rgba(36, 39, 47, var(--material-tint-alpha));
+  --color-surface-elevated: rgba(32, 35, 42, var(--material-tint-alpha));
+  --color-surface-sunken: rgba(0, 0, 0, 0.32);
+
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-text-disabled: #565b66;
+  --color-text-inverse: #08090c;
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.18);
+  --color-divider: rgba(255, 255, 255, 0.07);
+
+  --color-bg-base: var(--color-background);
+  --color-bg-surface: var(--color-surface);
+  --color-bg-card: var(--color-surface);
+  --color-bg-card-hover: var(--color-surface-hover);
+  --color-accent: var(--color-primary);
+
+  --glass-bg: var(--color-surface);
+  --glass-bg-hover: var(--color-surface-hover);
+  --glass-bg-active: rgba(44, 48, 57, var(--material-tint-alpha));
+  --glass-border: rgba(255, 255, 255, calc(0.11 + var(--material-edge-boost)));
+  --glass-border-specular: rgba(255, 255, 255, 0.24);
+  --glass-highlight: linear-gradient(
+    90deg,
+    transparent 6%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 94%
+  );
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 45%);
+
+  --glass-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 10px 30px rgba(0, 0, 0, 0.5);
+  --glass-shadow-raised: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 22px 56px rgba(0, 0, 0, 0.6);
+  --glass-shadow-floating: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 34px 84px rgba(0, 0, 0, 0.7);
+
+  --focus-ring: 0 0 0 3px rgba(106, 162, 255, 0.42);
+  --overlay-scrim: rgba(4, 5, 8, 0.7);
+  --scrim-media: linear-gradient(180deg, transparent 24%, rgba(0, 0, 0, 0.84) 100%);
+}
+
+/* ==========================================================================
+   Material intensity guards
+   The knob itself lives on <html> as an inline `--material-intensity`.
+   These rules force it back to 0 when frosting is unavailable or unwanted.
+   ========================================================================== */
+
+/* Frosting requires backdrop-filter; fall back to an opaque tint without it. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html {
+    --material-intensity: 0;
+  }
+}
+
+/* The OS-level transparency preference overrides any app setting. */
+@media (prefers-reduced-transparency: reduce) {
+  html {
+    --material-intensity: 0;
+  }
 }

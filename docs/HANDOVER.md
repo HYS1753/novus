@@ -7,7 +7,7 @@
 ## 1. 프로젝트 요약
 
 - **프로젝트명**: Novus (`com.novus.hub`)
-- **목적**: 저사양 태블릿(Surface Pro 4 m3 / 4GB RAM)을 위한 초경량 미디어 콘솔 및 Google TV 스타일 제어 대시보드
+- **목적**: 저사양 태블릿(4GB RAM급)을 위한 초경량 미디어 콘솔 및 TV형 제어 대시보드
 - **기술 스택**: Tauri v2 (Rust) + React 19 + TypeScript + Vite 8 + pnpm
 - **아키텍처**: Modular Layered Architecture (FSD 기반 단방향 계층: `app` -> `pages` -> `widgets` -> `features` -> `entities` -> `shared`)
 
@@ -23,14 +23,29 @@
    - `eslint-plugin-boundaries` 기반 계층 간 단방향 의존성 자동 강제
    - `simple-git-hooks` + `lint-staged` 연동으로 커밋 시 자동 린트/포맷/타입 검사 강제
    - Prettier 코드 스타일 통일
-3. **레이어드 뼈대 코드**:
-   - `shared`: 저사양용 10초 주기 시계 훅(`useCurrentTime`), 창 제어 API(`window.ts`), 터치 카드/버튼 컴포넌트
+3. **레이어드 뼈대 코드 & 디자인 시스템**:
+   - `shared/ui/common`: UI 코어 컴포넌트 18종
+     - Actions/Inputs: `GlassButton`, `GlassInput`, `GlassCheckbox`, `GlassToggle`, `GlassSegmentedControl`, `GlassSlider`, `GlassMenu`, `GlassTooltip`
+     - Feedback: `GlassBadge`, `GlassProgress`, `GlassSkeleton`, `GlassToast`, `GlassEmptyState`
+     - Surfaces: `GlassCard`, `GlassListRow`, `GlassDivider`, `GlassModal`, `GlassSheet`
+   - 머티리얼 모델: `틴트 + 헤어라인 엣지 + 상단 스펙큘러 + elevation`, 역할별 블러 비율 14 : 26 : 40
+   - 머티리얼 강도는 **0–100 연속값** 하나(`--material-intensity`). 기본 0(불투명)이며 100에서도 틴트 알파 0.62 하한과 엣지 보정으로 면이 떠 보이지 않습니다. `shared/lib/material.ts` + `useMaterialIntensity`로 제어하며 앱 설정에서 슬라이더로 노출할 수 있도록 설계
+   - 모션: 인터랙션 → 레시피 6종(`press` · `lift` · `reveal` · `emerge` · `enter` · `pulse`) 고정 매핑. `prefers-reduced-motion` 대응 포함
+   - `shared/ui/button & card`: 기존 `TouchButton`, `MediaCard`를 시스템 기반으로 하위 호환 유지
+   - `shared`: 저사양용 10초 주기 시계 훅(`useCurrentTime`), 창 제어 API(`window.ts`), 런타임 게이트(`isTauriRuntime`, `isStyleGuideRouteEnabled`)
    - `entities`: 앱 바로가기(`AppItem`), 시스템 프로필(`DeviceProfile`)
    - `features`: 앱 실행 훅(`useLaunchApp`)
-   - `widgets`: 시계/전체화면 제어 헤더(`QuickHeader`), Google TV 스타일 앱 쉘프(`MediaShelf`)
-   - `pages`: 메인 대시보드(`DashboardPage`)
-   - `app`: 글로벌 테마, 하드웨어 가속 스타일(`global.css`, `variables.css`)
+   - `widgets`: 시계/테마/전체화면 헤더(`QuickHeader`), 앱 쉘프(`MediaShelf`)
+   - `pages`: 메인 대시보드(`DashboardPage`) 및 **DEV 전용** 스타일 가이드(`StyleGuidePage`)
+   - `app`: 글로벌 시맨틱 토큰 및 머티리얼 스타일(`global.css`, `variables.css`), 앰비언트 레이어 + 뷰 게이트(`App.tsx`)
    - `src-tauri`: Rust 모듈 분리 (`commands/system.rs`, `commands/mod.rs`)
+
+### Style Guide 접근 (개발 전용)
+
+- **경로**: Vite 브라우저 개발 서버에서만 `http://localhost:1420/styleguide`
+- **성격**: Figma형 톤앤매너/토큰/컴포넌트 스펙시먼 문서. 제품 설정·기능 데모가 아님.
+- **조건**: `import.meta.env.DEV === true` 이고 Tauri 런타임이 아닐 것
+- Tauri 앱(개발/배포 모두) 및 프로덕션 빌드에는 노출되지 않음. 헤더 진입 버튼 없음.
 
 ---
 
@@ -60,8 +75,16 @@
 
 1. `src-tauri/src/commands/`에 함수 작성 후 `#[tauri::command]` 매크로 부여
 2. `src-tauri/src/lib.rs`의 `invoke_handler`에 등록
-3. `src-tauri/capabilities/default.json`에 권한 등록 필요 시 추가
-4. `src/shared/api/tauri/`에 프론트엔드용 비동기 래퍼 함수 생성
+
+### ④ 공통 디자인 시스템 컴포넌트를 활용 및 확장할 때
+
+1. **컴포넌트 참조**: 상위 레이어(`pages`, `widgets`)에서는 `@/shared`에서 바로 `GlassCard`, `GlassButton`, `GlassInput`, `GlassModal`, `TouchButton`, `MediaCard`를 임포트합니다.
+2. **신규 컴포넌트 추가**: `src/shared/ui/common/` 내에 작성하고 `src/shared/ui/common/index.ts`에 배럴 익스포트합니다.
+3. **토큰 수정**: 메인 컬러는 `src/app/styles/variables.css`의 `--color-primary`, 면의 농도/블러는 `--material-*` 정의를 조정합니다. 컴포넌트에 임의 블러값을 쓰지 말고 역할 토큰(`control`/`panel`/`overlay`)을 사용합니다.
+4. **모션 규칙**: duration·easing·이동거리를 컴포넌트에 직접 쓰지 않습니다. 인터랙션에 맞는 레시피(`.motion-press`, `.motion-lift`, `.motion-reveal`, `.motion-emerge`, `.motion-enter-*`)와 `--motion-*` / `--ease-*` 토큰만 참조합니다. `transform`과 `opacity` 외의 속성은 애니메이션하지 않습니다.
+5. **접근성 및 터치 기준**: 모든 버튼과 터치 요소는 최소 48x48px(`min-h-touch`) 및 active 피드백(`scale(0.97)`)을 보장하고, 반투명 면 위 소형 텍스트는 4.5:1 대비를 확인합니다. 새 컴포넌트는 default · hover · focus · active · disabled 상태를 모두 정의합니다.
+6. **머티리얼 기본값**: 배포 기본 강도는 `0`입니다. 상향은 설정에서 사용자가 선택하는 옵션이며, 미지원 환경과 투명도 감소 설정에서는 자동으로 0으로 폴백됩니다.
+7. **금지**: 무거운 UI 라이브러리, 임의 블러/duration/hex 하드코딩, 코드·문서에 타사 디자인 브랜드명을 시스템 명칭으로 사용하는 것.
 
 ---
 
@@ -85,6 +108,7 @@ pnpm build
 
 ## 5. 다음 단계 로드맵 (Next Milestones)
 
+- [ ] **앱 설정 화면**: 머티리얼 강도 슬라이더(0–100)를 붙입니다. 토큰·런타임·저장 로직은 이미 완성되어 있고(`shared/lib/material.ts`, `useMaterialIntensity`), 설정 화면에서 `setIntensity`만 호출하면 됩니다. `GlassSheet` + `GlassListRow` + `GlassSlider` 조합이 그대로 쓰입니다.
 - [ ] **Tauri Autostart 플러그인 연동**: Windows 부팅 시 자동 시작 및 백그라운드 상주 옵션 구현
 - [ ] **D-Pad / 키보드 방향키 내비게이션**: 터치 외에도 무선 리모컨 및 키보드로 타일 포커스를 이동할 수 있는 `useSpatialNavigation` 기능 구현
 - [ ] **시스템 배터리 / Wi-Fi 상태 조회**: Rust 백엔드 시스템 모니터링 커맨드 확장

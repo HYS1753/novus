@@ -1,10 +1,19 @@
 <!doctype html>
-<html lang="en">
+<!-- Material intensity defaults to 0 (opaque); the app writes the stored
+     preference onto <html> before first paint of the shell. -->
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri + React + Typescript</title>
+    <meta name="color-scheme" content="dark light" />
+    <title>Novus Hub</title>
+    <style>
+      /* Pre-paint canvas colour; the stylesheet overrides this once loaded. */
+      html.dark {
+        background-color: #08090c;
+      }
+    </style>
   </head>
 
   <body>

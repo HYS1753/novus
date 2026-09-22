@@ -1,23 +1,14 @@
-import React from "react";
+import { forwardRef } from "react";
+import { GlassButton, type GlassButtonProps } from "../common/GlassButton";
 
-export interface TouchButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md" | "lg";
-}
+export type TouchButtonProps = GlassButtonProps;
 
-export const TouchButton: React.FC<TouchButtonProps> = ({
-  children,
-  variant = "secondary",
-  size = "md",
-  className = "",
-  ...props
-}) => {
-  return (
-    <button
-      className={`touch-button touch-button--${variant} touch-button--${size} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+/**
+ * TouchButton - Backwards-compatible touch-optimized button
+ * Standardized to use the GlassButton design system implementation internally.
+ */
+export const TouchButton = forwardRef<HTMLButtonElement, TouchButtonProps>((props, ref) => {
+  return <GlassButton ref={ref} {...props} />;
+});
+
+TouchButton.displayName = "TouchButton";

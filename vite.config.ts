@@ -33,7 +33,7 @@ export default defineConfig(() => ({
     },
   },
 
-  // Optimizations for low-spec devices (Surface Pro 4 m3 / 4GB RAM)
+  // Optimizations for low-spec devices (4GB RAM class tablets / PCs)
   build: {
     target: "es2022",
     minify: true,
