@@ -1,0 +1,16 @@
+:root {
+  --color-bg-base: #0a0c10;
+  --color-bg-surface: #141820;
+  --color-bg-card: #1c222d;
+  --color-bg-card-hover: #262e3d;
+  --color-border: #283244;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #3b82f6;
+
+  --font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --touch-target-min: 48px;
+  --border-radius-card: 16px;
+  --border-radius-button: 12px;
+}

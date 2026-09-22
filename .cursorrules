@@ -1,0 +1,8 @@
+# Cursor Rules for Novus Project
+# Refer to AGENTS.md for complete harness and architectural constraints.
+
+Strictly adhere to AGENTS.md in the root directory:
+1. Always use pnpm.
+2. Low-spec target: Surface Pro 4 m3 (4GB RAM). Never install heavy UI libraries (MUI, AntD). Never use backdrop-filter: blur.
+3. Unidirectional architecture: app -> pages -> widgets -> features -> entities -> shared.
+4. Before finishing any task, run: pnpm typecheck && pnpm lint && pnpm format:check && pnpm build.
