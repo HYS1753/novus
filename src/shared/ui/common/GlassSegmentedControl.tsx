@@ -1,4 +1,5 @@
 import React from "react";
+import { MotionIcon } from "../icons";
 
 export interface SegmentOption<T extends string = string> {
   id: T;
@@ -34,7 +35,7 @@ export const GlassSegmentedControl = <T extends string>({
             onClick={() => onChange(option.id)}
             className={`glass-segmented__item ${isSelected ? "glass-segmented__item--active" : ""}`}
           >
-            {option.icon && <span>{option.icon}</span>}
+            {option.icon && <MotionIcon motion="pop">{option.icon}</MotionIcon>}
             <span>{option.label}</span>
           </button>
         );

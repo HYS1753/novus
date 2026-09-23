@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { CloseIcon, MotionIcon } from "../icons";
 
 export interface GlassSheetProps {
   isOpen: boolean;
@@ -59,7 +60,9 @@ export const GlassSheet: React.FC<GlassSheetProps> = ({
         {footer && <footer className="glass-sheet__footer">{footer}</footer>}
 
         <button type="button" className="glass-modal-close" onClick={onClose} aria-label="Close">
-          ✕
+          <MotionIcon motion="pop">
+            <CloseIcon size={20} />
+          </MotionIcon>
         </button>
       </aside>
     </div>

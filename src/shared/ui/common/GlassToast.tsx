@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { CloseIcon, MotionIcon } from "../icons";
 import { GlassCard } from "./GlassCard";
 
 export interface GlassToastProps {
@@ -52,7 +53,9 @@ export const GlassToast: React.FC<GlassToastProps> = ({
           <span className="text-sm font-medium text-primary truncate">{message}</span>
         </div>
         <button type="button" onClick={onClose} aria-label="닫기" className="glass-toast-close">
-          ✕
+          <MotionIcon motion="pop">
+            <CloseIcon size={16} />
+          </MotionIcon>
         </button>
       </GlassCard>
     </div>

@@ -66,6 +66,12 @@
   --enter-offset: 10px;
   --enter-scale: 0.97;
 
+  /* Icon motion recipes: shared by MotionIcon and documented in Style Guide. */
+  --icon-motion-distance: 3px;
+  --icon-motion-pop-scale: 1.12;
+  --icon-motion-tilt: 16deg;
+  --icon-motion-rotate: 90deg;
+
   /* ---------- Material ----------
      One continuous knob drives the whole surface language.
      `--material-intensity` is 0..1 and is written to <html> at runtime

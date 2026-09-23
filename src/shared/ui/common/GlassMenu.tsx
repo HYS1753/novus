@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { MotionIcon } from "../icons";
 
 export interface GlassMenuItem {
   id: string;
@@ -70,7 +71,11 @@ export const GlassMenu: React.FC<GlassMenuProps> = ({
               onClick={() => select(item)}
               className={`glass-menu__item glass-menu__item--${item.tone ?? "default"}`}
             >
-              {item.icon && <span className="glass-menu__icon">{item.icon}</span>}
+              {item.icon && (
+                <span className="glass-menu__icon">
+                  <MotionIcon motion="nudge-right">{item.icon}</MotionIcon>
+                </span>
+              )}
               <span>{item.label}</span>
             </button>
           ))}

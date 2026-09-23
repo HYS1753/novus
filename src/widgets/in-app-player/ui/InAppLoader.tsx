@@ -6,6 +6,7 @@ import {
   ExternalLinkIcon,
   RefreshIcon,
   HomeIcon,
+  MotionIcon,
   getBundledBrandAssetUrl,
   getBuiltinBrandLogo,
 } from "@/shared";
@@ -48,13 +49,15 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
             ["--app-glow" as string]: app.accentColor || "var(--color-primary)",
           }}
         >
-          {logoUrl ? (
-            <img src={logoUrl} alt={app.title} className="in-app-loader__logo-img" />
-          ) : BuiltinLogo ? (
-            React.createElement(BuiltinLogo, { size: 48 })
-          ) : (
-            <span className="in-app-loader__logo-text">{app.title.slice(0, 2)}</span>
-          )}
+          <MotionIcon motion="breathe" active>
+            {logoUrl ? (
+              <img src={logoUrl} alt={app.title} className="in-app-loader__logo-img" />
+            ) : BuiltinLogo ? (
+              React.createElement(BuiltinLogo, { size: 48 })
+            ) : (
+              <span className="in-app-loader__logo-text">{app.title.slice(0, 2)}</span>
+            )}
+          </MotionIcon>
         </div>
 
         {/* Title & Status */}
@@ -80,7 +83,10 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
         {/* Quick Launch Button available immediately */}
         <div className="in-app-loader__quick-row">
           <GlassButton variant="primary" size="sm" onClick={onOpenExternal}>
-            <ExternalLinkIcon size={16} /> 독립 플레이어로 즉시 열기
+            <MotionIcon motion="nudge-right">
+              <ExternalLinkIcon size={16} />
+            </MotionIcon>
+            독립 플레이어로 즉시 열기
           </GlassButton>
         </div>
 
@@ -94,10 +100,16 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
             </p>
             <div className="in-app-loader__fallback-actions">
               <GlassButton variant="secondary" size="sm" onClick={onReload}>
-                <RefreshIcon size={16} /> 다시 시도
+                <MotionIcon motion="rotate">
+                  <RefreshIcon size={16} />
+                </MotionIcon>
+                다시 시도
               </GlassButton>
               <GlassButton variant="ghost" size="sm" onClick={onClose}>
-                <HomeIcon size={16} /> 대시보드
+                <MotionIcon motion="pop">
+                  <HomeIcon size={16} />
+                </MotionIcon>
+                대시보드
               </GlassButton>
             </div>
           </div>

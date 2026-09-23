@@ -3,6 +3,8 @@ import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer } from "@/widgets";
 import { GlassDivider, GlassModal, GlassButton, RemoteIcon, MoonIcon } from "@/shared";
 import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
+import { GalleryPage } from "../../gallery";
+import { FinderPage } from "../../finder";
 
 const STREAMING_APPS: AppItem[] = [
   {
@@ -81,10 +83,17 @@ const SMART_TOOLS: AppItem[] = [
   },
   {
     id: "photos",
-    title: "Digital Gallery",
-    category: "tools",
+    title: "미디어 갤러리",
+    category: "media",
     url: "#photos",
-    accentColor: "#00897B",
+    accentColor: "#EC4899",
+  },
+  {
+    id: "finder",
+    title: "파일 파인더",
+    category: "tools",
+    url: "#finder",
+    accentColor: "#3B82F6",
   },
   {
     id: "browser",
@@ -115,6 +124,7 @@ const QUICK_CONTROLS: AppItem[] = [
 const ALL_APPS = [...STREAMING_APPS, ...SMART_TOOLS, ...QUICK_CONTROLS];
 
 export const DashboardPage: React.FC = () => {
+  const [activeView, setActiveView] = useState<"dashboard" | "gallery" | "finder">("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeApp, setActiveApp] = useState<AppItem | null>(null);
@@ -170,6 +180,14 @@ export const DashboardPage: React.FC = () => {
       setIsAmbientModalOpen(true);
       return;
     }
+    if (item.id === "photos") {
+      setActiveView("gallery");
+      return;
+    }
+    if (item.id === "finder") {
+      setActiveView("finder");
+      return;
+    }
     if (item.url.startsWith("http://") || item.url.startsWith("https://")) {
       setActiveApp(item);
       return;
@@ -190,6 +208,16 @@ export const DashboardPage: React.FC = () => {
         <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </div>
     );
+  }
+
+  // Dedicated Gallery view (Images & Videos)
+  if (activeView === "gallery") {
+    return <GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />;
+  }
+
+  // Dedicated System Finder view (All files)
+  if (activeView === "finder") {
+    return <FinderPage onBackToDashboard={() => setActiveView("dashboard")} />;
   }
 
   return (

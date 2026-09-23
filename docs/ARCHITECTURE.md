@@ -68,7 +68,10 @@ src-tauri/
 ├── src/
 │   ├── commands/         # 프론트엔드에서 invoke 가능한 핸들러 모음
 │   │   ├── mod.rs        # 커맨드 모듈 등록
-│   │   └── system.rs     # 시스템 상태 및 레거시 웹뷰 호환 커맨드
+│   │   ├── media_fs.rs   # OS 드라이브/디렉터리 스캔 및 기본 앱 파일 열기 커맨드
+│   │   ├── player.rs     # 인앱 디코더 미지원 형식의 외부 플레이어 폴백 커맨드
+│   │   ├── system.rs     # 시스템 상태 및 레거시 웹뷰 호환 커맨드
+│   │   └── thumbnail.rs  # 세션 기반 썸네일 축소 생성 및 임시 캐시 클린업
 │   ├── page_manager.rs   # 스트리밍 싱글톤 브라우저 풀 및 페이지(탭) 라이프사이클 매니저
 │   ├── lib.rs            # Tauri 빌더, State 관리, 플러그인 초기화 및 커맨드 등록
 │   └── main.rs           # 진입 바이너리
@@ -88,8 +91,12 @@ src-tauri/
 | `reload_streaming_page`           | `reloadStreamingPage(id)`               | • 브라우저 프로세스 재시작 없이 웹뷰의 `reload()`만 실행                                                                                                                                                           |
 | `go_back_or_close_streaming_page` | `goBackOrCloseStreamingPage(id)`        | • 브라우저 히스토리 이전 페이지로 뒤로가기 실행 (`history.back()`)<br>• 더 이상 뒤로갈 히스토리가 없는 경우 해당 페이지를 즉시 파괴(`discard`)하여 메모리를 반환하고 홈 복귀 신호(false) 전달                      |
 | `discard_streaming_page`          | `discardStreamingPage(id)`              | • 저사양 메모리 압박 시 비활성 페이지 웹뷰 인스턴스 파괴 (`close()`)<br>• 공용 프로필 쿠키 DB는 유지되어 재오픈 시 즉시 로그인 복원                                                                                |
-| `attach_child_webview`            | `attachChildWebview(...)`               | • 기존 `InAppPlayer` 하위 호환을 위한 래퍼 (내부적으로 `show_streaming_page` 호출)                                                                                                                                 |
-| `close_child_webview`             | `closeChildWebview(...)`                | • 기존 `InAppPlayer` 하위 호환을 위한 래퍼 (내부적으로 `hide_streaming_page` 호출)                                                                                                                                 |
+| `get_system_locations`            | `getSystemLocations()`                  | • Windows 드라이브(`C:\`, `D:\`) / macOS 볼륨 및 주요 시스템 폴더(사진, 동영상, 다운로드, 문서, 홈) 목록 감지 반환                                                                                                 |
+| `scan_directory`                  | `scanDirectory(path, filterMode)`       | • 디렉터리 항목(폴더, 파일) 비동기 고속 스캔. `filterMode: "media"` 시 이미지/비디오만 추출, `"all"` 시 전체 시스템 파일 추출                                                                                      |
+| `open_file_in_os`                 | `openFileInOs(path)`                    | • OS 기본 쉘/애플리케이션을 통해 지정된 파일 또는 폴더 열기 (`tauri_plugin_opener`)                                                                                                                                |
+| `get_image_thumbnail`             | `getImageThumbnail(filePath, maxDim)`   | • `tokio::task::spawn_blocking` 스레드풀에서 256x256 초경량 리사이징 후 JPEG Base64 URI 반환. 임시 디렉터리 세션 캐시 자동 운용                                                                                    |
+| `cleanup_thumbnail_cache`         | `cleanupThumbnailCache()`               | • 세션 임시 썸네일 디렉터리(`temp_dir/novus_thumbnails`) 완전 정리. 앱 시동 및 종료 시 자동 호출                                                                                                                   |
+| `play_video_native`               | `playVideoNative(filePath)`             | • 사용자가 외부 재생을 선택한 경우 MPV 설치 및 로컬 후보 경로를 탐색해 하드웨어 가속으로 구동하고, 없으면 OS 기본 플레이어로 폴백                                                                                  |
 | `launch_native_app_mode`          | `launchNativeAppMode(url)`              | • 시스템 Edge / Chrome PWA 앱 모드(`--app`) 외부 프로세스 런처 (비상 폴백용)                                                                                                                                       |
 
 ---
@@ -109,16 +116,16 @@ novus/
 │   ├── features/         # 비즈니스 기능
 │   ├── entities/         # 도메인 모델
 │   ├── shared/           # 공통 기반 인프라 (UI Kit, Tauri IPC, Hooks)
-│   │   ├── ui/           # 공통 UI 컴포넌트
-│   │   │   ├── common/   # UI 코어 18종
-│   │   │   │              #   Actions/Inputs: Button, Input, Checkbox, Toggle, SegmentedControl, Slider, Menu, Tooltip
-│   │   │   │              #   Feedback: Badge, Progress, Skeleton, Toast, EmptyState
-│   │   │   │              #   Surfaces: Card, ListRow, Divider, Modal, Sheet
-│   │   │   ├── button/   # TouchButton (하위 호환)
-│   │   │   └── card/     # MediaCard (하위 호환)
-│   │   ├── api/          # Tauri IPC 래퍼
-│   │   ├── hooks/        # 저사양 최적화 훅
-│   │   └── types/        # 공통 타입
+│   │   ├── ui/           # 공통 UI 컴포넌트 (모든 화면 UI는 이 계층에서 재활용)
+│   │   │   ├── common/   # UI 코어 18종 (GlassCard, GlassButton, GlassSegmentedControl, etc.)
+│   │   │   ├── media/    # GlassMediaTile (1:1 풀커버 타일 + GPU 저비용 하단 틴트 오버레이)
+│   │   │   ├── nav/      # SubpageDock (내부 서브페이지 표준 시스템 독)
+│   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons 및 공통 MotionIcon 모션 프리셋
+│   │   │   ├── button/   # TouchButton
+│   │   │   └── card/     # MediaCard
+│   │   ├── api/          # Tauri IPC 래퍼 (mediaFs, mediaPlayer, window)
+│   │   ├── hooks/        # 저사양 최적화 훅 (useCurrentTime, useDockPosition, etc.)
+│   │   └── types/        # 공통 타입 (DockPosition, etc.)
 │   ├── main.tsx          # React DOM 렌더링 엔트리
 │   └── vite-env.d.ts     # Vite 환경 타입 정의
 ├── src-tauri/            # Tauri v2 (Rust 백엔드)
@@ -126,6 +133,14 @@ novus/
 ├── tsconfig.json         # TypeScript 엄격 모드 및 @/* 별칭
 └── vite.config.ts        # Vite 8 / Rolldown 최적화 번들러 설정
 ```
+
+### 아이콘 및 모션 경계
+
+- SVG 아이콘은 `src/shared/ui/icons/`에서만 정의하며 화면·위젯 내부에 개별 SVG나 문자형 닫기/정렬 아이콘을 만들지 않습니다.
+- 아이콘 애니메이션은 `MotionIcon`의 `pop`, `rotate`, `tilt`, `nudge-left`, `nudge-right`, `nudge-up`, `spin`, `pulse`, `breathe` 프리셋만 사용합니다.
+- 상호작용 프리셋은 상위 버튼의 hover/focus에 반응합니다. 반복 프리셋은 실제 진행·연결 상태에서만 `active`로 실행하고 `prefers-reduced-motion`에서는 정지합니다.
+- 스트리밍 `InAppDock`은 별도 내비게이션 DOM을 만들지 않고 `SubpageDock`에 스트리밍 전용 액션 슬롯만 조합합니다.
+- 파일 탐색 화면은 `SubpageDock`의 방문 기록 뒤로가기와 `PathNavigation`의 상위 폴더·브레드크럼을 명확히 분리합니다.
 
 ---
 

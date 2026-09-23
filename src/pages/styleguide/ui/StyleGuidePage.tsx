@@ -21,6 +21,28 @@ import {
   GlassTooltip,
   MATERIAL_INTENSITY_STEP,
   useMaterialIntensity,
+  GlassMediaTile,
+  SubpageDock,
+  PlayIcon,
+  FolderIcon,
+  ImageIcon,
+  VideoIcon,
+  DocumentIcon,
+  ArchiveIcon,
+  GridIcon,
+  ListIcon,
+  CloseIcon,
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  ArrowUpIcon,
+  CloudSunIcon,
+  ExternalLinkIcon,
+  MotionIcon,
+  RefreshIcon,
+  SettingsIcon,
+  ThemeIcon,
+  PathNavigation,
+  type IconMotionPreset,
 } from "@/shared";
 
 type SectionId =
@@ -97,6 +119,57 @@ const MOTION_RECIPES = [
     token: "1.2–1.6s · linear / --ease-standard",
   },
 ] as const;
+
+const ICON_MOTION_RECIPES: {
+  name: string;
+  motion: IconMotionPreset;
+  usage: string;
+  icon: React.ReactNode;
+  active?: boolean;
+}[] = [
+  { name: "Pop", motion: "pop", usage: "열기·선택·확대", icon: <PlayIcon size={22} /> },
+  { name: "Rotate", motion: "rotate", usage: "설정·새로고침", icon: <SettingsIcon size={22} /> },
+  { name: "Tilt", motion: "tilt", usage: "테마·모드 전환", icon: <ThemeIcon size={22} /> },
+  {
+    name: "Nudge left",
+    motion: "nudge-left",
+    usage: "뒤로 이동",
+    icon: <ArrowLeftIcon size={22} />,
+  },
+  {
+    name: "Nudge right",
+    motion: "nudge-right",
+    usage: "외부·다음 이동",
+    icon: <ExternalLinkIcon size={22} />,
+  },
+  {
+    name: "Nudge up",
+    motion: "nudge-up",
+    usage: "상위 폴더 이동",
+    icon: <ArrowUpIcon size={22} />,
+  },
+  {
+    name: "Spin",
+    motion: "spin",
+    usage: "진행 중인 작업만",
+    icon: <RefreshIcon size={22} />,
+    active: true,
+  },
+  {
+    name: "Pulse",
+    motion: "pulse",
+    usage: "주의가 필요한 상태만",
+    icon: <PlayIcon size={22} />,
+    active: true,
+  },
+  {
+    name: "Breathe",
+    motion: "breathe",
+    usage: "연결·대기 상태만",
+    icon: <CloudSunIcon size={22} />,
+    active: true,
+  },
+];
 
 const COLORS = [
   {
@@ -558,6 +631,52 @@ export const StyleGuidePage: React.FC = () => {
                   </GlassCard>
                 </div>
               </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">SubpageDock (Internal Navigation)</span>
+                <div
+                  className="in-app-player--dock-right"
+                  style={{
+                    position: "relative",
+                    height: "210px",
+                    border: "1px dashed var(--glass-border)",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <SubpageDock
+                    title="미디어 갤러리"
+                    dockPosition="right"
+                    onHome={() => undefined}
+                    onBack={() => undefined}
+                    onReload={() => undefined}
+                  />
+                  <span className="text-xs text-secondary">
+                    모든 내부 기능에서 홈, 뒤로, 시계와 상황별 액션을 같은 위치에 제공합니다.
+                  </span>
+                </div>
+              </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">PathNavigation (Filesystem Hierarchy)</span>
+                <PathNavigation
+                  items={[
+                    { label: "사진", path: "/Pictures" },
+                    { label: "여행", path: "/Pictures/Travel" },
+                    { label: "제주", path: "/Pictures/Travel/Jeju" },
+                  ]}
+                  canGoUp
+                  onUp={() => undefined}
+                  onNavigate={() => undefined}
+                />
+                <p className="sg__tile-body">
+                  시스템 독의 뒤로가기는 방문 기록, 위쪽 화살표는 부모 폴더, 브레드크럼은 지정한
+                  조상 폴더로 이동합니다. 세 동작의 의미를 섞지 않습니다.
+                </p>
+              </div>
             </section>
           )}
 
@@ -611,6 +730,31 @@ export const StyleGuidePage: React.FC = () => {
                     </GlassButton>
                   </div>
                 </div>
+              </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">Icon motion catalog</span>
+                <div className="sg__icon-motion-grid">
+                  {ICON_MOTION_RECIPES.map((recipe) => (
+                    <button
+                      type="button"
+                      className="sg__icon-motion-sample"
+                      key={recipe.name}
+                      aria-label={`${recipe.name}: ${recipe.usage}`}
+                    >
+                      <MotionIcon motion={recipe.motion} active={recipe.active}>
+                        {recipe.icon}
+                      </MotionIcon>
+                      <strong>{recipe.name}</strong>
+                      <span>{recipe.usage}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="sg__tile-body">
+                  모든 제품 아이콘 모션은 <code className="font-mono">MotionIcon</code>의 명명된
+                  프리셋을 사용합니다. Pop·Rotate·Tilt·Nudge는 상위 터치 타깃의 hover/focus에서만
+                  실행하고, Spin·Pulse·Breathe는 실제 진행 상태에서만 active로 실행합니다.
+                </p>
               </div>
 
               <div className="sg__pair">
@@ -766,6 +910,56 @@ export const StyleGuidePage: React.FC = () => {
                   </GlassTooltip>
                 </div>
               </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">System &amp; Media Icons</span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                    alignItems: "center",
+                    padding: "12px",
+                    background: "var(--glass-bg)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <div className="flex items-center gap-2 text-xs">
+                    <FolderIcon size={20} /> Folder
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <ImageIcon size={20} /> Image
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <VideoIcon size={20} /> Video
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <DocumentIcon size={20} /> Document
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <ArchiveIcon size={20} /> Archive
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <PlayIcon size={20} /> Play
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <GridIcon size={20} /> Grid
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <ListIcon size={20} /> List
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <CloseIcon size={20} /> Close
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <ChevronRightIcon size={20} /> Chevron
+                  </div>
+                </div>
+                <p className="sg__tile-body mt-2">
+                  애플리케이션 전반에서 일관되게 사용되는 파일시스템 및 미디어 제어 벡터
+                  아이콘입니다.
+                </p>
+              </div>
             </section>
           )}
 
@@ -903,6 +1097,45 @@ export const StyleGuidePage: React.FC = () => {
                 </div>
                 <p className="sg__tile-body">
                   뒤 맥락을 계속 보여줘야 하면 시트를, 결정을 강제해야 하면 모달을 씁니다.
+                </p>
+              </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">
+                  GlassMediaTile (1:1 Full Cover + Bottom Tint)
+                </span>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: "16px",
+                    maxWidth: "600px",
+                  }}
+                >
+                  <GlassMediaTile
+                    title="vacation_photo.jpg"
+                    typeLabel="JPG"
+                    sizeLabel="3.4 MB"
+                    category="image"
+                    onClick={() => undefined}
+                  />
+                  <GlassMediaTile
+                    title="action_cam_trailer.mp4"
+                    typeLabel="MP4"
+                    sizeLabel="48 MB"
+                    category="video"
+                    onClick={() => undefined}
+                  />
+                  <GlassMediaTile
+                    title="Documents & Projects"
+                    typeLabel="Folder"
+                    category="directory"
+                    onClick={() => undefined}
+                  />
+                </div>
+                <p className="sg__tile-body mt-2">
+                  사진/비디오 갤러리의 표준 타일 컴포넌트입니다. 썸네일이 1:1로 꽉 차고, 하단 반투명
+                  오버레이에 파일명과 속성이 표시됩니다.
                 </p>
               </div>
             </section>

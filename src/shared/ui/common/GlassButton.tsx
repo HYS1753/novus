@@ -1,4 +1,5 @@
 import React, { forwardRef } from "react";
+import { MotionIcon, RefreshIcon } from "../icons";
 
 export interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "glass" | "ghost";
@@ -36,22 +37,9 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
 
         {isLoading && (
           <span className="glass-btn__spinner" aria-hidden="true">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="12"
-                cy="12"
-                r="9"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                style={{ opacity: 0.25 }}
-              />
-              <path
-                d="M21 12a9 9 0 0 0-9-9"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <MotionIcon motion="spin" active>
+              <RefreshIcon size={16} />
+            </MotionIcon>
           </span>
         )}
       </button>

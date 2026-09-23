@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { CloseIcon, MotionIcon } from "../icons";
 import { GlassCard } from "./GlassCard";
 
 export interface GlassModalProps {
@@ -77,20 +78,9 @@ export const GlassModal: React.FC<GlassModalProps> = ({
         )}
 
         <button type="button" onClick={onClose} aria-label="닫기" className="glass-modal-close">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <MotionIcon motion="pop">
+            <CloseIcon size={20} />
+          </MotionIcon>
         </button>
 
         <div className="text-sm text-primary leading-relaxed">{children}</div>

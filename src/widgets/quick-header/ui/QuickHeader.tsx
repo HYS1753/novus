@@ -8,6 +8,8 @@ import {
   FullscreenIcon,
   ThemeIcon,
   SearchIcon,
+  CloseIcon,
+  MotionIcon,
 } from "@/shared";
 import novusLogo from "@/assets/novus-logo.png";
 
@@ -129,7 +131,9 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
                   className="quick-header__search-clear"
                   aria-label="검색어 초기화"
                 >
-                  ✕
+                  <MotionIcon motion="pop">
+                    <CloseIcon size={12} />
+                  </MotionIcon>
                 </button>
               )}
             </div>
@@ -145,7 +149,9 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
                 isSearchExpanded ? "quick-header__icon-btn--active" : ""
               }`}
             >
-              <SearchIcon size={18} />
+              <MotionIcon motion="pop">
+                <SearchIcon size={18} />
+              </MotionIcon>
             </GlassButton>
           </div>
 
@@ -157,7 +163,9 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
             title={isDark ? "라이트 모드" : "다크 모드"}
             className="quick-header__icon-btn quick-header__icon-btn--theme"
           >
-            <ThemeIcon size={18} isDark={isDark} />
+            <MotionIcon motion="tilt">
+              <ThemeIcon size={18} isDark={isDark} />
+            </MotionIcon>
           </GlassButton>
 
           <GlassButton
@@ -168,7 +176,9 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
             title="전체화면"
             className="quick-header__icon-btn quick-header__icon-btn--fullscreen"
           >
-            <FullscreenIcon size={18} />
+            <MotionIcon motion="pop">
+              <FullscreenIcon size={18} />
+            </MotionIcon>
           </GlassButton>
 
           {onOpenSettings && (
@@ -180,7 +190,9 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
               title="설정"
               className="quick-header__icon-btn quick-header__icon-btn--settings"
             >
-              <SettingsIcon size={18} />
+              <MotionIcon motion="rotate">
+                <SettingsIcon size={18} />
+              </MotionIcon>
             </GlassButton>
           )}
         </div>
