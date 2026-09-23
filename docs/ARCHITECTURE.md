@@ -61,24 +61,36 @@ Novus는 저사양 태블릿/PC(4GB RAM급) 환경에서 시동 시 즉시 실�
 
 ## 3. 백엔드 (Rust / Tauri v2) 아키텍처
 
-Rust 백엔드는 OS 네이티브 제어(창 관리, 전체화면, 자동 실행, 시스템 배터리 및 하드웨어 모니터링)를 담당합니다.
+Rust 백엔드는 OS 네이티브 제어(창 관리, 전체화면, 시스템 상태) 및 **스트리밍 서비스 싱글톤 페이지 매니저(PageManager)**를 담당합니다.
 
 ```
 src-tauri/
 ├── src/
-│   ├── commands/         # 프론트엔드에서 invoke 가능한 핸들러
+│   ├── commands/         # 프론트엔드에서 invoke 가능한 핸들러 모음
 │   │   ├── mod.rs        # 커맨드 모듈 등록
-│   │   └── system.rs     # 시스템 상태, 전원, 프로세스 관리 커맨드
-│   ├── lib.rs            # Tauri 빌더, 플러그인 초기화 및 커맨드 핸들러 등록
+│   │   └── system.rs     # 시스템 상태 및 레거시 웹뷰 호환 커맨드
+│   ├── page_manager.rs   # 스트리밍 싱글톤 브라우저 풀 및 페이지(탭) 라이프사이클 매니저
+│   ├── lib.rs            # Tauri 빌더, State 관리, 플러그인 초기화 및 커맨드 등록
 │   └── main.rs           # 진입 바이너리
 ├── capabilities/         # Tauri v2 권한 명세 (default.json)
-└── tauri.conf.json       # 앱 설정, 창 크기, 식별자(com.novus.hub)
+└── tauri.conf.json       # 앱 설정, 식별자(com.novus.hub), 창 크기
 ```
 
-### IPC (Inter-Process Communication) 규약
+### IPC (Inter-Process Communication) 인터페이스 및 내부 동작
 
-- 프론트엔드는 Rust 커맨드를 직접 호출하지 않고, 반드시 `src/shared/api/tauri/` 래퍼 함수를 거쳐 호출합니다.
-- 이를 통해 IPC 시그니처 변경 시에도 프론트엔드 전반에 걸친 수정 없이 단일 인터페이스에서 대응할 수 있습니다.
+프론트엔드는 Rust 커맨드를 직접 호출하지 않고, 반드시 `src/shared/api/tauri/` 래퍼 함수를 통해 통신합니다.
+
+| Tauri 커맨드명                    | 래퍼 함수 (`src/shared/api/tauri/`)     | 내부 동작 및 메커니즘                                                                                                                                                                                              |
+| :-------------------------------- | :-------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `show_streaming_page`             | `showStreamingPage(id, url, bounds)`    | • **지연 생성**: 페이지 미존재 시 자식 웹뷰를 메인 창에 `add_child` 도킹<br>• **재진입**: 이미 존재할 경우 뷰포트 bounds 복원 및 `show()`<br>• **자동 스왑**: 이전에 표시되던 다른 페이지를 자동으로 `hide()` 처리 |
+| `hide_streaming_page`             | `hideStreamingPage(id)`                 | • **세션 보존**: 웹뷰를 파괴하지 않고 `hide()` 및 오프스크린 이동 처리<br>• 메모리 상에 DOM과 로그인 세션 쿠키를 유지하여 홈(ESC) 복귀 지원                                                                        |
+| `update_streaming_page_bounds`    | `updateStreamingPageBounds(id, bounds)` | • 태블릿 독 위치(`right` \| `left` \| `bottom`) 변경 시 리로드 없이 뷰포트 크기/위치만 즉시 갱신 (`set_position`, `set_size`)                                                                                      |
+| `reload_streaming_page`           | `reloadStreamingPage(id)`               | • 브라우저 프로세스 재시작 없이 웹뷰의 `reload()`만 실행                                                                                                                                                           |
+| `go_back_or_close_streaming_page` | `goBackOrCloseStreamingPage(id)`        | • 브라우저 히스토리 이전 페이지로 뒤로가기 실행 (`history.back()`)<br>• 더 이상 뒤로갈 히스토리가 없는 경우 해당 페이지를 즉시 파괴(`discard`)하여 메모리를 반환하고 홈 복귀 신호(false) 전달                      |
+| `discard_streaming_page`          | `discardStreamingPage(id)`              | • 저사양 메모리 압박 시 비활성 페이지 웹뷰 인스턴스 파괴 (`close()`)<br>• 공용 프로필 쿠키 DB는 유지되어 재오픈 시 즉시 로그인 복원                                                                                |
+| `attach_child_webview`            | `attachChildWebview(...)`               | • 기존 `InAppPlayer` 하위 호환을 위한 래퍼 (내부적으로 `show_streaming_page` 호출)                                                                                                                                 |
+| `close_child_webview`             | `closeChildWebview(...)`                | • 기존 `InAppPlayer` 하위 호환을 위한 래퍼 (내부적으로 `hide_streaming_page` 호출)                                                                                                                                 |
+| `launch_native_app_mode`          | `launchNativeAppMode(url)`              | • 시스템 Edge / Chrome PWA 앱 모드(`--app`) 외부 프로세스 런처 (비상 폴백용)                                                                                                                                       |
 
 ---
 
@@ -87,10 +99,9 @@ src-tauri/
 ```
 novus/
 ├── docs/                 # 프로젝트 공식 문서 센터
-│   ├── ARCHITECTURE.md   # 본 문서
+│   ├── ARCHITECTURE.md   # 시스템 내부 동작 및 아키텍처 명세
 │   ├── PERFORMANCE_GUIDE.md # 4GB RAM 저사양 최적화 가이드
-│   ├── HANDOVER.md       # 인수인계 및 작업 가이드
-│   └── adr/              # 아키텍처 결정 기록
+│   └── HANDOVER.md       # 인수인계 및 기능 구현 명세
 ├── src/                  # React 19 프론트엔드 소스
 │   ├── app/              # 앱 루트 & 글로벌 스타일
 │   ├── pages/            # 화면 (DashboardPage, StyleGuidePage 등)
@@ -130,3 +141,57 @@ novus/
 - **런타임 제어**: `src/shared/lib/material.ts`(`applyMaterialIntensity`, `resolveMaterialIntensity`, `clampMaterialIntensity`, `describeMaterialIntensity`)와 `useMaterialIntensity` 훅. 향후 설정 화면이 이 API를 그대로 사용합니다.
 - **모션 시스템**: 인터랙션 → 레시피 매핑을 고정합니다. `press`(누름) · `lift`(호버) · `reveal`(제자리 등장) · `emerge`(트리거 기반 오버레이) · `enter`(가장자리 진입) · `pulse`(무한 진행). 컴포넌트는 duration/easing을 직접 쓰지 않고 `--motion-*`, `--ease-*`, `--press-scale`, `--lift-distance` 토큰과 `.motion-*` 클래스를 참조합니다. `prefers-reduced-motion: reduce`에서 이동은 제거되고 상태 변화만 남습니다.
 - **Style Guide 페이지** (`StyleGuidePage`): Vite 브라우저 DEV에서만 `/styleguide`로 접근. Tauri 런타임 및 프로덕션 빌드에서는 마운트되지 않음 (`isStyleGuideRouteEnabled`). 제품 설정 화면이 아니라 톤앤매너·토큰·컴포넌트 스펙시먼 문서입니다.
+
+---
+
+## 6. 인앱 스트리밍 뷰 및 세션/쿠키 영속성 규약 (Streaming & Storage Architecture)
+
+Novus는 외부 무거운 브라우저 프로그램을 별도로 띄우지 않고, **단일 윈도우 내에서 태블릿 독(InAppDock)과 네이티브 자식 뷰(Child View)가 한 몸으로 동작**하는 일체형 뷰어 아키텍처를 채택합니다.
+
+### 1) 싱글톤 페이지 매니저(Singleton Page Manager) 도킹 구조
+
+- **`<iframe>` 미사용**: 브라우저 보안 정책(`X-Frame-Options: DENY`, `SAMEORIGIN`, CSP frame-ancestors, Frame-Busting 스크립트)을 원천 차단하기 위해 HTML `<iframe>`을 사용하지 않습니다.
+- **앱 라이프사이클과 동일한 싱글톤 브라우저 풀**:
+  - 대시보드(허브)는 초경량 시스템 웹뷰(RAM ~30MB)로 상시 유지되며, 스트리밍 서비스는 앱당 하나의 브라우저 엔진 풀 안에서 **페이지(탭)** 로 관리됩니다.
+  - 스트리밍 URL(`https://www.youtube.com`, `https://www.netflix.com` 등)은 `app.id` 키에 일대일 매핑됩니다.
+  - **지연 생성 (Lazy Creation)**: 첫 클릭 시에만 해당 페이지를 생성하여 뷰포트에 도킹합니다. 기동 시 모든 OTT를 미리 띄우지 않습니다.
+  - **Hide != Destroy (세션 및 렌더링 유지)**: 홈(ESC)으로 복귀해도 페이지와 브라우저 프로세스를 파괴하지 않고 숨김(`hide_streaming_page`) 처리합니다. 다시 동일 앱을 열면 스크롤 위치 및 로그인 세션이 즉시 복원됩니다.
+  - **페이지 스왑**: 다른 앱으로 전환 시 이전 페이지를 hide하고 대상 페이지를 show(없으면 create)합니다.
+  - **Bounds 업데이트**: 태블릿 독 위치(`right` | `left` | `bottom`)나 화면 회전 시 페이지를 재생성하지 않고 뷰포트 bounds만 즉시 갱신(`update_streaming_page_bounds`)합니다.
+  - **메모리 압박 대응**: 4GB 저사양 환경에서 필요 시 비활성 백그라운드 페이지만 선별적으로 `discard_streaming_page`할 수 있으며, 공용 프로필 쿠키는 영구 보존됩니다.
+- **렌더링 엔진**:
+  - **Windows (Surface Pro 4)**: Microsoft Edge WebView2 (Chromium 기반, 단일 브라우저 프로세스/프로필 풀)
+  - **macOS**: Apple WebKit (`WKWebView`)
+
+### 2) 계정 로그인 및 세션/쿠키 저장 위치 (Session Persistence)
+
+Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자가 유튜브, 웨이브, 쿠팡플레이 등에서 로그인한 세션 및 쿠키는 **앱을 종료하거나 OS를 재부팅해도 영구적으로 유지(자동 로그인)**됩니다. 모든 스트리밍 페이지는 단일 공용 프로필 경로를 공유합니다.
+
+| 운영체제                          | 웹 렌더링 엔진                     | 쿠키 및 사용자 데이터 저장 디렉토리                                                                                                                                               |
+| :-------------------------------- | :--------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Windows 10/11** (Surface Pro 4) | Microsoft Edge WebView2 (Chromium) | `%LOCALAPPDATA%\com.novus.hub\EBWebView\Default\`<br>• 쿠키: `Network\Cookies` (SQLite DB, DPAPI 암호화)<br>• 로컬 스토리지: `Local Storage\leveldb\`<br>• 인덱스DB: `IndexedDB\` |
+| **macOS**                         | Apple WebKit (`WKWebView`)         | `~/Library/WebKit/com.novus.hub/`<br>• 쿠키: `~/Library/HTTPStorages/com.novus.hub.binarycookies`<br>• 웹사이트 데이터: `WebsiteData/Default/LocalStorage/` 및 `IndexedDB/`       |
+| **Web Dev Server** (`pnpm dev`)   | 로컬 웹 브라우저 (Chrome/Safari)   | 브라우저 자체 프로필 디렉토리의 Cookie / LocalStorage                                                                                                                             |
+
+> **자동 로그인 보장 규칙**:
+>
+> 1. `tauri.conf.json`의 앱 식별자(`identifier: "com.novus.hub"`)를 임의로 변경하지 않습니다.
+> 2. `WebviewBuilder` 생성 시 임시 세션 모드(`incognito: true`)를 지정하지 않습니다.
+> 3. 다른 외부 브라우저(Chrome/Safari)의 쿠키 DB를 직접 읽거나 변조하지 않습니다.
+
+### 3) User-Agent 전략 및 Google 계정 로그인 정책
+
+- **선별적 UA 적용 (지문 일치화)**:
+  - 구글 안티어뷰즈 시스템(`accounts.google.com`)은 `User-Agent` 문자열과 실제 브라우저 엔진의 클라이언트 힌트(`Sec-CH-UA`, JS 피처 지문) 불일치를 임베디드 웹뷰/위장 브라우저 판정의 핵심 근거로 사용합니다.
+  - 따라서 **YouTube/Google 도메인에 대해서는 가짜 데스크톱 Chrome UA 강제 주입을 배제**하고, 렌더링 엔진 고유의 순정 지문 그대로 통신하도록 처리합니다.
+  - 쿠팡플레이 등 특정 OTT가 비표준 환경을 차단하는 경우에만 해당 서비스에 국한하여 데스크톱 UA를 선별 주입합니다.
+
+### 4) 초경량 Chromium(CEF 코어 ~120MB) 전환 로드맵 (해법 C)
+
+- **배경**: Electron(상시 150~200MB RAM) 전면 전환을 피하고, 1GB에 달하는 풀 CEF 배포본에서 불필요한 번들을 쳐낸 순수 웹 브라우징 코어만을 추출하여 도킹하는 단계적 전환을 추진합니다.
+- **다이어트 목표 및 패키징 구성**:
+  - `libcef` 코어 렌더링 바이너리 (~100MB)
+  - V8 스냅샷 및 ICU 데이터 (`v8_context_snapshot.bin`, `icudtl.dat`, ~20MB)
+  - 다국어 80개 언어 제외, 필수 언어(`ko.pak`, `en-US.pak`)만 유지 (약 60MB 절감)
+  - DevTools, PDF 뷰어, Chrome Extensions, 인쇄 스풀러 등 잉여 모듈 배제
+  - ➡️ 총 번들 크기 **약 120MB** 수준의 초경량 렌더러 코어로 `PageManager` 백엔드를 바인딩합니다.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { QuickHeader, MediaShelf, SettingsSheet } from "@/widgets";
+import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer } from "@/widgets";
 import { GlassDivider, GlassModal, GlassButton, RemoteIcon, MoonIcon } from "@/shared";
 import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
@@ -117,6 +117,7 @@ const ALL_APPS = [...STREAMING_APPS, ...SMART_TOOLS, ...QUICK_CONTROLS];
 export const DashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeApp, setActiveApp] = useState<AppItem | null>(null);
   const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
   const [isAmbientModalOpen, setIsAmbientModalOpen] = useState(false);
   const [canScrollUp, setCanScrollUp] = useState(false);
@@ -169,8 +170,27 @@ export const DashboardPage: React.FC = () => {
       setIsAmbientModalOpen(true);
       return;
     }
+    if (item.url.startsWith("http://") || item.url.startsWith("https://")) {
+      setActiveApp(item);
+      return;
+    }
     launchApp(item);
   };
+
+  // Dedicated In-App TV Player view
+  if (activeApp) {
+    return (
+      <div className="dashboard-page dashboard-page--in-app-mode">
+        <InAppPlayer
+          key={activeApp.id}
+          app={activeApp}
+          onClose={() => setActiveApp(null)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+        <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page">

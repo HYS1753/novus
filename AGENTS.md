@@ -95,10 +95,21 @@ pnpm build
 
 ---
 
-## 6. 문서 최신화 의무 (Documentation Integrity)
+## 6. 문서 최신화 의무 및 작성 원칙 (Documentation Integrity)
 
-에이전트는 새로운 컴포넌트, 위젯, IPC 인터페이스를 추가하거나 아키텍처 구조를 변경할 경우, 다음 문서를 즉시 최신화해야 합니다:
+본 프로젝트의 `docs/` 디렉토리는 단순한 의사결정 히스토리(커밋 로그로 대체 가능)가 아니라, **“Novus 프로그램이 내부적으로 어떤 기능을 갖고 어떻게 동작하는지”**를 명확하고 직관적으로 파악할 수 있는 기능/아키텍처 명세서입니다.
 
-1. 새 위젯/기능 추가 시: [`docs/HANDOVER.md`](docs/HANDOVER.md)의 구현 현황 및 로드맵 업데이트
-2. 아키텍처/IPC 변경 시: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 명세 동기화
-3. 핵심 기술 결정 시: `docs/adr/`에 새로운 ADR 문서 추가
+새로운 기능, 위젯, IPC 인터페이스, 상태 관리 메커니즘을 추가하거나 변경할 경우, 다음 문서를 즉시 최신화해야 합니다:
+
+1. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**:
+   - 각 계층별 역할, 런타임/프로세스 모델(시스템 웹뷰 허브 + 싱글톤 페이지 매니저), IPC 규약 및 세션 영속성 등 시스템 내부 동작 메커니즘 명세 동기화.
+2. **[`docs/HANDOVER.md`](docs/HANDOVER.md)**:
+   - 신규 투입 개발자 및 AI가 바로 구현할 수 있도록 현재 구현 완료된 기능 목록, 실질적 컴포넌트/모듈 동작 방식, 다음 단계 로드맵 최신화.
+3. **[`docs/PERFORMANCE_GUIDE.md`](docs/PERFORMANCE_GUIDE.md)**:
+   - 저사양 타깃(Surface Pro 4 4GB RAM) 최적화 규칙 및 렌더링/메모리 동작 가이드라인 유지.
+
+> [!IMPORTANT]
+> **문서화 작성 원칙**:
+>
+> - ADR(Architecture Decision Record)과 같은 장황한 배경/결정 이력 문서는 작성하지 마십시오. (히스토리는 Git 커밋 메시지로 관리)
+> - 모든 문서는 코드베이스의 **현재 실제 구현(Truth)과 런타임 동작 메커니즘**을 정확하고 직관적으로 설명하는 데 집중하십시오.

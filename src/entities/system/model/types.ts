@@ -1,4 +1,6 @@
-export type DockPosition = "right" | "left" | "bottom";
+import type { DockPosition } from "@/shared";
+
+export type { DockPosition };
 
 export interface DeviceProfile {
   name: string;

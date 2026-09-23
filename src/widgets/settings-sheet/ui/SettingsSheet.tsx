@@ -7,11 +7,14 @@ import {
   GlassBadge,
   GlassDivider,
   GlassButton,
+  GlassSegmentedControl,
   useMaterialIntensity,
+  useDockPosition,
   describeMaterialIntensity,
   SettingsIcon,
   MoonIcon,
   BatteryIcon,
+  type DockPosition,
 } from "@/shared";
 
 export interface SettingsSheetProps {
@@ -21,6 +24,7 @@ export interface SettingsSheetProps {
 
 export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose }) => {
   const { intensity, setIntensity } = useMaterialIntensity();
+  const { dockPosition, setDockPosition } = useDockPosition();
   const [isDark, setIsDark] = useState(
     () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
   );
@@ -51,6 +55,38 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
       }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* 인앱 플레이어 독 위치 설정 */}
+        <section>
+          <GlassDivider label="인앱 플레이어 & 내비게이션 독" size="md" />
+          <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <label
+              style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}
+            >
+              태블릿 독(Dock) 위치
+            </label>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--color-text-secondary)",
+                margin: 0,
+                lineHeight: 1.4,
+              }}
+            >
+              앱 실행 중 홈 복귀, 뒤로가기, 새로고침 및 상태를 표시하는 내비게이션 바의 위치를
+              지정합니다.
+            </p>
+            <GlassSegmentedControl<DockPosition>
+              options={[
+                { id: "right", label: "오른쪽 (기본)" },
+                { id: "left", label: "왼쪽" },
+                { id: "bottom", label: "하단" },
+              ]}
+              value={dockPosition}
+              onChange={setDockPosition}
+            />
+          </div>
+        </section>
+
         {/* 디스플레이 & 머티리얼 */}
         <section>
           <GlassDivider label="비주얼 & 머티리얼" size="md" />
