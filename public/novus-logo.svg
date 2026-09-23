@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <!-- Combined N+V Monogram -->
+  <g class="novus-mark">
+    <!-- Outer N with integrated central V vertex -->
+    <path
+      d="M7 32V8L18 30L29 8V32"
+      stroke="#FFFFFF"
+      stroke-width="4.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Subtle luminous accent in the V core -->
+    <circle cx="18" cy="30" r="1.5" fill="#FFFFFF" />
+  </g>
+
+  <!-- "novus" modern display wordmark -->
+  <text
+    x="42"
+    y="27"
+    fill="#FFFFFF"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    font-size="22"
+    font-weight="700"
+    letter-spacing="0.08em"
+  >novus</text>
+</svg>

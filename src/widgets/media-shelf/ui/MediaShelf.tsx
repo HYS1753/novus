@@ -4,16 +4,17 @@ import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
 
 export interface MediaShelfProps {
-  title: string;
+  title?: string;
   items: AppItem[];
+  onItemClick?: (item: AppItem) => void;
 }
 
-export const MediaShelf: React.FC<MediaShelfProps> = ({ title, items }) => {
+export const MediaShelf: React.FC<MediaShelfProps> = ({ title, items, onItemClick }) => {
   const { launchApp } = useLaunchApp();
 
   return (
     <section className="media-shelf">
-      <h2 className="media-shelf__title">{title}</h2>
+      {title && <h2 className="media-shelf__title">{title}</h2>}
       <div className="media-shelf__grid">
         {items.map((item) => (
           <MediaCard
@@ -22,7 +23,10 @@ export const MediaShelf: React.FC<MediaShelfProps> = ({ title, items }) => {
             title={item.title}
             category={item.category.toUpperCase()}
             accentColor={item.accentColor}
-            onClick={() => launchApp(item)}
+            imageUrl={item.imageUrl || item.iconUrl}
+            imageFit={item.imageFit}
+            bannerUrl={item.bannerUrl}
+            onClick={() => (onItemClick ? onItemClick(item) : launchApp(item))}
           />
         ))}
       </div>

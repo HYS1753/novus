@@ -28,15 +28,16 @@
      - Actions/Inputs: `GlassButton`, `GlassInput`, `GlassCheckbox`, `GlassToggle`, `GlassSegmentedControl`, `GlassSlider`, `GlassMenu`, `GlassTooltip`
      - Feedback: `GlassBadge`, `GlassProgress`, `GlassSkeleton`, `GlassToast`, `GlassEmptyState`
      - Surfaces: `GlassCard`, `GlassListRow`, `GlassDivider`, `GlassModal`, `GlassSheet`
+   - `shared/ui/icons`: 초경량 정밀 벡터 SVG 아이콘 모음 (YouTube, Netflix, TVING, Wavve, Disney+, Google Calendar, Web Radio, Photo Frame, Google Search, Weather, Settings, Moon, Remote, Battery)
    - 머티리얼 모델: `틴트 + 헤어라인 엣지 + 상단 스펙큘러 + elevation`, 역할별 블러 비율 14 : 26 : 40
    - 머티리얼 강도는 **0–100 연속값** 하나(`--material-intensity`). 기본 0(불투명)이며 100에서도 틴트 알파 0.62 하한과 엣지 보정으로 면이 떠 보이지 않습니다. `shared/lib/material.ts` + `useMaterialIntensity`로 제어하며 앱 설정에서 슬라이더로 노출할 수 있도록 설계
    - 모션: 인터랙션 → 레시피 6종(`press` · `lift` · `reveal` · `emerge` · `enter` · `pulse`) 고정 매핑. `prefers-reduced-motion` 대응 포함
-   - `shared/ui/button & card`: 기존 `TouchButton`, `MediaCard`를 시스템 기반으로 하위 호환 유지
+   - `shared/ui/button & card`: 기존 `TouchButton`, `MediaCard`를 시스템 기반으로 하위 호환 및 브랜드 SVG/뱃지 확장 유지
    - `shared`: 저사양용 10초 주기 시계 훅(`useCurrentTime`), 창 제어 API(`window.ts`), 런타임 게이트(`isTauriRuntime`, `isStyleGuideRouteEnabled`)
    - `entities`: 앱 바로가기(`AppItem`), 시스템 프로필(`DeviceProfile`)
    - `features`: 앱 실행 훅(`useLaunchApp`)
-   - `widgets`: 시계/테마/전체화면 헤더(`QuickHeader`), 앱 쉘프(`MediaShelf`)
-   - `pages`: 메인 대시보드(`DashboardPage`) 및 **DEV 전용** 스타일 가이드(`StyleGuidePage`)
+   - `widgets`: 시계/날씨/설정 헤더(`QuickHeader`), TV 스타일 앱 쉘프(`MediaShelf`), 설정 사이드 시트(`SettingsSheet`)
+   - `pages`: 3단 섹션 분리 및 검색 연동 메인 대시보드(`DashboardPage`) 및 **DEV 전용** 스타일 가이드(`StyleGuidePage`)
    - `app`: 글로벌 시맨틱 토큰 및 머티리얼 스타일(`global.css`, `variables.css`), 앰비언트 레이어 + 뷰 게이트(`App.tsx`)
    - `src-tauri`: Rust 모듈 분리 (`commands/system.rs`, `commands/mod.rs`)
 
@@ -108,8 +109,9 @@ pnpm build
 
 ## 5. 다음 단계 로드맵 (Next Milestones)
 
-- [ ] **앱 설정 화면**: 머티리얼 강도 슬라이더(0–100)를 붙입니다. 토큰·런타임·저장 로직은 이미 완성되어 있고(`shared/lib/material.ts`, `useMaterialIntensity`), 설정 화면에서 `setIntensity`만 호출하면 됩니다. `GlassSheet` + `GlassListRow` + `GlassSlider` 조합이 그대로 쓰입니다.
+- [x] **앱 설정 화면 (SettingsSheet)**: `GlassSheet` + `GlassListRow` + `GlassSlider`(0–100 머티리얼 강도) 기반 설정 화면 구현 완료.
+- [ ] **Tauri v2 Child Webview 기반 인앱 스트리밍 런처**: 넷플릭스/유튜브/티빙/웨이브를 브라우저 없이 Tauri 자식 웹뷰 및 OSD(Home/Back)로 앱 내 재생
 - [ ] **Tauri Autostart 플러그인 연동**: Windows 부팅 시 자동 시작 및 백그라운드 상주 옵션 구현
 - [ ] **D-Pad / 키보드 방향키 내비게이션**: 터치 외에도 무선 리모컨 및 키보드로 타일 포커스를 이동할 수 있는 `useSpatialNavigation` 기능 구현
 - [ ] **시스템 배터리 / Wi-Fi 상태 조회**: Rust 백엔드 시스템 모니터링 커맨드 확장
-- [ ] **웹뷰 내장 런처**: 브라우저를 별도 창으로 띄우지 않고 앱 내부 웹뷰(Overlay Webview)로 넷플릭스/유튜브를 재생하는 모드 검토
+- [ ] **스마트폰 QR 웹 리모컨**: 동일 Wi-Fi 상에서 스마트폰으로 대시보드를 무선 제어하는 경량 웹소켓 서버 연동
