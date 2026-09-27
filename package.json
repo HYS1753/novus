@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "setup:mpv": "python3 scripts/setup_mpv.py",
+    "setup:mpv": "python3 scripts/setup_mpv.py || python scripts/setup_mpv.py",
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
