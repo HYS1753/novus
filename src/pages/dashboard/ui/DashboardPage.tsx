@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useLayoutEffect, useRef, useCallback } from "react";
 import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer } from "@/widgets";
 import { GlassDivider, GlassModal, GlassButton, RemoteIcon, MoonIcon } from "@/shared";
 import { useLaunchApp } from "@/features";
@@ -143,7 +143,7 @@ export const DashboardPage: React.FC = () => {
     setCanScrollDown(scrollTop + clientHeight < scrollHeight - 10);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
 
@@ -160,7 +160,7 @@ export const DashboardPage: React.FC = () => {
       window.removeEventListener("resize", updateScrollIndicators);
       resizeObserver.disconnect();
     };
-  }, [updateScrollIndicators]);
+  }, [activeView, activeApp, updateScrollIndicators]);
 
   const isSearching = searchQuery.trim().length > 0;
   const filteredApps = isSearching

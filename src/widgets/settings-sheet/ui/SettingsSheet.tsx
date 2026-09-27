@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   GlassSheet,
   GlassListRow,
@@ -14,6 +14,9 @@ import {
   SettingsIcon,
   MoonIcon,
   BatteryIcon,
+  getDeviceProfile,
+  getEmbeddedPlayerSupport,
+  type RuntimeDeviceProfile,
   type DockPosition,
 } from "@/shared";
 
@@ -30,6 +33,27 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
   );
   const [autoStart, setAutoStart] = useState(true);
   const [batteryOptimization, setBatteryOptimization] = useState(true);
+  const [deviceProfile, setDeviceProfile] = useState<RuntimeDeviceProfile | null | undefined>();
+  const [nativePlayerReady, setNativePlayerReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void getDeviceProfile()
+      .then((profile) => {
+        if (active) setDeviceProfile(profile);
+      })
+      .catch(() => {
+        if (active) setDeviceProfile(null);
+      });
+    void getEmbeddedPlayerSupport()
+      .then((support) => {
+        if (active) setNativePlayerReady(support.available);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleThemeChange = (nextDark: boolean) => {
     setIsDark(nextDark);
@@ -157,37 +181,61 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
           </div>
         </section>
 
-        {/* 기기 프로필 & 상태 */}
+        {/* 실행 중인 기기 정보 */}
         <section>
-          <GlassDivider label="디바이스 프로필" size="md" />
-          <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-            <GlassListRow
-              label="타깃 하드웨어"
-              description="Surface Pro 4 (Intel Core m3, 4GB RAM)"
-              trailing={
+          <GlassDivider label="현재 나의 기기" size="md" />
+          <div className="settings-device-card">
+            <div className="settings-device-card__head">
+              <span className="settings-device-card__icon" aria-hidden="true">
+                <SettingsIcon size={24} />
+              </span>
+              <div className="settings-device-card__identity">
+                <span>이 기기에서 실행 중</span>
+                <strong>
+                  {deviceProfile === undefined
+                    ? "기기 정보 확인 중…"
+                    : deviceProfile
+                      ? [deviceProfile.manufacturer, deviceProfile.model]
+                          .filter(Boolean)
+                          .join(" ") ||
+                        deviceProfile.device_name ||
+                        "내 컴퓨터"
+                      : "기기 정보를 읽을 수 없습니다"}
+                </strong>
+                {deviceProfile?.device_name && <small>{deviceProfile.device_name}</small>}
+              </div>
+              {deviceProfile && (
                 <GlassBadge variant="primary" size="sm">
-                  최적화됨
+                  자동 감지
                 </GlassBadge>
-              }
-            />
-            <GlassListRow
-              label="메모리 프로필"
-              description="초경량 모드 (RAM ~30MB 목표)"
-              trailing={
-                <GlassBadge variant="neutral" size="sm">
-                  Ultra-Light
-                </GlassBadge>
-              }
-            />
-            <GlassListRow
-              label="코어 엔진"
-              description="Tauri v2 + Edge WebView2"
-              trailing={
-                <GlassBadge variant="neutral" size="sm">
-                  v2.0.0
-                </GlassBadge>
-              }
-            />
+              )}
+            </div>
+            {deviceProfile && (
+              <dl className="settings-device-card__specs">
+                <div>
+                  <dt>운영체제</dt>
+                  <dd>{deviceProfile.os_version || deviceProfile.os_family}</dd>
+                </div>
+                <div>
+                  <dt>프로세서</dt>
+                  <dd>{deviceProfile.cpu_name || "확인할 수 없음"}</dd>
+                </div>
+                <div>
+                  <dt>메모리</dt>
+                  <dd>{formatMemory(deviceProfile.memory_bytes)}</dd>
+                </div>
+                <div>
+                  <dt>아키텍처 · 논리 코어</dt>
+                  <dd>
+                    {deviceProfile.architecture} · {deviceProfile.logical_cores}개
+                  </dd>
+                </div>
+                <div>
+                  <dt>로컬 영상 재생</dt>
+                  <dd>{nativePlayerReady ? "libmpv 파일 감지" : "현재 WebView 경로"}</dd>
+                </div>
+              </dl>
+            )}
           </div>
         </section>
       </div>
@@ -196,3 +244,9 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
 };
 
 GlassSheet.displayName = "SettingsSheet";
+
+function formatMemory(bytes: number | null): string {
+  if (bytes === null) return "확인할 수 없음";
+  const gib = bytes / 1024 ** 3;
+  return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 }).format(gib)} GB`;
+}

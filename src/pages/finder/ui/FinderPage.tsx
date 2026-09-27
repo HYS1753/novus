@@ -17,8 +17,13 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard }) => 
     canGoBack,
     items,
     isLoading,
+    error,
     searchQuery,
     setSearchQuery,
+    sortField,
+    setSortField,
+    sortOrder,
+    setSortOrder,
     navigateTo,
     navigateUp,
     navigateBack,
@@ -40,8 +45,13 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard }) => 
           breadcrumbs={breadcrumbs}
           items={items}
           isLoading={isLoading}
+          error={error}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          sortField={sortField}
+          onSortFieldChange={setSortField}
+          sortOrder={sortOrder}
+          onToggleSortOrder={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           onNavigateTo={navigateTo}
           onNavigateUp={navigateUp}
         />
@@ -52,8 +62,8 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard }) => 
         title="파일 파인더"
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
-        onBack={navigateBack}
-        canGoBack={canGoBack}
+        onBack={() => (canGoBack ? navigateBack() : onBackToDashboard())}
+        backLabel={canGoBack ? "이전 폴더로 이동" : "대시보드 홈으로 이동"}
         onReload={refresh}
       />
     </div>

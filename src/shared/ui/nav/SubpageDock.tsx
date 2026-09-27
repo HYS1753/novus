@@ -10,6 +10,7 @@ export interface SubpageDockProps {
   onHome: () => void;
   onBack?: () => void;
   canGoBack?: boolean;
+  backLabel?: string;
   onReload?: () => void;
   toolsSlot?: React.ReactNode;
 }
@@ -20,6 +21,7 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
   onHome,
   onBack,
   canGoBack = true,
+  backLabel = "이전 화면으로 이동",
   onReload,
   toolsSlot,
 }) => {
@@ -78,8 +80,8 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
             className="in-app-dock__btn"
             onClick={onBack}
             disabled={!canGoBack}
-            aria-label="이전에 보던 위치로 이동"
-            title="뒤로가기"
+            aria-label={backLabel}
+            title={backLabel}
           >
             <MotionIcon motion="nudge-left">
               <ArrowLeftIcon size={20} />

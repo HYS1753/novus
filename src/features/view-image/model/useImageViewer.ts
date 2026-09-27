@@ -5,9 +5,25 @@ interface UseImageViewerOptions {
   images: FileItem[];
   initialIndex: number;
   onClose: () => void;
+  totalCount?: number;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  loadMoreError?: string | null;
+  onNeedMore?: () => void;
+  canSwipe?: boolean;
 }
 
-export function useImageViewer({ images, initialIndex, onClose }: UseImageViewerOptions) {
+export function useImageViewer({
+  images,
+  initialIndex,
+  onClose,
+  totalCount,
+  hasMore = false,
+  isLoadingMore = false,
+  loadMoreError,
+  onNeedMore,
+  canSwipe = true,
+}: UseImageViewerOptions) {
   const [currentIndex, setCurrentIndex] = useState<number>(initialIndex);
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -22,7 +38,8 @@ export function useImageViewer({ images, initialIndex, onClose }: UseImageViewer
   }
 
   const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < images.length - 1;
+  const isWaitingForImage = currentIndex >= images.length;
+  const hasNext = !isWaitingForImage && currentIndex < (totalCount ?? images.length) - 1;
 
   const goToPrev = useCallback(() => {
     if (hasPrev) {
@@ -31,12 +48,23 @@ export function useImageViewer({ images, initialIndex, onClose }: UseImageViewer
     }
   }, [hasPrev]);
 
+  const goToFirst = useCallback(() => {
+    setCurrentIndex(0);
+    setDragOffset(0);
+  }, []);
+
   const goToNext = useCallback(() => {
-    if (hasNext) {
+    if (currentIndex < images.length && currentIndex < (totalCount ?? images.length) - 1) {
       setCurrentIndex((prev) => prev + 1);
       setDragOffset(0);
+      if (currentIndex + 1 >= images.length && hasMore && !isLoadingMore) onNeedMore?.();
     }
-  }, [hasNext]);
+  }, [currentIndex, hasMore, images.length, isLoadingMore, onNeedMore, totalCount]);
+
+  useEffect(() => {
+    if (currentIndex >= images.length && hasMore && !isLoadingMore && !loadMoreError)
+      onNeedMore?.();
+  }, [currentIndex, hasMore, images.length, isLoadingMore, loadMoreError, onNeedMore]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -56,12 +84,14 @@ export function useImageViewer({ images, initialIndex, onClose }: UseImageViewer
 
   // Pointer / Touch gestures
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (!canSwipe) return;
     isPointerDownRef.current = true;
     startXRef.current = e.clientX;
     setIsDragging(true);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (!canSwipe) return;
     if (!isPointerDownRef.current) return;
     const currentX = e.clientX;
     const diff = currentX - startXRef.current;
@@ -75,6 +105,7 @@ export function useImageViewer({ images, initialIndex, onClose }: UseImageViewer
   };
 
   const handlePointerUp = () => {
+    if (!canSwipe) return;
     if (!isPointerDownRef.current) return;
     isPointerDownRef.current = false;
     setIsDragging(false);
@@ -96,22 +127,24 @@ export function useImageViewer({ images, initialIndex, onClose }: UseImageViewer
   };
 
   // 3-slide ring buffer items
-  const currentImage = images[currentIndex] || null;
+  const currentImage = images[Math.min(currentIndex, images.length - 1)] || null;
   const prevImage = hasPrev ? images[currentIndex - 1] : null;
   const nextImage = hasNext ? images[currentIndex + 1] : null;
 
   return {
     currentIndex,
-    totalCount: images.length,
+    totalCount: totalCount ?? images.length,
     currentImage,
     prevImage,
     nextImage,
     hasPrev,
     hasNext,
+    isWaitingForImage,
     dragOffset,
     isDragging,
     goToPrev,
     goToNext,
+    goToFirst,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

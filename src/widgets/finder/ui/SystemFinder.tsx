@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import type { FileItem, QuickLocation } from "@/entities";
-import type { PathBreadcrumb } from "@/features";
+import type { PathBreadcrumb, SortField, SortOrder } from "@/features";
 import {
   ArchiveIcon,
   DocumentIcon,
   ExternalLinkIcon,
   FolderIcon,
   GlassMediaTile,
+  GlassSegmentedControl,
   GridIcon,
   ImageIcon,
   ListIcon,
   MotionIcon,
   PathNavigation,
   SearchIcon,
+  SortDirectionIcon,
   VideoIcon,
   openFileInOs,
 } from "@/shared";
@@ -24,8 +26,13 @@ interface SystemFinderProps {
   breadcrumbs: PathBreadcrumb[];
   items: FileItem[];
   isLoading: boolean;
+  error: string | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  sortField: SortField;
+  onSortFieldChange: (field: SortField) => void;
+  sortOrder: SortOrder;
+  onToggleSortOrder: () => void;
   onNavigateTo: (path: string) => void;
   onNavigateUp: () => void;
 }
@@ -57,18 +64,24 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
   breadcrumbs,
   items,
   isLoading,
+  error,
   searchQuery,
   onSearchChange,
+  sortField,
+  onSortFieldChange,
+  sortOrder,
+  onToggleSortOrder,
   onNavigateTo,
   onNavigateUp,
 }) => {
   const [layout, setLayout] = useState<"grid" | "list">("list");
   const [message, setMessage] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const pageSize = 72;
+  const pageSize = 40;
   const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
   const safePage = Math.min(page, pageCount - 1);
   const visibleItems = items.slice(safePage * pageSize, (safePage + 1) * pageSize);
+  const folderCount = items.filter((item) => item.is_dir).length;
 
   useEffect(() => {
     if (!message) return;
@@ -140,6 +153,29 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
               aria-label="파일 검색"
             />
           </label>
+          <div className="finder__sort" aria-label="정렬 방식">
+            <GlassSegmentedControl<SortField>
+              value={sortField}
+              onChange={(field) => {
+                setPage(0);
+                onSortFieldChange(field);
+              }}
+              options={[
+                { id: "name", label: "이름" },
+                { id: "modified", label: "날짜" },
+                { id: "size", label: "크기" },
+              ]}
+            />
+            <button
+              type="button"
+              className="gallery-browser__sort-order"
+              onClick={onToggleSortOrder}
+              aria-label={sortOrder === "asc" ? "내림차순으로 변경" : "오름차순으로 변경"}
+              title="정렬 방향 변경"
+            >
+              <SortDirectionIcon size={17} direction={sortOrder} />
+            </button>
+          </div>
           <div className="finder__layout" aria-label="보기 방식">
             <button
               type="button"
@@ -172,6 +208,15 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
           </div>
         </div>
 
+        <div className="subpage-summary finder__summary">
+          <strong title={currentPath}>{breadcrumbs.at(-1)?.label || "파일"}</strong>
+          <span>
+            {searchQuery
+              ? `검색 결과 ${items.length}개`
+              : `폴더 ${folderCount}개 · 파일 ${items.length - folderCount}개`}
+          </span>
+        </div>
+
         {message && (
           <div className="finder__toast" role="status">
             <ExternalLinkIcon size={16} />
@@ -185,10 +230,18 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
               <span className="subpage-state__spinner" />
               <span>폴더를 불러오는 중…</span>
             </div>
+          ) : error ? (
+            <div className="subpage-state" role="alert">
+              <strong>폴더를 열 수 없습니다</strong>
+              <span>{error}</span>
+            </div>
           ) : items.length === 0 ? (
             <div className="subpage-state">
               <FolderIcon size={42} />
-              <strong>폴더가 비어 있습니다</strong>
+              <strong>{searchQuery ? "검색 결과가 없습니다" : "폴더가 비어 있습니다"}</strong>
+              <span>
+                {searchQuery ? "다른 검색어를 입력해 보세요." : "다른 위치를 선택해 보세요."}
+              </span>
             </div>
           ) : layout === "grid" ? (
             <div className="finder__grid">

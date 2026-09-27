@@ -1,4 +1,5 @@
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { queueThumbnail } from "./thumbnailQueue";
 
 export { convertFileSrc };
 
@@ -25,6 +26,37 @@ export interface DirectoryScanResult {
   current_path: string;
   parent_path: string | null;
   items: FileItem[];
+}
+
+export interface MediaPageResult {
+  current_path: string;
+  parent_path: string | null;
+  snapshot_id: number;
+  total_count: number;
+  image_count: number;
+  video_count: number;
+  items: FileItem[];
+  has_more: boolean;
+}
+
+export async function getMediaPage(options: {
+  path: string;
+  searchQuery: string;
+  sortField: "name" | "modified" | "size";
+  sortOrder: "asc" | "desc";
+  snapshotId?: number;
+  offset?: number;
+  pageSize?: number;
+}): Promise<MediaPageResult> {
+  return await invoke<MediaPageResult>("get_media_page", {
+    path: options.path,
+    searchQuery: options.searchQuery,
+    sortField: options.sortField,
+    sortOrder: options.sortOrder,
+    snapshotId: options.snapshotId ?? null,
+    offset: options.offset ?? 0,
+    pageSize: options.pageSize ?? 80,
+  });
 }
 
 export interface PlayResult {
@@ -60,14 +92,15 @@ export async function openFileInOs(path: string): Promise<void> {
   await invoke<void>("open_file_in_os", { path });
 }
 
-/**
- * Get downsampled session thumbnail as Base64 JPEG data URI
- */
-export async function getImageThumbnail(filePath: string, maxDim: number = 256): Promise<string> {
-  return await invoke<string>("get_image_thumbnail", {
-    filePath,
-    maxDim,
-  });
+/** Bounded, prioritized thumbnail requests with a small in-memory URI cache. */
+export async function getImageThumbnail(
+  filePath: string,
+  maxDim = 256,
+  priority = 0,
+  signal?: AbortSignal,
+  version?: string,
+): Promise<string> {
+  return await queueThumbnail(filePath, maxDim, priority, signal, version);
 }
 
 /**

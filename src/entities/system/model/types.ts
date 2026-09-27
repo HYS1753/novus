@@ -1,12 +1,8 @@
-import type { DockPosition } from "@/shared";
+import type { DockPosition, RuntimeDeviceProfile } from "@/shared";
 
 export type { DockPosition };
 
-export interface DeviceProfile {
-  name: string;
-  model: string;
-  lowPowerMode: boolean;
-}
+export type DeviceProfile = RuntimeDeviceProfile;
 
 export interface SystemSettings {
   dockPosition: DockPosition;

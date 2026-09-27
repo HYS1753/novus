@@ -17,7 +17,15 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
     breadcrumbs,
     canGoBack,
     items,
+    totalCount,
+    imageCount,
+    videoCount,
+    hasMore,
+    isLoadingMore,
+    loadMoreError,
+    loadMore,
     isLoading,
+    error,
     searchQuery,
     setSearchQuery,
     sortField,
@@ -45,10 +53,18 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
         <GalleryGrid
           key={currentPath}
           items={items}
+          totalCount={totalCount}
+          imageCount={imageCount}
+          videoCount={videoCount}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          loadMoreError={loadMoreError}
+          onLoadMore={loadMore}
           locations={locations}
           breadcrumbs={breadcrumbs}
           parentPath={parentPath}
           isLoading={isLoading}
+          error={error}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           sortField={sortField}
@@ -67,8 +83,13 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
         title="미디어 갤러리"
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
-        onBack={navigateBack}
-        canGoBack={canGoBack}
+        onBack={() => {
+          if (selectedImageIndex !== null) setSelectedImageIndex(null);
+          else if (selectedVideo) setSelectedVideo(null);
+          else if (canGoBack) navigateBack();
+          else onBackToDashboard();
+        }}
+        backLabel={canGoBack ? "이전 폴더로 이동" : "대시보드 홈으로 이동"}
         onReload={refresh}
       />
 
@@ -77,13 +98,22 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
         <FullscreenImageViewer
           images={imageItems}
           initialIndex={selectedImageIndex}
+          totalImageCount={imageCount}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          loadMoreError={loadMoreError}
+          onNeedMore={loadMore}
           onClose={() => setSelectedImageIndex(null)}
         />
       )}
 
       {/* In-App Video Player Modal */}
       {selectedVideo && (
-        <InAppVideoModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />
+        <InAppVideoModal
+          key={selectedVideo.path}
+          video={selectedVideo}
+          onClose={() => setSelectedVideo(null)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { DashboardPage, StyleGuidePage } from "@/pages";
-import { isStyleGuidePath, isStyleGuideRouteEnabled, useMaterialIntensity } from "@/shared";
+import {
+  getDeviceProfile,
+  isStyleGuidePath,
+  isStyleGuideRouteEnabled,
+  useMaterialIntensity,
+} from "@/shared";
 import "./styles/global.css";
 
 export const App: React.FC = () => {
@@ -10,6 +15,11 @@ export const App: React.FC = () => {
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
+
+  useEffect(() => {
+    // Native profile is collected once at process start and cached for the session.
+    void getDeviceProfile().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!isStyleGuideRouteEnabled()) return;

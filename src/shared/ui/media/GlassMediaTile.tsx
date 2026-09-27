@@ -56,7 +56,12 @@ export const GlassMediaTile: React.FC<GlassMediaTileProps> = React.memo(
         </span>
 
         <span className="glass-media-tile__meta">
-          <span className="glass-media-tile__meta-line">{metadata}</span>
+          <span className="glass-media-tile__meta-line">{title}</span>
+          {(typeLabel || sizeLabel) && (
+            <span className="glass-media-tile__meta-detail">
+              {[typeLabel, sizeLabel].filter(Boolean).join(" · ")}
+            </span>
+          )}
         </span>
       </button>
     );

@@ -58,10 +58,7 @@ pub async fn show_streaming_page(
 
     // 1. Hide previously visible page if it's different from the target
     {
-        let mut curr_guard = state
-            .current_visible_id
-            .lock()
-            .map_err(|e| e.to_string())?;
+        let mut curr_guard = state.current_visible_id.lock().map_err(|e| e.to_string())?;
 
         if let Some(ref prev_id) = *curr_guard {
             if prev_id != &id {
@@ -110,9 +107,8 @@ pub async fn show_streaming_page(
     // Do NOT inject a fake synthetic User-Agent on YouTube / Google authentication pages,
     // as Google's anti-abuse engine compares the UA header against actual engine JavaScript features (Sec-CH-UA / client hints).
     // Only inject desktop Chrome UA for OTTs (e.g. Coupang Play) that strictly require it.
-    let is_google_or_youtube = id == "youtube"
-        || url.contains("youtube.com")
-        || url.contains("google.com");
+    let is_google_or_youtube =
+        id == "youtube" || url.contains("youtube.com") || url.contains("google.com");
     // Track internal navigation depth for SPAs (like YouTube) so we can accurately detect
     // when we are back at the entry point and should close the view.
     let init_script = r#"
@@ -192,10 +188,7 @@ pub async fn hide_streaming_page(
         let _ = existing_webview.set_position(LogicalPosition::new(-9999.0, -9999.0));
     }
 
-    let mut curr_guard = state
-        .current_visible_id
-        .lock()
-        .map_err(|e| e.to_string())?;
+    let mut curr_guard = state.current_visible_id.lock().map_err(|e| e.to_string())?;
     if curr_guard.as_deref() == Some(&id) {
         *curr_guard = None;
     }
@@ -257,10 +250,7 @@ pub async fn discard_streaming_page(
         let _ = existing_webview.close();
     }
 
-    let mut curr_guard = state
-        .current_visible_id
-        .lock()
-        .map_err(|e| e.to_string())?;
+    let mut curr_guard = state.current_visible_id.lock().map_err(|e| e.to_string())?;
     if curr_guard.as_deref() == Some(&id) {
         *curr_guard = None;
     }

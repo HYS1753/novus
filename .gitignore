@@ -26,6 +26,8 @@ dist-ssr/
 # ------------------------------------------------------------------------------
 src-tauri/target/
 src-tauri/gen/schemas/
+src-tauri/bin/mpv/*.dylib
+src-tauri/bin/mpv/*.dll
 target/
 **/*.rs.bk
 *.pdb
@@ -90,4 +92,3 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/tasks.json
-

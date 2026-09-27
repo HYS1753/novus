@@ -36,37 +36,91 @@ _(하위 레이어에서 상위 레이어를 역참조할 경우 린트 및 커�
 
 ---
 
-## 🛠️ 개발 시작 가이드
+## 🛠️ 개발 시작 가이드 (Environment Setup)
 
-### 필수 요구 도구
+### 1. 필수 사전 요구 도구 (Prerequisites)
 
-- [Node.js](https://nodejs.org/) (v20+) 및 [pnpm](https://pnpm.io/)
-- [Rust](https://www.rust-lang.org/) 및 Cargo
-- OS별 빌드 도구 (Windows: C++ Build Tools & WebView2, macOS: Xcode Command Line Tools)
+본 프로젝트는 **Tauri v2 (Rust)**와 **React 19 (TypeScript, Vite 8)**를 사용하며, 패키지 매니저로 **`pnpm`을 전용으로 사용**합니다 (`npm`, `yarn` 사용 금지).
 
-### 주요 개발 명령어
+#### ① OS별 C++ 빌드 도구
+
+Tauri 네이티브 백엔드 컴파일을 위해 플랫폼 빌드 도구가 필요합니다.
+
+- **macOS**:
+  ```bash
+  xcode-select --install
+  ```
+- **Windows (타깃 디바이스 / PC)**:
+  - [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 설치
+  - 워크로드: **"C++를 사용한 데스크톱 개발"** 선택 설치
+  - [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) 설치 (Windows 10/11 기본 탑재)
+
+#### ② Rust 및 Cargo 설치
+
+Rust 공식 도구체인 관리자인 `rustup`을 통해 최신 안정판을 설치합니다.
+
+- **macOS / Linux**:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source "$HOME/.cargo/env"
+  ```
+- **Windows**:
+  - [rustup-init.exe](https://rustup.rs/) 다운로드 후 실행
+- **버전 확인**:
+  ```bash
+  rustc --version
+  cargo --version
+  ```
+
+#### ③ Node.js & pnpm 설치
+
+- **Node.js (v20 이상 권장)**:
+  - [Node.js 공식 사이트](https://nodejs.org/) LTS 설치 또는 `nvm` / `fnm` / `brew install node`
+- **pnpm 설치**:
+  ```bash
+  npm install -g pnpm
+  # 또는 macOS Homebrew
+  brew install pnpm
+  ```
+- **버전 확인**:
+  ```bash
+  node -v
+  pnpm -v
+  ```
+
+---
+
+### 2. 프로젝트 실행 단계 (Quick Start)
 
 ```bash
-# 1. 의존성 설치 및 Git hook 자동 등록
+# 1. 의존성 설치 및 Git hook 자동 등록 (simple-git-hooks)
 pnpm install
 
-# 2. 프론트엔드 단독 브라우저 개발 서버 (빠른 UI 작업)
+# 2. 프론트엔드 단독 브라우저 개발 모드 (UI/컴포넌트 빠른 작업 시)
 pnpm dev
 
-# 3. Tauri 데스크톱 애플리케이션 개발 모드 (Rust 백엔드 + 핫 리로드)
+# 3. 데스크톱 앱 전체 개발 모드 (Rust 백엔드 + WebView + 핫 리로드)
 pnpm tauri dev
+```
 
-# 4. TypeScript 타입 검사
+---
+
+### 3. 코드 무결성 검증 체크리스트 (AGENTS.md 준수)
+
+코드 작성 및 수정 후 커밋하기 전, 아래 명령어들을 순차적으로 실행하여 모두 정상 통과(Exit Code 0)해야 합니다:
+
+```bash
+# 1. TypeScript 정적 타입 검증
 pnpm typecheck
 
-# 5. 아키텍처 규칙 및 코드 린트 검사
+# 2. 아키텍처 계층 경계 및 코드 린트 검증 (FSD 규칙 위반 차단)
 pnpm lint
 
-# 6. 코드 포맷 검사 및 자동 수정
+# 3. 코드 포맷 검증 (Prettier)
 pnpm format:check
-pnpm format
+# 필요 시 포맷 자동 수정: pnpm format
 
-# 7. 프론트엔드 프로덕션 번들 빌드
+# 4. 프로덕션 번들 빌드 검증
 pnpm build
 ```
 
