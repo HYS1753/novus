@@ -39,6 +39,21 @@ pub fn get_page_label(id: &str) -> String {
     format!("child-{}", id)
 }
 
+/// Reports live pages, including hidden pages that may still be playing media.
+#[tauri::command]
+pub fn list_streaming_pages(
+    app: AppHandle,
+    state: tauri::State<'_, PageManagerState>,
+) -> Result<Vec<String>, String> {
+    let pages = state.pages.lock().map_err(|e| e.to_string())?;
+    let mut ids: Vec<String> = pages.values()
+        .filter(|page| app.get_webview(&page.label).is_some())
+        .map(|page| page.id.clone())
+        .collect();
+    ids.sort();
+    Ok(ids)
+}
+
 /// Shows a streaming page mapped to `id` in the singleton Chromium / WebView2 engine.
 /// If already created, updates its bounds, makes it visible, and hides any previously active page.
 /// If not created, lazily constructs the webview child attached to the main window.
@@ -247,7 +262,7 @@ pub async fn discard_streaming_page(
     let label = get_page_label(&id);
 
     if let Some(existing_webview) = app.get_webview(&label) {
-        let _ = existing_webview.close();
+        existing_webview.close().map_err(|e| e.to_string())?;
     }
 
     let mut curr_guard = state.current_visible_id.lock().map_err(|e| e.to_string())?;

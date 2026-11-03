@@ -18,7 +18,7 @@ use commands::system::{
 use commands::thumbnail::{cleanup_thumbnail_cache, get_image_thumbnail};
 use page_manager::{
     discard_streaming_page, go_back_or_close_streaming_page, hide_streaming_page,
-    reload_streaming_page, show_streaming_page, update_streaming_page_bounds, PageManagerState,
+    list_streaming_pages, reload_streaming_page, show_streaming_page, update_streaming_page_bounds, PageManagerState,
 };
 
 #[tauri::command]
@@ -43,6 +43,7 @@ pub fn run() {
             attach_child_webview,
             close_child_webview,
             show_streaming_page,
+            list_streaming_pages,
             hide_streaming_page,
             update_streaming_page_bounds,
             reload_streaming_page,

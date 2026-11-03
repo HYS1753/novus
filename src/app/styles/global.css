@@ -5021,3 +5021,104 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
     --gallery-grid-gap: 10px;
   }
 }
+
+/* Live app tabs share the subpage dock; the home dashboard has no tab strip. */
+.in-app-dock:has(.running-apps) {
+  flex-shrink: 0;
+}
+.in-app-dock--right:has(.running-apps),
+.in-app-dock--left:has(.running-apps) {
+  width: 104px;
+}
+.in-app-dock__app-info:has(.running-apps) {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.running-apps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  max-width: 100%;
+  gap: 6px;
+}
+.running-apps__label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+.running-apps__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+  min-height: 0;
+}
+.running-apps__item {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  background: rgba(128, 128, 128, 0.1);
+  flex-shrink: 0;
+}
+.running-apps__item[data-active="true"] {
+  background: rgba(79, 140, 255, 0.22);
+  box-shadow: inset 0 0 0 1px #4f8cff;
+}
+.running-apps__switch,
+.running-apps__close {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 6px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  background: transparent;
+  cursor: pointer;
+}
+.running-apps button:hover,
+.running-apps button:focus-visible {
+  background: rgba(128, 128, 128, 0.25);
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: -2px;
+}
+.running-apps button:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+.running-apps__switch img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.running-apps__switch > span:first-child {
+  font-size: 12px;
+}
+.running-apps__dot {
+  position: absolute;
+  bottom: 3px;
+  left: 20px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+.running-apps__close {
+  font-size: 22px;
+}
+.running-apps__error {
+  font-size: 11px;
+  color: var(--color-text-primary);
+}
+.in-app-dock--bottom .running-apps,
+.in-app-dock--bottom .running-apps__list {
+  flex-direction: row;
+}
+.in-app-dock--bottom .running-apps__label {
+  display: none;
+}

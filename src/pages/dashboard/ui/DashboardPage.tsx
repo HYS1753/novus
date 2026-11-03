@@ -1,6 +1,16 @@
-import React, { useState, useLayoutEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer } from "@/widgets";
-import { GlassDivider, GlassModal, GlassButton, RemoteIcon, MoonIcon } from "@/shared";
+import {
+  GlassDivider,
+  GlassModal,
+  GlassButton,
+  RemoteIcon,
+  MoonIcon,
+  RunningAppsContext,
+  listStreamingPages,
+  discardStreamingPage,
+  STREAMING_PAGES_CHANGED,
+} from "@/shared";
 import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
 import { GalleryPage } from "../../gallery";
@@ -134,6 +144,74 @@ export const DashboardPage: React.FC = () => {
   const [canScrollDown, setCanScrollDown] = useState(false);
   const contentRef = useRef<HTMLElement>(null);
   const { launchApp } = useLaunchApp();
+  const [runningIds, setRunningIds] = useState<string[]>([]);
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const closingRef = useRef(false);
+  const [runningError, setRunningError] = useState("");
+
+  useEffect(() => {
+    let generation = 0;
+    const refresh = () => {
+      const request = ++generation;
+      void listStreamingPages()
+        .then((ids) => {
+          if (request === generation) setRunningIds(ids);
+        })
+        .catch(() => {
+          if (request === generation) setRunningError("실행 목록을 불러오지 못했습니다.");
+        });
+    };
+    refresh();
+    window.addEventListener(STREAMING_PAGES_CHANGED, refresh);
+    return () => {
+      ++generation;
+      window.removeEventListener(STREAMING_PAGES_CHANGED, refresh);
+    };
+  }, []);
+
+  const closeRunningApp = async (id: string) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setClosingId(id);
+    setRunningError("");
+    try {
+      await discardStreamingPage(id);
+      setRunningIds((ids) => ids.filter((entry) => entry !== id));
+      if (activeApp?.id === id) {
+        setActiveApp(null);
+        setActiveView("dashboard");
+      }
+    } catch {
+      setRunningError("앱을 닫지 못했습니다. 다시 시도하세요.");
+    } finally {
+      closingRef.current = false;
+      setClosingId(null);
+    }
+  };
+
+  const withRunningApps = (content: React.ReactNode) => (
+    <RunningAppsContext.Provider
+      value={{
+        apps: ALL_APPS.filter((app) => runningIds.includes(app.id)),
+        activeId: activeApp?.id,
+        closingId,
+        error: runningError,
+        onSelect: (id) => {
+          if (closingRef.current) return;
+          const app = ALL_APPS.find((entry) => entry.id === id);
+          if (app) {
+            setActiveView("dashboard");
+            setActiveApp(app);
+          }
+        },
+        onClose: (id) => {
+          void closeRunningApp(id);
+        },
+      }}
+    >
+      {content}
+    </RunningAppsContext.Provider>
+  );
 
   const updateScrollIndicators = useCallback(() => {
     const el = contentRef.current;
@@ -197,7 +275,7 @@ export const DashboardPage: React.FC = () => {
 
   // Dedicated In-App TV Player view
   if (activeApp) {
-    return (
+    return withRunningApps(
       <div className="dashboard-page dashboard-page--in-app-mode">
         <InAppPlayer
           key={activeApp.id}
@@ -206,18 +284,18 @@ export const DashboardPage: React.FC = () => {
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
         <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      </div>
+      </div>,
     );
   }
 
   // Dedicated Gallery view (Images & Videos)
   if (activeView === "gallery") {
-    return <GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />;
+    return withRunningApps(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />);
   }
 
   // Dedicated System Finder view (All files)
   if (activeView === "finder") {
-    return <FinderPage onBackToDashboard={() => setActiveView("dashboard")} />;
+    return withRunningApps(<FinderPage onBackToDashboard={() => setActiveView("dashboard")} />);
   }
 
   return (

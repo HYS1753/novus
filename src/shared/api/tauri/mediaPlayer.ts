@@ -36,6 +36,17 @@ export interface StreamingPageBounds {
   height: number;
 }
 
+export const STREAMING_PAGES_CHANGED = "novus:streaming-pages-changed";
+
+function notifyStreamingPagesChanged() {
+  window.dispatchEvent(new Event(STREAMING_PAGES_CHANGED));
+}
+
+export async function listStreamingPages(): Promise<string[]> {
+  if (!isTauriRuntime()) return [];
+  return invoke<string[]>("list_streaming_pages");
+}
+
 /**
  * Shows a streaming page in the singleton Chromium / WebView2 engine.
  * - Lazily creates the page view if it has not been opened yet.
@@ -54,6 +65,7 @@ export async function showStreamingPage(
       url,
       bounds,
     });
+    notifyStreamingPagesChanged();
     return true;
   } catch (error) {
     console.warn(`Failed to show streaming page (${id}):`, error);
@@ -108,11 +120,8 @@ export async function reloadStreamingPage(id: string): Promise<void> {
  */
 export async function discardStreamingPage(id: string): Promise<void> {
   if (!isTauriRuntime()) return;
-  try {
-    await invoke("discard_streaming_page", { id });
-  } catch (error) {
-    console.warn(`Failed to discard streaming page (${id}):`, error);
-  }
+  await invoke("discard_streaming_page", { id });
+  notifyStreamingPagesChanged();
 }
 
 /**
@@ -124,6 +133,7 @@ export async function goBackOrCloseStreamingPage(id: string): Promise<boolean> {
   if (!isTauriRuntime()) return false;
   try {
     const navigated = await invoke<boolean>("go_back_or_close_streaming_page", { id });
+    notifyStreamingPagesChanged();
     return !!navigated;
   } catch (error) {
     console.warn(`Failed to go back or close streaming page (${id}):`, error);

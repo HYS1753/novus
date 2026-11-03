@@ -1,4 +1,5 @@
 import React from "react";
+import { RunningApps } from "@/shared/ui/nav/RunningApps";
 import { useCurrentTime } from "../../hooks";
 import { ArrowLeftIcon, HomeIcon, MotionIcon, RefreshIcon } from "../icons";
 import { TouchButton } from "../button";
@@ -56,6 +57,7 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
       {/* Center: Clean Subpage Title */}
       <div className="in-app-dock__app-info">
         <span className="in-app-dock__app-title">{title}</span>
+        <RunningApps />
       </div>
 
       {/* Bottom Cluster: Home, Back, and Clock */}

@@ -64,6 +64,10 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
       };
 
       const shown = await showStreamingPage(app.id, app.url, bounds);
+      if (shown && !isMounted) {
+        await hideStreamingPage(app.id);
+        return;
+      }
       if (shown && isMounted) {
         isPageShownRef.current = true;
         setIsLoading(false);
