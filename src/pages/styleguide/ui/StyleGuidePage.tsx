@@ -22,8 +22,14 @@ import {
   MATERIAL_INTENSITY_STEP,
   useMaterialIntensity,
   GlassMediaTile,
+  VideoPlayerControls,
   SubpageDock,
   PlayIcon,
+  PauseIcon,
+  Replay10Icon,
+  Forward10Icon,
+  VolumeIcon,
+  VolumeMuteIcon,
   FolderIcon,
   ImageIcon,
   VideoIcon,
@@ -310,6 +316,10 @@ export const StyleGuidePage: React.FC = () => {
   const [specToast, setSpecToast] = useState(false);
   const [specLoading, setSpecLoading] = useState(false);
   const [motionKey, setMotionKey] = useState(0);
+  const [demoVideoTime, setDemoVideoTime] = useState(42);
+  const [demoVideoPaused, setDemoVideoPaused] = useState(false);
+  const [demoVideoVol, setDemoVideoVol] = useState(85);
+  const [demoVideoMuted, setDemoVideoMuted] = useState(false);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -943,6 +953,21 @@ export const StyleGuidePage: React.FC = () => {
                     <PlayIcon size={20} /> Play
                   </div>
                   <div className="flex items-center gap-2 text-xs">
+                    <PauseIcon size={20} /> Pause
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Replay10Icon size={20} /> -10s
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Forward10Icon size={20} /> +10s
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <VolumeIcon size={20} /> Volume
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <VolumeMuteIcon size={20} /> Mute
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
                     <GridIcon size={20} /> Grid
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -1136,6 +1161,33 @@ export const StyleGuidePage: React.FC = () => {
                 <p className="sg__tile-body mt-2">
                   사진/비디오 갤러리의 표준 타일 컴포넌트입니다. 썸네일이 1:1로 꽉 차고, 하단 반투명
                   오버레이에 파일명과 속성이 표시됩니다.
+                </p>
+              </div>
+
+              <div className="sg__specimen">
+                <span className="sg__specimen-label">
+                  VideoPlayerControls (Interactive Timeline · Skips · Volume · Time)
+                </span>
+                <div style={{ maxWidth: "720px", padding: "14px 0" }}>
+                  <VideoPlayerControls
+                    currentTime={demoVideoTime}
+                    duration={184}
+                    isPaused={demoVideoPaused}
+                    volume={demoVideoVol}
+                    isMuted={demoVideoMuted}
+                    onTogglePlay={() => setDemoVideoPaused((prev) => !prev)}
+                    onSeek={(s) => setDemoVideoTime(s)}
+                    onSeekRelative={(delta) =>
+                      setDemoVideoTime((prev) => Math.max(0, Math.min(184, prev + delta)))
+                    }
+                    onVolumeChange={(v) => setDemoVideoVol(v)}
+                    onToggleMute={() => setDemoVideoMuted((prev) => !prev)}
+                  />
+                </div>
+                <p className="sg__tile-body mt-2">
+                  D3D11 하드웨어 가속 MPV 및 인앱 비디오를 위한 벤치마크 표준 미디어 플레이어 컨트롤
+                  바입니다. 타임라인 스크러빙, 10초 건너뛰기, 정밀 음량 조절 및 디지털 시간 표시를
+                  지원합니다.
                 </p>
               </div>
             </section>

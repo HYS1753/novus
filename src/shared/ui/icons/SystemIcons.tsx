@@ -381,6 +381,123 @@ export const PlayIcon: React.FC<IconProps> = ({ size = 20, className = "", ...pr
   </svg>
 );
 
+/** Action: Pause icon */
+export const PauseIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    <rect x="6" y="4" width="4" height="16" rx="1.5" />
+    <rect x="14" y="4" width="4" height="16" rx="1.5" />
+  </svg>
+);
+
+/** Action: Replay 10s icon */
+export const Replay10Icon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    <path d="M4 12a8 8 0 1 1 2.34 5.66" />
+    <polyline points="4 6 4 12 10 12" />
+    <text
+      x="12"
+      y="15"
+      fontSize="7"
+      fontWeight="700"
+      fill="currentColor"
+      stroke="none"
+      textAnchor="middle"
+      fontFamily="system-ui, -apple-system, sans-serif"
+    >
+      10
+    </text>
+  </svg>
+);
+
+/** Action: Forward 10s icon */
+export const Forward10Icon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    <path d="M20 12a8 8 0 1 0-2.34 5.66" />
+    <polyline points="20 6 20 12 14 12" />
+    <text
+      x="12"
+      y="15"
+      fontSize="7"
+      fontWeight="700"
+      fill="currentColor"
+      stroke="none"
+      textAnchor="middle"
+      fontFamily="system-ui, -apple-system, sans-serif"
+    >
+      10
+    </text>
+  </svg>
+);
+
+/** Media: Volume icon */
+export const VolumeIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fillOpacity="0.2" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+  </svg>
+);
+
+/** Media: Volume Mute icon */
+export const VolumeMuteIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fillOpacity="0.2" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </svg>
+);
+
 /** Navigation: Folder icon */
 export const FolderIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
   <svg

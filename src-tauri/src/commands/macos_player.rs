@@ -32,6 +32,8 @@ type MpvInitialize = unsafe extern "C" fn(*mut c_void) -> c_int;
 type MpvSetOption = unsafe extern "C" fn(*mut c_void, *const c_char, c_int, *const c_void) -> c_int;
 type MpvSetOptionString = unsafe extern "C" fn(*mut c_void, *const c_char, *const c_char) -> c_int;
 type MpvCommand = unsafe extern "C" fn(*mut c_void, *const *const c_char) -> c_int;
+type MpvGetPropertyString = unsafe extern "C" fn(*mut c_void, *const c_char) -> *mut c_char;
+type MpvFree = unsafe extern "C" fn(*mut c_void);
 type MpvWaitEvent = unsafe extern "C" fn(*mut c_void, f64) -> *const MpvEvent;
 type MpvTerminate = unsafe extern "C" fn(*mut c_void);
 
@@ -250,6 +252,25 @@ pub fn control(
         .map_err(|error| error.to_string())?
 }
 
+pub fn get_state(
+    sessions: &Arc<Mutex<Option<Session>>>,
+    id: &str,
+) -> Result<super::embedded_player::EmbeddedVideoPlaybackState, String> {
+    let guard = sessions.lock().map_err(|error| error.to_string())?;
+    let session = guard.as_ref().ok_or("Video session is closed")?;
+    if session.id != id {
+        return Err("Video session has changed".into());
+    }
+    let (sender, receiver) = mpsc::sync_channel(1);
+    session
+        .commands
+        .send(PlayerMessage::GetState(sender))
+        .map_err(|error| error.to_string())?;
+    receiver
+        .recv_timeout(Duration::from_millis(500))
+        .map_err(|error| error.to_string())?
+}
+
 fn stop_session(app: &AppHandle, session: Session) -> Result<(), String> {
     let _ = session.commands.send(PlayerMessage::Stop);
     let _ = session.thread.join();
@@ -271,6 +292,9 @@ fn player_thread(
                 match message {
                     PlayerMessage::Control(action, reply) => {
                         let _ = reply.send(unsafe { player.control(action) });
+                    }
+                    PlayerMessage::GetState(reply) => {
+                        let _ = reply.send(Ok(player.get_state()));
                     }
                     PlayerMessage::Stop => break,
                 }
@@ -323,34 +347,96 @@ struct Player {
     handle: *mut c_void,
     terminate: MpvTerminate,
     command: MpvCommand,
+    get_property_string: MpvGetPropertyString,
+    free: MpvFree,
 }
 
 impl Player {
-    unsafe fn control(&self, action: EmbeddedPlayerAction) -> Result<(), String> {
-        let arguments: [*const c_char; 4] = match action {
-            EmbeddedPlayerAction::TogglePause => [
-                c"cycle".as_ptr(),
-                c"pause".as_ptr(),
-                std::ptr::null(),
-                std::ptr::null(),
-            ],
-            EmbeddedPlayerAction::SeekBackward => [
-                c"seek".as_ptr(),
-                c"-10".as_ptr(),
-                c"relative".as_ptr(),
-                std::ptr::null(),
-            ],
-            EmbeddedPlayerAction::SeekForward => [
-                c"seek".as_ptr(),
-                c"10".as_ptr(),
-                c"relative".as_ptr(),
-                std::ptr::null(),
-            ],
-        };
-        if (self.command)(self.handle, arguments.as_ptr()) < 0 {
+    unsafe fn get_prop_str(&self, name: &CStr) -> Option<String> {
+        let ptr = (self.get_property_string)(self.handle, name.as_ptr());
+        if ptr.is_null() {
+            return None;
+        }
+        let s = CStr::from_ptr(ptr).to_string_lossy().into_owned();
+        (self.free)(ptr.cast());
+        Some(s)
+    }
+
+    pub fn get_state(&self) -> super::embedded_player::EmbeddedVideoPlaybackState {
+        let position = unsafe { self.get_prop_str(c"time-pos") }
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(0.0);
+        let duration = unsafe { self.get_prop_str(c"duration") }
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(0.0);
+        let paused = unsafe { self.get_prop_str(c"pause") }
+            .map(|s| s == "yes")
+            .unwrap_or(false);
+        let volume = unsafe { self.get_prop_str(c"volume") }
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(100.0);
+        let muted = unsafe { self.get_prop_str(c"mute") }
+            .map(|s| s == "yes")
+            .unwrap_or(false);
+
+        super::embedded_player::EmbeddedVideoPlaybackState {
+            position,
+            duration,
+            paused,
+            volume,
+            muted,
+        }
+    }
+
+    unsafe fn run_cmd(&self, args: &[*const c_char]) -> Result<(), String> {
+        if (self.command)(self.handle, args.as_ptr()) < 0 {
             Err("libmpv rejected the playback command".into())
         } else {
             Ok(())
+        }
+    }
+
+    unsafe fn control(&self, action: EmbeddedPlayerAction) -> Result<(), String> {
+        match action {
+            EmbeddedPlayerAction::TogglePause => {
+                let args = [c"cycle".as_ptr(), c"pause".as_ptr(), std::ptr::null(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::Play => {
+                let args = [c"set".as_ptr(), c"pause".as_ptr(), c"no".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::Pause => {
+                let args = [c"set".as_ptr(), c"pause".as_ptr(), c"yes".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::SeekBackward => {
+                let args = [c"seek".as_ptr(), c"-10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::SeekForward => {
+                let args = [c"seek".as_ptr(), c"10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::ToggleMute => {
+                let args = [c"cycle".as_ptr(), c"mute".as_ptr(), std::ptr::null(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::SeekTo(seconds) => {
+                let sec_str = CString::new(format!("{seconds:.2}")).map_err(|e| e.to_string())?;
+                let args = [c"seek".as_ptr(), sec_str.as_ptr(), c"absolute".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::SeekPercent(percent) => {
+                let pct_str = CString::new(format!("{percent:.2}")).map_err(|e| e.to_string())?;
+                let args = [c"seek".as_ptr(), pct_str.as_ptr(), c"absolute-percent".as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
+            EmbeddedPlayerAction::SetVolume(volume) => {
+                let vol_str = CString::new(format!("{volume:.1}")).map_err(|e| e.to_string())?;
+                let args = [c"set".as_ptr(), c"volume".as_ptr(), vol_str.as_ptr(), std::ptr::null()];
+                self.run_cmd(&args)
+            }
         }
     }
 }
@@ -368,6 +454,8 @@ unsafe fn start_player(library: &Path, path: &Path, surface: usize) -> Result<Pl
     let set_option: MpvSetOption = module.symbol(c"mpv_set_option")?;
     let set_option_string: MpvSetOptionString = module.symbol(c"mpv_set_option_string")?;
     let command: MpvCommand = module.symbol(c"mpv_command")?;
+    let get_property_string: MpvGetPropertyString = module.symbol(c"mpv_get_property_string")?;
+    let free: MpvFree = module.symbol(c"mpv_free")?;
     let wait_event: MpvWaitEvent = module.symbol(c"mpv_wait_event")?;
     let terminate: MpvTerminate = module.symbol(c"mpv_terminate_destroy")?;
     let handle = create();
@@ -379,6 +467,8 @@ unsafe fn start_player(library: &Path, path: &Path, surface: usize) -> Result<Pl
         handle,
         terminate,
         command,
+        get_property_string,
+        free,
     };
     let wid = surface as i64;
     if set_option(

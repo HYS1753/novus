@@ -3,8 +3,9 @@ pub mod page_manager;
 
 use commands::device_profile::{get_device_profile, DeviceProfile};
 use commands::embedded_player::{
-    close_embedded_video, control_embedded_video, get_embedded_player_support, open_embedded_video,
-    update_embedded_video_bounds, EmbeddedPlayerState,
+    close_embedded_video, control_embedded_video, get_embedded_player_support,
+    get_embedded_video_state, open_embedded_video, update_embedded_video_bounds,
+    EmbeddedPlayerState,
 };
 use commands::media_fs::{
     get_media_page, get_system_locations, open_file_in_os, scan_directory, MediaPageState,
@@ -60,7 +61,8 @@ pub fn run() {
             open_embedded_video,
             update_embedded_video_bounds,
             close_embedded_video,
-            control_embedded_video
+            control_embedded_video,
+            get_embedded_video_state
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

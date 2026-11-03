@@ -13,7 +13,24 @@ export interface EmbeddedPlayerSupport {
   available: boolean;
 }
 
-export type EmbeddedPlayerAction = "toggle_pause" | "seek_backward" | "seek_forward";
+export type EmbeddedPlayerAction =
+  | "toggle_pause"
+  | "play"
+  | "pause"
+  | "seek_backward"
+  | "seek_forward"
+  | "toggle_mute"
+  | { seek_to: number }
+  | { seek_percent: number }
+  | { set_volume: number };
+
+export interface EmbeddedVideoPlaybackState {
+  position: number;
+  duration: number;
+  paused: boolean;
+  volume: number;
+  muted: boolean;
+}
 
 export function getEmbeddedPlayerSupport(): Promise<EmbeddedPlayerSupport> {
   if (!isTauriRuntime()) return Promise.resolve({ platform: "browser", available: false });
@@ -41,4 +58,17 @@ export function controlEmbeddedVideo(
   action: EmbeddedPlayerAction,
 ): Promise<void> {
   return invoke("control_embedded_video", { sessionId, action });
+}
+
+export function getEmbeddedVideoState(sessionId: string): Promise<EmbeddedVideoPlaybackState> {
+  if (!isTauriRuntime()) {
+    return Promise.resolve({
+      position: 0,
+      duration: 0,
+      paused: false,
+      volume: 100,
+      muted: false,
+    });
+  }
+  return invoke<EmbeddedVideoPlaybackState>("get_embedded_video_state", { sessionId });
 }
