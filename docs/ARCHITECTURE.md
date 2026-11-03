@@ -110,7 +110,7 @@ src-tauri/
 | `get_embedded_video_state`        | `getEmbeddedVideoState(id)`             | • 현재 재생 위치(time-pos), 전체 길이(duration), 일시정지 여부(pause), 음량(volume), 음소거(mute) 상태를 libmpv C API 속성 조회를 통해 실시간 질의                                                                 |
 | `launch_native_app_mode`          | `launchNativeAppMode(url)`              | • 시스템 Edge / Chrome PWA 앱 모드(`--app`) 외부 프로세스 런처 (비상 폴백용)                                                                                                                                       |
 
-로컬 영상의 프런트엔드 계약은 운영체제에 관계없이 `src/shared/api/tauri/embeddedVideo.ts`를 사용합니다. 앱 시작 시 수집한 `DeviceProfile.os_family`는 지원 조회의 플랫폼 값으로 쓰고, 갤러리는 운영체제명을 직접 비교하지 않고 `available` 기능값으로 재생 경로를 선택합니다. Windows는 자식 HWND를, macOS는 메인 스레드에서 붙인 NSView를 libmpv의 `wid`로 넘깁니다. macOS 지원 조회는 묶인 dylib와 의존성을 실제로 동적 로딩하고 필수 심볼을 확인한 결과를 세션 동안 캐시합니다. 열기·크기 변경·닫기는 OS별 단일 세션을 관리하며 디코더 스레드와 네이티브 뷰를 종료 시 해제합니다. `control_embedded_video`와 `get_embedded_video_state`는 동일 세션 스레드에서 mpv 명령과 속성을 질의·실행하며, 프론트엔드의 `VideoPlayerControls`는 반응형 타임라인 진행 바, 10초 건너뛰기, 정밀 음량 조절, 재생 시간 표시, 3.5초 무조작 시 자동 페이드아웃 및 키보드 단축키를 표준 제공합니다. 영상 영역 아래의 Novus 조작 독은 네이티브 뷰와 겹치지 않습니다. 배포 번들은 `src-tauri/tauri.conf.json`의 `bundle.resources` 및 `macOS.files` 설정을 통해 `bin/mpv`의 라이브러리를 각각 Windows `Resources/mpv` 및 macOS `Contents/Frameworks/mpv`에 자동 패키징합니다. 이 폴더에 유효한 라이브러리가 없으면 WebView 재생을 사용합니다. 의존 바이너리는 `pnpm setup:mpv`(`scripts/setup_mpv.py`)를 통해 버전별로 일관되게 관리·다운로드됩니다.
+로컬 영상의 프런트엔드 계약은 운영체제에 관계없이 `src/shared/api/tauri/embeddedVideo.ts`를 사용합니다. 앱 시작 시 수집한 `DeviceProfile.os_family`는 지원 조회의 플랫폼 값으로 쓰고, 갤러리는 운영체제명을 직접 비교하지 않고 `available` 기능값으로 재생 경로를 선택합니다. Windows는 자식 HWND를, macOS는 메인 스레드에서 붙인 NSView를 libmpv의 `wid`로 넘깁니다. macOS 지원 조회는 묶인 dylib와 의존성을 실제로 동적 로딩하고 필수 심볼을 확인한 결과를 세션 동안 캐시합니다. 열기·크기 변경·닫기는 OS별 단일 세션을 관리하며 디코더 스레드와 네이티브 뷰를 종료 시 해제합니다. `control_embedded_video`와 `get_embedded_video_state`는 동일 세션 스레드에서 mpv 명령과 속성을 질의·실행하며, 프론트엔드의 `VideoPlayerControls`는 반응형 타임라인 진행 바, 10초 건너뛰기, 정밀 음량 조절, 재생 시간 표시, 모든 재생 경로에서 상·하단 조작 UI의 3초 무조작 자동 숨김과 키보드 단축키를 표준 제공합니다. Windows 네이티브 영상은 고정된 전체 클라이언트 영역에 렌더링하고, 재생 중에만 생성하는 투명 조작 웹뷰가 그 위에서 UI를 합성합니다. 웹뷰 영상도 고정된 캔버스 위 DOM 조작 UI를 사용합니다. 배포 번들은 `src-tauri/tauri.conf.json`의 `bundle.resources` 및 `macOS.files` 설정을 통해 `bin/mpv`의 라이브러리를 각각 Windows `Resources/mpv` 및 macOS `Contents/Frameworks/mpv`에 자동 패키징합니다. 이 폴더에 유효한 라이브러리가 없으면 WebView 재생을 사용합니다. 의존 바이너리는 `pnpm setup:mpv`(`scripts/setup_mpv.py`)를 통해 버전별로 일관되게 관리·다운로드됩니다.
 
 ---
 
@@ -176,7 +176,7 @@ novus/
 
 갤러리와 파인더는 `DashboardPage`가 전환하는 독립 화면입니다. 두 화면의 `useFileBrowser`는 `navigateTo`가 방문 경로를 최대 50개 쌓으며 `navigateBack`이 이를 역순으로 소비합니다. 각 화면의 현재 경로와 방문 기록은 `novus.browser.media` / `novus.browser.all` 키로 `localStorage`에 저장됩니다. 홈으로 이동하면 화면 컴포넌트와 파일 목록은 해제되고 재진입 시 저장된 경로를 다시 스캔합니다. 파인더는 `scan_directory`로 전체 목록을 읽고, 갤러리는 `get_media_page`로 Rust 메모리의 현재 폴더 스냅샷에서 80개씩 받습니다. 갤러리 검색은 입력 후 250ms 대기해 재스캔하고, 정렬·검색·새로고침은 새 스냅샷을 만듭니다. 검색과 정렬은 파일시스템을 변경하지 않습니다.
 
-독의 뒤로가기는 갤러리의 열린 뷰어, 방문 기록, 홈 순서로 동작합니다. 상위 폴더와 브레드크럼 이동은 `PathNavigation`의 별도 동작입니다. 갤러리는 현재 스크롤 위치와 뷰포트 크기에서 보이는 격자 행 및 양쪽 여유 행만 마운트하고, 스크롤 끝에 가까워지면 다음 묶음을 요청합니다. 파인더는 40개 단위 페이지로 DOM 수를 제한합니다. 정확한 전체 정렬을 위해 갤러리의 첫 요청은 폴더 전체 메타데이터를 Rust에서 스캔·정렬하지만 프런트엔드로는 필요한 묶음만 전달합니다. 뷰어는 아직 받지 않은 다음 사진에 도달하면 후속 묶음을 요청합니다. 썸네일은 2개 동시 요청 큐와 Base64 문자열 길이 기준 12MiB 프런트엔드 URI 캐시를 거쳐 Rust 영속 디스크 캐시에 저장됩니다. 뷰어는 320px 미리보기 → 1600px 화면 이미지 → 확대 시 3200px 순서로 요청하고, 10/15/30초 자동 재생을 지원합니다.
+독의 뒤로가기는 갤러리의 열린 뷰어, 방문 기록, 홈 순서로 동작합니다. 상위 폴더와 브레드크럼 이동은 `PathNavigation`의 별도 동작입니다. 갤러리는 현재 스크롤 위치와 뷰포트 크기에서 보이는 격자 행 및 양쪽 여유 행만 마운트하고, 스크롤 끝에 가까워지면 다음 묶음을 요청합니다. 파인더는 40개 단위 페이지로 DOM 수를 제한합니다. 정확한 전체 정렬을 위해 갤러리의 첫 요청은 폴더 전체 메타데이터를 Rust에서 스캔·정렬하지만 프런트엔드로는 필요한 묶음만 전달합니다. 뷰어는 아직 받지 않은 다음 사진에 도달하면 후속 묶음을 요청합니다. 썸네일은 2개 동시 요청 큐와 Base64 문자열 길이 기준 12MiB 프런트엔드 URI 캐시를 거쳐 Rust 영속 디스크 캐시에 저장됩니다. 뷰어는 1600px 화면 이미지를 디코딩한 뒤 표시하고 확대 시 3200px를 요청하며, 10/15/30초 자동 재생을 지원합니다.
 
 긴 파일 경로는 `PathNavigation`에서 현재 폴더와 바로 위 폴더를 우선 표시하고 앞쪽 조상은 `…` 메뉴로 접습니다. `상위` 버튼은 고정 크기로 유지하며 긴 현재 이름은 앞쪽을 생략해 끝부분을 표시합니다.
 
@@ -241,3 +241,17 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 - `list_streaming_pages` / `listStreamingPages()`는 PageManager에 등록되고 실제 웹뷰가 존재하는 앱 ID를 반환합니다. 웹뷰 생성·닫기·이전 탐색 완료 후 프론트엔드 이벤트로 목록을 갱신하며 폴링하지 않습니다.
 - 아이콘 선택은 기존 웹뷰를 다시 표시하고, 닫기는 `discard_streaming_page`로 웹뷰를 파괴합니다. 현재 앱을 닫으면 홈으로 이동합니다. 닫기 실패 시 목록을 유지하고 오류를 표시합니다. 로그인 프로필 쿠키는 유지됩니다.
 - 목록은 앱이 열려 있다는 표시이며 오디오 재생 여부를 감지하지 않습니다. 외부 브라우저 프로세스와 개발 모드 iframe은 추적하지 않습니다.
+
+### 내장 영상 플레이어 입력·종료 안전성
+
+- 네이티브/웹뷰 모두 화면 클릭·터치로 상·하단 조작 UI를 토글하고 3초 무조작 후 숨깁니다. Windows/웹뷰에서는 영상 영역을 고정한 채 opacity만 140ms로 전환하고 숨겨진 버튼은 inert 처리합니다. 슬라이더·버튼의 포인터 조작 중에는 자동 숨김을 보류합니다. Windows는 mpv의 비활성 자식 창에서 호스트 STATIC HWND로 전달되는 클릭을 SetWindowSubclass로 받아 메인 웹뷰에 embedded-video-input 이벤트를 전달합니다. macOS는 NSClickGestureRecognizer 콜백으로 같은 이벤트를 전달합니다. 프론트엔드는 세션 ID가 일치하는 이벤트만 처리하고 종료 시 리스너를 해제합니다. 이벤트 연결 실패 시에는 조작 UI를 유지합니다. 고빈도 입력 폴링은 없습니다.
+- Escape는 캡처 단계에서 입력 컨트롤의 단축키 제외 규칙보다 먼저 처리합니다. mpv 기본 키 바인딩과 VO 키보드 입력은 비활성화합니다. Novus 종료 버튼은 허용된 `core:window:allow-close` 권한으로 메인 창을 닫습니다.
+- Windows 크기 변경은 작업 스레드에서 `SWP_ASYNCWINDOWPOS`로 전달해 UI 스레드가 영상 창의 메시지 처리를 기다리지 않게 합니다. 상태·조작 IPC는 세션 잠금을 해제한 뒤 응답을 기다립니다.
+- 종료는 세션을 먼저 분리하고 창을 비동기로 숨긴 뒤 정리 스레드에서 디코더 종료와 HWND 파괴를 순서대로 수행합니다. 호출자는 최대 2초 기다리며 지연 시 오류를 반환하고 정리는 계속됩니다. 디코더가 종료되기 전에는 HWND/DLL을 강제 해제하지 않습니다. 디코더 자체가 멈춘 경우 오디오 종료 시점은 보장되지 않지만 앱 종료는 UI 경로에서 수행할 수 있습니다.
+- 메인 스레드 작업 응답도 2초로 제한합니다. 시간 초과 뒤 생성된 HWND는 메인 스레드에서 즉시 파괴해 고아 창을 방지합니다.
+
+### 영상 플로팅 조작 창과 고정 이미지 캔버스
+
+- Windows open_embedded_video_overlay(sessionId, video)는 메인 클라이언트 영역에 투명한 세션 ID별 video-controls-* 투명 소유 창 하나를 만듭니다. App은 네이티브가 주입한 로컬 초기화 데이터가 있으면 대시보드 대신 기존 InAppVideoModal의 조작 UI만 렌더링합니다. 디코더와 영상 HWND는 메인 창에 유지하며, 이 창은 별도의 영상 세션을 생성하지 않습니다.
+- request_embedded_video_overlay_action은 갤러리 복귀·앱 종료·전체화면 요청을 세션 ID와 함께 메인 웹뷰로 전달합니다. 영상 닫기에서 소유 조작 창을 먼저 파괴하고 기존 디코더 정리를 이어갑니다. 메인 창 크기 변경 시 조작 창 크기도 맞춥니다. 네이티브 표면의 크기 갱신은 Z 순서를 변경하지 않습니다.
+- FullscreenImageViewer는 전체 화면 크기의 고정 img 박스에 object-fit: contain을 적용합니다. 1600px URI를 Image.decode()로 준비하는 동안 GlassProgress를 표시하며, 이전 사진이나 작은 미리보기를 새 사진으로 확대하지 않습니다. 다음 사진은 미리 요청하고, 확대용 3200px도 디코딩 후 교체합니다. 경로 전환 시 확대·이동을 초기화하고 새 사진에 이전 transform 애니메이션을 넘기지 않습니다.

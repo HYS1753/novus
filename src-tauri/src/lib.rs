@@ -1,11 +1,12 @@
 mod commands;
 pub mod page_manager;
+use tauri::Manager;
 
 use commands::device_profile::{get_device_profile, DeviceProfile};
 use commands::embedded_player::{
     close_embedded_video, control_embedded_video, get_embedded_player_support,
-    get_embedded_video_state, open_embedded_video, update_embedded_video_bounds,
-    EmbeddedPlayerState,
+    get_embedded_video_state, open_embedded_video, open_embedded_video_overlay,
+    request_embedded_video_overlay_action, update_embedded_video_bounds, EmbeddedPlayerState,
 };
 use commands::media_fs::{
     get_media_page, get_system_locations, open_file_in_os, scan_directory, MediaPageState,
@@ -18,7 +19,8 @@ use commands::system::{
 use commands::thumbnail::{cleanup_thumbnail_cache, get_image_thumbnail};
 use page_manager::{
     discard_streaming_page, go_back_or_close_streaming_page, hide_streaming_page,
-    list_streaming_pages, reload_streaming_page, show_streaming_page, update_streaming_page_bounds, PageManagerState,
+    list_streaming_pages, reload_streaming_page, show_streaming_page, update_streaming_page_bounds,
+    PageManagerState,
 };
 
 #[tauri::command]
@@ -63,8 +65,31 @@ pub fn run() {
             update_embedded_video_bounds,
             close_embedded_video,
             control_embedded_video,
-            get_embedded_video_state
+            get_embedded_video_state,
+            open_embedded_video_overlay,
+            request_embedded_video_overlay_action
         ])
+        .on_window_event(|window, event| {
+            if window.label() != "main" {
+                return;
+            }
+            if matches!(
+                event,
+                tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_)
+            ) {
+                for (label, overlay) in window.app_handle().webview_windows() {
+                    if !label.starts_with("video-controls-") {
+                        continue;
+                    }
+                    if let Ok(position) = window.inner_position() {
+                        let _ = overlay.set_position(position);
+                    }
+                    if let Ok(size) = window.inner_size() {
+                        let _ = overlay.set_size(size);
+                    }
+                }
+            }
+        })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app_handle, _event| {});

@@ -6,12 +6,17 @@ import {
   GlassButton,
   MotionIcon,
   PlayIcon,
+  closeWindow,
   VideoPlayerControls,
   closeEmbeddedVideo,
   controlEmbeddedVideo,
   convertFileSrc,
   getEmbeddedPlayerSupport,
   getEmbeddedVideoState,
+  listenEmbeddedVideoInput,
+  openEmbeddedVideoOverlay,
+  requestEmbeddedVideoOverlayAction,
+  toggleFullscreen,
   isTauriRuntime,
   openEmbeddedVideo,
   updateEmbeddedVideoBounds,
@@ -20,19 +25,27 @@ import {
 interface InAppVideoModalProps {
   video: FileItem;
   onClose: () => void;
+  overlaySessionId?: string;
+  onExit?: () => void;
 }
 
-export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose }) => {
+export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
+  video,
+  onClose,
+  overlaySessionId,
+  onExit,
+}) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLVideoElement>(null);
   const { isPlaying, playVideo, feedback } = useNativeVideoPlayer();
 
   const [videoError, setVideoError] = useState(false);
-  const [nativeSessionId, setNativeSessionId] = useState<string | null>(null);
+  const [nativeSessionId, setNativeSessionId] = useState<string | null>(overlaySessionId ?? null);
   const [nativeControlError, setNativeControlError] = useState(false);
   const [engine, setEngine] = useState<"checking" | "native" | "web">(() =>
-    isTauriRuntime() ? "checking" : "web",
+    overlaySessionId ? "native" : isTauriRuntime() ? "checking" : "web",
   );
+  const [usesNativeOverlay, setUsesNativeOverlay] = useState(false);
 
   // Playback state
   const [currentTime, setCurrentTime] = useState(0);
@@ -45,24 +58,69 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
   // Auto-hide controls on inactivity
   const [userActive, setUserActive] = useState(true);
   const [activityKey, setActivityKey] = useState(0);
+  const [nativeInputReady, setNativeInputReady] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
 
   const notifyActivity = useCallback(() => {
     setUserActive(true);
     setActivityKey((prev) => prev + 1);
   }, []);
 
+  const toggleControls = useCallback(() => {
+    setUserActive((visible) => !visible);
+    setActivityKey((prev) => prev + 1);
+  }, []);
+
   useEffect(() => {
-    if (isPaused) return;
+    if (!nativeSessionId) return;
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+    void listenEmbeddedVideoInput(nativeSessionId, (action) => {
+      if (cancelled) return;
+      if (action === "close") onClose();
+      else if (action === "exit") void closeWindow();
+      else if (action === "fullscreen") void toggleFullscreen();
+      else toggleControls();
+    })
+      .then((dispose) => {
+        if (cancelled) dispose();
+        else {
+          unlisten = dispose;
+          setNativeInputReady(true);
+        }
+      })
+      .catch(() => setNativeControlError(true));
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [nativeSessionId, onClose, toggleControls]);
+
+  useEffect(() => {
+    const finish = () => setIsInteracting(false);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    window.addEventListener("blur", finish);
+    return () => {
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      window.removeEventListener("blur", finish);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (engine === "checking" || videoError || isInteracting || !userActive) return;
     const timer = window.setTimeout(() => {
       setUserActive(false);
-    }, 3500);
+    }, 3000);
     return () => window.clearTimeout(timer);
-  }, [isPaused, activityKey]);
+  }, [activityKey, engine, videoError, isInteracting, userActive]);
 
-  const isControlsVisible = isPaused || userActive;
+  const isControlsVisible = videoError || userActive || (engine === "native" && !nativeInputReady);
 
   const handleNativeError = useCallback(() => setVideoError(true), []);
   const clearNativeSession = useCallback(() => {
+    setNativeInputReady(false);
     setNativeSessionId(null);
     setCurrentTime(0);
     setDuration(0);
@@ -70,11 +128,14 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
 
   // Check hardware acceleration engine support
   useEffect(() => {
-    if (!isTauriRuntime()) return;
+    if (!isTauriRuntime() || overlaySessionId) return;
     let cancelled = false;
     void getEmbeddedPlayerSupport()
       .then((support) => {
-        if (!cancelled) setEngine(support.available ? "native" : "web");
+        if (!cancelled) {
+          setUsesNativeOverlay(support.available && support.platform === "windows");
+          setEngine(support.available ? "native" : "web");
+        }
       })
       .catch(() => {
         if (!cancelled) setEngine("web");
@@ -82,11 +143,11 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [overlaySessionId]);
 
   // Poll native MPV state
   useEffect(() => {
-    if (engine !== "native" || !nativeSessionId) return;
+    if (engine !== "native" || !nativeSessionId || usesNativeOverlay) return;
     let active = true;
 
     const refreshState = () => {
@@ -109,7 +170,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
       active = false;
       clearInterval(interval);
     };
-  }, [engine, nativeSessionId]);
+  }, [engine, nativeSessionId, usesNativeOverlay]);
 
   // Handle Play/Pause
   const handleTogglePlay = useCallback(() => {
@@ -204,6 +265,11 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
 
   // Handle Fullscreen Toggle
   const handleToggleFullscreen = useCallback(() => {
+    if (overlaySessionId) {
+      void requestEmbeddedVideoOverlayAction(overlaySessionId, "fullscreen");
+      notifyActivity();
+      return;
+    }
     if (!document.fullscreenElement) {
       void modalRef.current?.requestFullscreen();
       setIsFullscreen(true);
@@ -212,7 +278,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
       setIsFullscreen(false);
     }
     notifyActivity();
-  }, [notifyActivity]);
+  }, [notifyActivity, overlaySessionId]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -226,14 +292,18 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
       if (
         event.target instanceof HTMLElement &&
         (event.target.closest("input, button, select, textarea") || event.target.isContentEditable)
       )
         return;
-      if (event.key === "Escape") {
-        onClose();
-      } else if (event.key === " " || event.key === "k") {
+      if (event.key === " " || event.key === "k") {
         event.preventDefault();
         handleTogglePlay();
       } else if (event.key === "ArrowLeft" || event.key === "j") {
@@ -257,8 +327,8 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
       }
       notifyActivity();
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [
     onClose,
     handleTogglePlay,
@@ -275,16 +345,19 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
   return (
     <div
       ref={modalRef}
-      className="video-modal"
+      className={`video-modal ${usesNativeOverlay && !videoError ? "video-modal--native-host" : ""} ${overlaySessionId ? "video-modal--overlay-window" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label={`${video.name} 재생`}
-      onMouseMove={notifyActivity}
-      onTouchStart={notifyActivity}
+      onPointerMove={(event) => {
+        if (event.pointerType === "mouse") notifyActivity();
+      }}
+      onFocusCapture={notifyActivity}
     >
       {/* Header */}
       <header
         className={`video-modal__header ${!isControlsVisible ? "video-modal__chrome--hidden" : ""}`}
+        inert={!isControlsVisible}
       >
         <button type="button" className="image-viewer__back" onClick={onClose}>
           <MotionIcon motion="nudge-left">
@@ -298,19 +371,30 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
             {video.extension.toUpperCase()} ∙ {(video.size / 1024 ** 2).toFixed(1)} MB
           </span>
         </div>
-        <span className="video-modal__engine">
-          {engine === "checking"
-            ? "NOVUS · 확인 중"
-            : engine === "native"
-              ? "NOVUS · MPV"
-              : "NOVUS · WEBVIEW"}
-        </span>
+        <div className="video-modal__actions">
+          <span className="video-modal__engine">
+            {engine === "checking"
+              ? "NOVUS · 확인 중"
+              : engine === "native"
+                ? "NOVUS · MPV"
+                : "NOVUS · WEBVIEW"}
+          </span>
+          <button
+            type="button"
+            className="image-viewer__back"
+            onClick={() => (onExit ? onExit() : void closeWindow())}
+            aria-label="Novus 종료"
+            title="Novus 종료"
+          >
+            종료
+          </button>
+        </div>
       </header>
 
       {/* Main Video Canvas */}
       <main
         className={`video-modal__canvas${engine === "native" ? " video-modal__canvas--native" : ""}`}
-        onClick={handleTogglePlay}
+        onClick={toggleControls}
       >
         {videoError ? (
           <div className="video-modal__error" onClick={(e) => e.stopPropagation()}>
@@ -327,11 +411,12 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
               시스템 플레이어로 열기
             </GlassButton>
           </div>
-        ) : engine === "native" ? (
+        ) : overlaySessionId ? null : engine === "native" ? (
           <NativeVideoSurface
             video={video}
             onError={handleNativeError}
-            onReady={setNativeSessionId}
+            onReady={usesNativeOverlay ? undefined : setNativeSessionId}
+            overlayReady={usesNativeOverlay ? setNativeSessionId : undefined}
             onClosed={clearNativeSession}
           />
         ) : engine === "checking" ? (
@@ -368,9 +453,14 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
       </main>
 
       {/* Modern Floating Video Player Controls */}
-      {!videoError && engine !== "checking" && (
+      {!videoError && engine !== "checking" && !usesNativeOverlay && (
         <div
           className={`video-modal__controls ${!isControlsVisible ? "video-modal__chrome--hidden" : ""}`}
+          inert={!isControlsVisible}
+          onPointerDown={() => {
+            setIsInteracting(true);
+            notifyActivity();
+          }}
         >
           <VideoPlayerControls
             currentTime={currentTime}
@@ -403,9 +493,10 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({ video, onClose
 const NativeVideoSurface: React.FC<{
   video: FileItem;
   onError: () => void;
-  onReady: (sessionId: string) => void;
+  onReady?: (sessionId: string) => void;
+  overlayReady?: (sessionId: string) => void;
   onClosed: () => void;
-}> = ({ video, onError, onReady, onClosed }) => {
+}> = ({ video, onError, onReady, overlayReady, onClosed }) => {
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -424,7 +515,8 @@ const NativeVideoSurface: React.FC<{
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         frame = 0;
-        if (opened && !cancelled) void updateEmbeddedVideoBounds(sessionId, measure());
+        if (opened && !cancelled)
+          void updateEmbeddedVideoBounds(sessionId, measure()).catch(onError);
       });
     };
 
@@ -432,11 +524,19 @@ const NativeVideoSurface: React.FC<{
     observer.observe(surface);
     window.addEventListener("resize", scheduleResize);
     void openEmbeddedVideo(sessionId, video.path, measure())
-      .then(() => {
+      .then(async () => {
         opened = true;
-        if (cancelled) void closeEmbeddedVideo(sessionId);
+        if (cancelled) void closeEmbeddedVideo(sessionId).catch(console.error);
         else {
-          onReady(sessionId);
+          onReady?.(sessionId);
+          overlayReady?.(sessionId);
+          if (overlayReady) {
+            await openEmbeddedVideoOverlay(sessionId, video);
+            if (cancelled) {
+              await closeEmbeddedVideo(sessionId);
+              return;
+            }
+          }
           scheduleResize();
         }
       })
@@ -449,10 +549,10 @@ const NativeVideoSurface: React.FC<{
       observer.disconnect();
       window.removeEventListener("resize", scheduleResize);
       if (frame) cancelAnimationFrame(frame);
-      if (opened) void closeEmbeddedVideo(sessionId);
+      if (opened) void closeEmbeddedVideo(sessionId).catch(console.error);
       onClosed();
     };
-  }, [video.path, onError, onReady, onClosed]);
+  }, [video, onError, onReady, overlayReady, onClosed]);
 
   return (
     <div ref={surfaceRef} className="video-modal__native-surface" aria-label="동영상 재생 영역" />

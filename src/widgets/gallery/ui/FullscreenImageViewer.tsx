@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { FileItem } from "@/entities";
 import { useImageViewer } from "@/features";
-import { ArrowLeftIcon, CloseIcon, MotionIcon, getImageThumbnail } from "@/shared";
+import { ArrowLeftIcon, CloseIcon, MotionIcon, GlassProgress, getImageThumbnail } from "@/shared";
 
 interface FullscreenImageViewerProps {
   images: FileItem[];
@@ -15,6 +15,16 @@ interface FullscreenImageViewerProps {
 }
 
 const clampZoom = (value: number) => Math.max(1, Math.min(4, value));
+
+async function decodeImage(source: string, signal: AbortSignal): Promise<string> {
+  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  const image = new Image();
+  image.decoding = "async";
+  image.src = source;
+  await image.decode();
+  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  return source;
+}
 
 export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
   images,
@@ -40,8 +50,6 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
     hasPrev,
     hasNext,
     isWaitingForImage,
-    dragOffset,
-    isDragging,
     goToPrev,
     goToNext,
     goToFirst,
@@ -63,11 +71,11 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
   const [loadedImage, setLoadedImage] = useState({
     path: "",
     version: "",
-    preview: "",
     full: "",
     high: "",
   });
   const [failedPath, setFailedPath] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
   const currentKey = currentImage
     ? `${currentImage.path}:${currentImage.modified_ms}:${currentImage.size}`
     : "";
@@ -100,23 +108,14 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
     if (!currentPath) return;
     const controller = new AbortController();
     const path = currentPath;
-    void getImageThumbnail(path, 320, 3, controller.signal, currentVersion)
-      .then((preview) => {
-        if (!controller.signal.aborted)
-          setLoadedImage((image) =>
-            image.path === path && image.version === currentVersion
-              ? { ...image, preview }
-              : { path, version: currentVersion, preview, full: "", high: "" },
-          );
-      })
-      .catch(() => undefined);
     void getImageThumbnail(path, 1600, 3, controller.signal, currentVersion)
+      .then((full) => decodeImage(full, controller.signal))
       .then((full) => {
         if (!controller.signal.aborted)
           setLoadedImage((image) =>
             image.path === path && image.version === currentVersion
               ? { ...image, full }
-              : { path, version: currentVersion, preview: "", full, high: "" },
+              : { path, version: currentVersion, full, high: "" },
           );
       })
       .catch((error) => {
@@ -131,7 +130,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
       );
     }
     return () => controller.abort();
-  }, [currentPath, currentVersion, nextPath, nextVersion]);
+  }, [currentPath, currentVersion, nextPath, nextVersion, retryVersion]);
 
   useEffect(() => {
     if (
@@ -145,6 +144,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
     const controller = new AbortController();
     const path = currentPath;
     void getImageThumbnail(path, 3200, 3, controller.signal, currentVersion)
+      .then((high) => decodeImage(high, controller.signal))
       .then((high) => {
         if (!controller.signal.aborted)
           setLoadedImage((image) =>
@@ -268,8 +268,10 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
   };
 
   const source =
-    loadedImage.path === currentImage.path && loadedImage.version === currentVersion
-      ? (zoom > 1.5 && loadedImage.high) || loadedImage.full || loadedImage.preview
+    !isWaitingForImage &&
+    loadedImage.path === currentImage.path &&
+    loadedImage.version === currentVersion
+      ? (zoom > 1.5 && loadedImage.high) || loadedImage.full
       : "";
 
   return (
@@ -299,6 +301,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
       <header
         className={`image-viewer__header ${isUiVisible ? "" : "image-viewer__chrome--hidden"}`}
         data-viewer-control
+        inert={!isUiVisible}
       >
         <button type="button" className="image-viewer__back" onClick={onClose}>
           <MotionIcon motion="nudge-left">
@@ -325,28 +328,39 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
       </header>
 
       <div className="image-viewer__canvas">
-        {source ? (
+        {source && failedPath !== currentImage.path ? (
           <img
+            key={currentKey}
             ref={imageRef}
             src={source}
             alt={currentImage.name}
             className={`image-viewer__image ${fill ? "image-viewer__image--fill" : ""}`}
             draggable={false}
+            decoding="async"
+            onError={() => setFailedPath(currentImage.path)}
             style={{
-              transform: `translate3d(${pan.x + (zoom === 1 ? dragOffset : 0)}px, ${pan.y}px, 0) scale(${zoom})`,
-              transition:
-                isDragging || zoom > 1 ? "none" : "transform var(--motion-base) var(--ease-out)",
+              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+              transition: "none",
             }}
           />
         ) : failedPath === currentImage.path ? (
           <div className="subpage-state" role="alert">
             <strong>이미지를 표시할 수 없습니다</strong>
             <span>파일 형식을 지원하지 않거나 파일을 읽을 수 없습니다.</span>
+            <button
+              type="button"
+              data-viewer-control
+              onClick={() => {
+                setFailedPath("");
+                setRetryVersion((value) => value + 1);
+              }}
+            >
+              다시 시도
+            </button>
           </div>
         ) : (
-          <div className="subpage-state" role="status">
-            <span className="subpage-state__spinner" />
-            <span>이미지를 불러오는 중…</span>
+          <div className="media-viewer-loading" role="status">
+            <GlassProgress label="이미지를 불러오는 중…" />
           </div>
         )}
       </div>
@@ -369,6 +383,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
       <div
         className={`image-viewer__controls ${isUiVisible ? "" : "image-viewer__chrome--hidden"}`}
         data-viewer-control
+        inert={!isUiVisible}
       >
         <button type="button" onClick={goToPrev} disabled={!hasPrev} aria-label="이전 사진">
           ‹

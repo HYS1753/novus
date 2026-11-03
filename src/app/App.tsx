@@ -7,8 +7,28 @@ import {
   useMaterialIntensity,
 } from "@/shared";
 import "./styles/global.css";
+import { InAppVideoModal } from "@/widgets";
+import type { FileItem } from "@/entities";
+import { requestEmbeddedVideoOverlayAction } from "@/shared";
 
-export const App: React.FC = () => {
+const overlay = (
+  window as Window & { __NOVUS_VIDEO_OVERLAY__?: { sessionId: string; video: FileItem } }
+).__NOVUS_VIDEO_OVERLAY__;
+if (overlay) document.documentElement.classList.add("video-overlay-window");
+
+export const App: React.FC = () =>
+  overlay ? (
+    <InAppVideoModal
+      video={overlay.video}
+      overlaySessionId={overlay.sessionId}
+      onClose={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "close")}
+      onExit={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "exit")}
+    />
+  ) : (
+    <DashboardApp />
+  );
+
+const DashboardApp: React.FC = () => {
   const [showStyleGuide, setShowStyleGuide] = useState(
     () => isStyleGuideRouteEnabled() && isStyleGuidePath(),
   );

@@ -4378,6 +4378,12 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
     transform var(--motion-base) var(--ease-out);
 }
 
+.video-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .image-viewer__back,
 .image-viewer__close {
   display: inline-flex;
@@ -4443,11 +4449,34 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
 
 .image-viewer__image {
   display: block;
-  max-width: 100vw;
-  max-height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   pointer-events: none;
-  will-change: transform;
+  animation: media-image-reveal 120ms ease-out;
+}
+
+@keyframes media-image-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.media-viewer-loading {
+  width: min(280px, calc(100vw - 48px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-viewer__image {
+    animation: none;
+  }
+  .video-modal__header,
+  .video-modal__controls {
+    transition: none;
+  }
 }
 
 .image-viewer__image--fill {
@@ -4598,22 +4627,34 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
 }
 
 .video-modal__canvas {
-  padding: 82px 24px 108px;
+  padding: 0;
 }
 
 .video-modal__canvas--native {
-  padding-bottom: 108px;
+  padding: 82px 24px 108px;
+}
+
+.video-modal--native-host .video-modal__canvas {
+  padding: 0;
+}
+.video-modal--native-host > .video-modal__header {
+  visibility: hidden;
+}
+
+/* One owned transparent controls window floats above the fixed GPU surface. */
+html.video-overlay-window,
+html.video-overlay-window body,
+.video-modal--overlay-window {
+  background: transparent !important;
+  transition: none;
 }
 
 .video-modal__header {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+  transition: opacity 140ms ease-out;
 }
 
 .video-modal__header.video-modal__chrome--hidden {
   opacity: 0;
-  transform: translateY(-12px);
   pointer-events: none;
 }
 
@@ -4625,14 +4666,11 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
   left: 24px;
   display: flex;
   justify-content: center;
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+  transition: opacity 140ms ease-out;
 }
 
 .video-modal__controls.video-modal__chrome--hidden {
   opacity: 0;
-  transform: translateY(12px);
   pointer-events: none;
 }
 
@@ -4823,18 +4861,17 @@ html:not(.dark) .in-app-dock__btn:focus-visible {
   display: block;
   width: 100%;
   height: 100%;
-  max-width: 1500px;
+  max-width: none;
   object-fit: contain;
   background: #000000;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--glass-shadow-floating);
+  border-radius: 0;
   outline: none;
 }
 
 .video-modal__native-surface {
   width: 100%;
   height: 100%;
-  max-width: 1500px;
+  max-width: none;
   background: #000000;
 }
 

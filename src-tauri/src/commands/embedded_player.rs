@@ -2,7 +2,92 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 #[cfg(any(windows, target_os = "macos"))]
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
+
+#[tauri::command]
+pub async fn open_embedded_video_overlay(
+    app: AppHandle,
+    state: tauri::State<'_, EmbeddedPlayerState>,
+    session_id: String,
+    video: serde_json::Value,
+) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        if !windows_player::is_current(&state.session, &session_id)? {
+            return Err("Video session has changed".into());
+        }
+        let main = app
+            .get_webview_window("main")
+            .ok_or("Main window not found")?;
+        let label = format!("video-controls-{session_id}");
+        if let Some(old) = app.get_webview_window(&label) {
+            old.destroy().map_err(|e| e.to_string())?;
+        }
+        let size = main.inner_size().map_err(|e| e.to_string())?;
+        let position = main.inner_position().map_err(|e| e.to_string())?;
+        let scale = main.scale_factor().map_err(|e| e.to_string())?;
+        let bootstrap = serde_json::json!({ "sessionId": session_id, "video": video });
+        let overlay = tauri::WebviewWindowBuilder::new(
+            &app,
+            &label,
+            tauri::WebviewUrl::App("index.html".into()),
+        )
+        .title("Novus 영상 조작")
+        .initialization_script(format!("window.__NOVUS_VIDEO_OVERLAY__ = {bootstrap};"))
+        .parent(&main)
+        .map_err(|e| e.to_string())?
+        .transparent(true)
+        .decorations(false)
+        .shadow(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .position(position.x as f64 / scale, position.y as f64 / scale)
+        .inner_size(size.width as f64 / scale, size.height as f64 / scale)
+        .build()
+        .map_err(|e| e.to_string())?;
+        let close_app = app.clone();
+        let close_id = session_id.clone();
+        overlay.on_window_event(move |event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = close_app.emit_to(
+                    "main",
+                    "embedded-video-input",
+                    serde_json::json!({
+                        "session_id": close_id, "action": "close",
+                    }),
+                );
+            }
+        });
+        if !windows_player::is_current(&state.session, &session_id)? {
+            let _ = overlay.destroy();
+            return Err("Video session is closed".into());
+        }
+        Ok(())
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (app, state, session_id, video);
+        Err("Native overlay is only needed on Windows".into())
+    }
+}
+
+#[tauri::command]
+pub async fn request_embedded_video_overlay_action(
+    app: AppHandle,
+    session_id: String,
+    action: String,
+) -> Result<(), String> {
+    if !["close", "exit", "fullscreen"].contains(&action.as_str()) {
+        return Err("Invalid overlay action".into());
+    }
+    app.emit_to(
+        "main",
+        "embedded-video-input",
+        serde_json::json!({"session_id": session_id, "action": action}),
+    )
+    .map_err(|e| e.to_string())
+}
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub struct VideoBounds {
@@ -63,9 +148,7 @@ pub enum PlayerMessage {
         EmbeddedPlayerAction,
         std::sync::mpsc::SyncSender<Result<(), String>>,
     ),
-    GetState(
-        std::sync::mpsc::SyncSender<Result<EmbeddedVideoPlaybackState, String>>,
-    ),
+    GetState(std::sync::mpsc::SyncSender<Result<EmbeddedVideoPlaybackState, String>>),
     Stop,
 }
 
@@ -287,13 +370,14 @@ pub async fn get_embedded_video_state(
 #[cfg(windows)]
 mod windows_player {
     use super::{EmbeddedPlayerAction, PlayerMessage, VideoBounds};
+    use serde::Serialize;
     use std::ffi::{c_char, c_int, c_void, CStr, CString, OsStr};
     use std::os::windows::ffi::OsStrExt;
     use std::path::{Path, PathBuf};
     use std::sync::{mpsc, Arc, Mutex};
     use std::thread::{self, JoinHandle};
     use std::time::Duration;
-    use tauri::{AppHandle, Manager};
+    use tauri::{AppHandle, Emitter, Manager};
 
     type NativeHandle = isize;
     const WS_CHILD: u32 = 0x4000_0000;
@@ -301,7 +385,9 @@ mod windows_player {
     const WS_CLIPSIBLINGS: u32 = 0x0400_0000;
     const SS_BLACKRECT: u32 = 0x0000_0004;
     const SWP_NOACTIVATE: u32 = 0x0010;
+    const SWP_NOZORDER: u32 = 0x0004;
     const SWP_SHOWWINDOW: u32 = 0x0040;
+    const SWP_ASYNCWINDOWPOS: u32 = 0x4000;
     const LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR: u32 = 0x0000_0100;
     const LOAD_LIBRARY_SEARCH_DEFAULT_DIRS: u32 = 0x0000_1000;
 
@@ -322,6 +408,7 @@ mod windows_player {
             parameter: *const c_void,
         ) -> NativeHandle;
         fn DestroyWindow(window: NativeHandle) -> i32;
+        fn ShowWindowAsync(window: NativeHandle, command: i32) -> i32;
         fn SetWindowPos(
             window: NativeHandle,
             insert_after: NativeHandle,
@@ -348,6 +435,81 @@ mod windows_player {
     type MpvFree = unsafe extern "C" fn(*mut c_void);
     type MpvTerminate = unsafe extern "C" fn(*mut c_void);
 
+    type SubclassProc =
+        unsafe extern "system" fn(NativeHandle, u32, usize, isize, usize, usize) -> isize;
+
+    #[link(name = "comctl32")]
+    extern "system" {
+        fn SetWindowSubclass(
+            window: NativeHandle,
+            callback: SubclassProc,
+            id: usize,
+            data: usize,
+        ) -> i32;
+        fn RemoveWindowSubclass(window: NativeHandle, callback: SubclassProc, id: usize) -> i32;
+        fn DefSubclassProc(
+            window: NativeHandle,
+            message: u32,
+            wparam: usize,
+            lparam: isize,
+        ) -> isize;
+    }
+
+    struct SurfaceInput {
+        app: AppHandle,
+        session_id: String,
+    }
+
+    #[derive(Clone, Serialize)]
+    struct VideoInput<'a> {
+        session_id: &'a str,
+        action: &'static str,
+    }
+
+    // mpv disables its embedded child window. Windows sends that child's mouse
+    // input (including promoted touch taps) to this host STATIC window instead.
+    // Forward only taps, not a high-frequency mouse-position stream.
+    unsafe extern "system" fn surface_input(
+        window: NativeHandle,
+        message: u32,
+        wparam: usize,
+        lparam: isize,
+        subclass_id: usize,
+        data: usize,
+    ) -> isize {
+        if message == 0x0084 {
+            // WM_NCHITTEST: STATIC normally returns HTTRANSPARENT without
+            // SS_NOTIFY. Own the video area's input instead of skipping it.
+            return 1; // HTCLIENT
+        } else if message == 0x0082 {
+            // WM_NCDESTROY
+            RemoveWindowSubclass(window, surface_input, subclass_id);
+            drop(Box::from_raw(data as *mut SurfaceInput));
+        } else if message == 0x0202 || (message == 0x0100 && wparam == 0x1b) {
+            // WM_LBUTTONUP / WM_KEYDOWN(VK_ESCAPE)
+            let input = &*(data as *const SurfaceInput);
+            for target in [
+                "main".to_string(),
+                format!("video-controls-{}", input.session_id),
+            ] {
+                let _ = input.app.emit_to(
+                    target,
+                    "embedded-video-input",
+                    VideoInput {
+                        session_id: &input.session_id,
+                        action: if message == 0x0202 {
+                            "toggle_controls"
+                        } else {
+                            "close"
+                        },
+                    },
+                );
+            }
+            return 0;
+        }
+        DefSubclassProc(window, message, wparam, lparam)
+    }
+
     pub struct Session {
         id: String,
         surface: NativeHandle,
@@ -370,7 +532,11 @@ mod windows_player {
         #[cfg(debug_assertions)]
         {
             dirs.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin"));
-            dirs.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin").join("mpv"));
+            dirs.push(
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .join("bin")
+                    .join("mpv"),
+            );
         }
 
         dirs.into_iter()
@@ -397,63 +563,113 @@ mod windows_player {
     fn on_main_thread<T: Send + 'static>(
         app: &AppHandle,
         work: impl FnOnce() -> Result<T, String> + Send + 'static,
+        abandoned: impl FnOnce(T) + Send + 'static,
     ) -> Result<T, String> {
         let (sender, receiver) = mpsc::sync_channel(1);
         app.run_on_main_thread(move || {
-            let _ = sender.send(work());
+            if let Err(mpsc::SendError(Ok(value))) = sender.send(work()) {
+                // A late-created surface must not survive a timed-out request.
+                abandoned(value);
+            }
         })
         .map_err(|error| error.to_string())?;
         receiver
-            .recv()
+            .recv_timeout(Duration::from_secs(2))
             .map_err(|error| format!("Video surface did not respond: {error}"))?
     }
 
-    fn create_surface(app: &AppHandle, bounds: VideoBounds) -> Result<NativeHandle, String> {
+    fn create_surface(
+        app: &AppHandle,
+        bounds: VideoBounds,
+        id: &str,
+    ) -> Result<NativeHandle, String> {
         let window = app
             .get_window("main")
             .ok_or_else(|| "Main window not found".to_string())?;
         let (x, y, width, height) = physical_bounds(app, bounds)?;
-        on_main_thread(app, move || {
-            let parent = window.hwnd().map_err(|error| error.to_string())?.0 as isize;
-            let class: Vec<u16> = OsStr::new("STATIC").encode_wide().chain(Some(0)).collect();
-            let surface = unsafe {
-                CreateWindowExW(
-                    0,
-                    class.as_ptr(),
-                    std::ptr::null(),
-                    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_BLACKRECT,
-                    x,
-                    y,
-                    width,
-                    height,
-                    parent,
-                    0,
-                    0,
-                    std::ptr::null(),
-                )
-            };
-            if surface == 0 {
-                Err(format!(
-                    "Could not create native video surface: {}",
-                    std::io::Error::last_os_error()
-                ))
-            } else {
-                Ok(surface)
-            }
-        })
+        let input = SurfaceInput {
+            app: app.clone(),
+            session_id: id.to_string(),
+        };
+        on_main_thread(
+            app,
+            move || {
+                let parent = window.hwnd().map_err(|error| error.to_string())?.0 as isize;
+                let class: Vec<u16> = OsStr::new("STATIC").encode_wide().chain(Some(0)).collect();
+                let surface = unsafe {
+                    CreateWindowExW(
+                        0,
+                        class.as_ptr(),
+                        std::ptr::null(),
+                        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_BLACKRECT,
+                        x,
+                        y,
+                        width,
+                        height,
+                        parent,
+                        0,
+                        0,
+                        std::ptr::null(),
+                    )
+                };
+                if surface == 0 {
+                    Err(format!(
+                        "Could not create native video surface: {}",
+                        std::io::Error::last_os_error()
+                    ))
+                } else {
+                    // A newly created native child must be above the main
+                    // WebView2 HWND. Later geometry updates preserve this order;
+                    // the owned controls window remains above the main window.
+                    if unsafe {
+                        SetWindowPos(
+                            surface,
+                            0,
+                            x,
+                            y,
+                            width,
+                            height,
+                            SWP_NOACTIVATE | SWP_SHOWWINDOW,
+                        )
+                    } == 0
+                    {
+                        unsafe {
+                            DestroyWindow(surface);
+                        }
+                        return Err("Could not raise native video surface".into());
+                    }
+                    let data = Box::into_raw(Box::new(input));
+                    if unsafe { SetWindowSubclass(surface, surface_input, 1, data as usize) } == 0 {
+                        unsafe {
+                            drop(Box::from_raw(data));
+                            DestroyWindow(surface);
+                        }
+                        return Err("Could not attach video input handler".into());
+                    }
+                    Ok(surface)
+                }
+            },
+            |surface| unsafe {
+                DestroyWindow(surface);
+            },
+        )
     }
 
     fn destroy_surface(app: &AppHandle, surface: NativeHandle) -> Result<(), String> {
-        on_main_thread(app, move || {
-            if unsafe { DestroyWindow(surface) } == 0 {
-                Err(format!(
-                    "Could not destroy native video surface: {}",
-                    std::io::Error::last_os_error()
-                ))
-            } else {
-                Ok(())
-            }
-        })
+        on_main_thread(
+            app,
+            move || {
+                if unsafe { DestroyWindow(surface) } == 0 {
+                    Err(format!(
+                        "Could not destroy native video surface: {}",
+                        std::io::Error::last_os_error()
+                    ))
+                } else {
+                    Ok(())
+                }
+            },
+            |_| {},
+        )
     }
 
     pub fn open(
@@ -470,7 +686,7 @@ mod windows_player {
             stop_session(app, old)?;
         }
 
-        let surface = create_surface(app, bounds)?;
+        let surface = create_surface(app, bounds, &id)?;
         let (commands, receiver) = mpsc::channel();
         let (started_tx, started_rx) = mpsc::sync_channel(1);
         let thread =
@@ -486,18 +702,27 @@ mod windows_player {
                 Ok(())
             }
             Ok(Err(error)) => {
-                let _ = commands.send(PlayerMessage::Stop);
-                let _ = thread.join();
-                let _ = destroy_surface(app, surface);
+                let _ = stop_session(
+                    app,
+                    Session {
+                        id,
+                        surface,
+                        commands,
+                        thread,
+                    },
+                );
                 Err(error)
             }
             Err(error) => {
-                let _ = commands.send(PlayerMessage::Stop);
-                let app = app.clone();
-                thread::spawn(move || {
-                    let _ = thread.join();
-                    let _ = destroy_surface(&app, surface);
-                });
+                let _ = stop_session(
+                    app,
+                    Session {
+                        id,
+                        surface,
+                        commands,
+                        thread,
+                    },
+                );
                 Err(format!("libmpv did not start: {error}"))
             }
         }
@@ -518,27 +743,27 @@ mod windows_player {
         }
         let surface = session.surface;
         let (x, y, width, height) = physical_bounds(app, bounds)?;
-        on_main_thread(app, move || {
-            if unsafe {
-                SetWindowPos(
-                    surface,
-                    0,
-                    x,
-                    y,
-                    width,
-                    height,
-                    SWP_NOACTIVATE | SWP_SHOWWINDOW,
-                )
-            } == 0
-            {
-                Err(format!(
-                    "Could not resize native video surface: {}",
-                    std::io::Error::last_os_error()
-                ))
-            } else {
-                Ok(())
-            }
-        })
+        // Queue cross-thread geometry changes rather than waiting on mpv's
+        // child window procedure from the Tauri UI thread.
+        if unsafe {
+            SetWindowPos(
+                surface,
+                0,
+                x,
+                y,
+                width,
+                height,
+                SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS,
+            )
+        } == 0
+        {
+            Err(format!(
+                "Could not resize native video surface: {}",
+                std::io::Error::last_os_error()
+            ))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn close(
@@ -547,12 +772,24 @@ mod windows_player {
         id: &str,
     ) -> Result<(), String> {
         let mut guard = sessions.lock().map_err(|error| error.to_string())?;
-        if guard.as_ref().is_some_and(|session| session.id == id) {
-            if let Some(session) = guard.take() {
-                stop_session(app, session)?;
-            }
+        let session = if guard.as_ref().is_some_and(|session| session.id == id) {
+            guard.take()
+        } else {
+            None
+        };
+        drop(guard);
+        if let Some(session) = session {
+            stop_session(app, session)?;
         }
         Ok(())
+    }
+
+    pub fn is_current(sessions: &Arc<Mutex<Option<Session>>>, id: &str) -> Result<bool, String> {
+        Ok(sessions
+            .lock()
+            .map_err(|e| e.to_string())?
+            .as_ref()
+            .is_some_and(|session| session.id == id))
     }
 
     pub fn control(
@@ -570,6 +807,7 @@ mod windows_player {
             .commands
             .send(PlayerMessage::Control(action, sender))
             .map_err(|error| error.to_string())?;
+        drop(guard);
         receiver
             .recv_timeout(Duration::from_secs(2))
             .map_err(|error| error.to_string())?
@@ -589,15 +827,91 @@ mod windows_player {
             .commands
             .send(PlayerMessage::GetState(sender))
             .map_err(|error| error.to_string())?;
+        drop(guard);
         receiver
             .recv_timeout(Duration::from_millis(500))
             .map_err(|error| error.to_string())?
     }
 
     fn stop_session(app: &AppHandle, session: Session) -> Result<(), String> {
+        if let Some(overlay) = app.get_webview_window(&format!("video-controls-{}", session.id)) {
+            let _ = overlay.destroy();
+        }
+        // Hide immediately. Never join a potentially stalled decoder on the UI
+        // thread or while holding the session lock used by control/state IPC.
+        unsafe {
+            ShowWindowAsync(session.surface, 0);
+        }
         let _ = session.commands.send(PlayerMessage::Stop);
-        let _ = session.thread.join();
-        destroy_surface(app, session.surface)
+        let app = app.clone();
+        reap_player(
+            session.thread,
+            move || destroy_surface(&app, session.surface),
+            Duration::from_secs(2),
+        )
+    }
+
+    fn reap_player(
+        worker: JoinHandle<()>,
+        cleanup: impl FnOnce() -> Result<(), String> + Send + 'static,
+        timeout: Duration,
+    ) -> Result<(), String> {
+        let (done_tx, done_rx) = mpsc::sync_channel(1);
+        thread::spawn(move || {
+            let joined = worker.join();
+            let destroyed = cleanup();
+            let result = joined
+                .map_err(|_| "Video worker panicked".to_string())
+                .and(destroyed);
+            let _ = done_tx.send(result);
+        });
+        done_rx
+            .recv_timeout(timeout)
+            .map_err(|error| format!("Video cleanup is still pending: {error}"))?
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn stalled_decoder_does_not_block_close_and_surface_is_cleaned_after_exit() {
+            let (release, wait) = mpsc::channel();
+            let (cleaned, cleanup_done) = mpsc::channel();
+            let worker = thread::spawn(move || {
+                wait.recv().unwrap();
+            });
+            let result = reap_player(
+                worker,
+                move || {
+                    cleaned.send(()).unwrap();
+                    Ok(())
+                },
+                Duration::from_millis(20),
+            );
+            assert!(result.unwrap_err().contains("cleanup is still pending"));
+            assert!(
+                cleanup_done.try_recv().is_err(),
+                "must not destroy a surface still in use"
+            );
+            release.send(()).unwrap();
+            cleanup_done.recv_timeout(Duration::from_secs(2)).unwrap();
+        }
+
+        #[test]
+        fn worker_panic_still_cleans_surface_and_reports_failure() {
+            let (cleaned, cleanup_done) = mpsc::channel();
+            let result = reap_player(
+                thread::spawn(|| panic!("simulated decoder failure")),
+                move || {
+                    cleaned.send(()).unwrap();
+                    Ok(())
+                },
+                Duration::from_secs(2),
+            );
+            assert_eq!(result.unwrap_err(), "Video worker panicked");
+            cleanup_done.recv_timeout(Duration::from_secs(2)).unwrap();
+        }
     }
 
     fn player_thread(
@@ -695,42 +1009,90 @@ mod windows_player {
         unsafe fn control(&self, action: EmbeddedPlayerAction) -> Result<(), String> {
             match action {
                 EmbeddedPlayerAction::TogglePause => {
-                    let args = [c"cycle".as_ptr(), c"pause".as_ptr(), std::ptr::null(), std::ptr::null()];
+                    let args = [
+                        c"cycle".as_ptr(),
+                        c"pause".as_ptr(),
+                        std::ptr::null(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::Play => {
-                    let args = [c"set".as_ptr(), c"pause".as_ptr(), c"no".as_ptr(), std::ptr::null()];
+                    let args = [
+                        c"set".as_ptr(),
+                        c"pause".as_ptr(),
+                        c"no".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::Pause => {
-                    let args = [c"set".as_ptr(), c"pause".as_ptr(), c"yes".as_ptr(), std::ptr::null()];
+                    let args = [
+                        c"set".as_ptr(),
+                        c"pause".as_ptr(),
+                        c"yes".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::SeekBackward => {
-                    let args = [c"seek".as_ptr(), c"-10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                    let args = [
+                        c"seek".as_ptr(),
+                        c"-10".as_ptr(),
+                        c"relative".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::SeekForward => {
-                    let args = [c"seek".as_ptr(), c"10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                    let args = [
+                        c"seek".as_ptr(),
+                        c"10".as_ptr(),
+                        c"relative".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::ToggleMute => {
-                    let args = [c"cycle".as_ptr(), c"mute".as_ptr(), std::ptr::null(), std::ptr::null()];
+                    let args = [
+                        c"cycle".as_ptr(),
+                        c"mute".as_ptr(),
+                        std::ptr::null(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::SeekTo(seconds) => {
-                    let sec_str = CString::new(format!("{seconds:.2}")).map_err(|e| e.to_string())?;
-                    let args = [c"seek".as_ptr(), sec_str.as_ptr(), c"absolute".as_ptr(), std::ptr::null()];
+                    let sec_str =
+                        CString::new(format!("{seconds:.2}")).map_err(|e| e.to_string())?;
+                    let args = [
+                        c"seek".as_ptr(),
+                        sec_str.as_ptr(),
+                        c"absolute".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::SeekPercent(percent) => {
-                    let pct_str = CString::new(format!("{percent:.2}")).map_err(|e| e.to_string())?;
-                    let args = [c"seek".as_ptr(), pct_str.as_ptr(), c"absolute-percent".as_ptr(), std::ptr::null()];
+                    let pct_str =
+                        CString::new(format!("{percent:.2}")).map_err(|e| e.to_string())?;
+                    let args = [
+                        c"seek".as_ptr(),
+                        pct_str.as_ptr(),
+                        c"absolute-percent".as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
                 EmbeddedPlayerAction::SetVolume(volume) => {
-                    let vol_str = CString::new(format!("{volume:.1}")).map_err(|e| e.to_string())?;
-                    let args = [c"set".as_ptr(), c"volume".as_ptr(), vol_str.as_ptr(), std::ptr::null()];
+                    let vol_str =
+                        CString::new(format!("{volume:.1}")).map_err(|e| e.to_string())?;
+                    let args = [
+                        c"set".as_ptr(),
+                        c"volume".as_ptr(),
+                        vol_str.as_ptr(),
+                        std::ptr::null(),
+                    ];
                     self.run_cmd(&args)
                 }
             }
@@ -773,7 +1135,8 @@ mod windows_player {
         let initialize: MpvInitialize = symbol(module.0, c"mpv_initialize")?;
         let set_option: MpvSetOption = symbol(module.0, c"mpv_set_option_string")?;
         let command: MpvCommand = symbol(module.0, c"mpv_command")?;
-        let get_property_string: MpvGetPropertyString = symbol(module.0, c"mpv_get_property_string")?;
+        let get_property_string: MpvGetPropertyString =
+            symbol(module.0, c"mpv_get_property_string")?;
         let free: MpvFree = symbol(module.0, c"mpv_free")?;
         let terminate: MpvTerminate = symbol(module.0, c"mpv_terminate_destroy")?;
         let handle = create();
@@ -793,7 +1156,8 @@ mod windows_player {
             (c"vo", "gpu".into()),
             (c"gpu-context", "d3d11".into()),
             (c"hwdec", "auto-safe".into()),
-            (c"input-default-bindings", "yes".into()),
+            (c"input-default-bindings", "no".into()),
+            (c"input-vo-keyboard", "no".into()),
             (c"osc", "no".into()),
         ] {
             let value = CString::new(value).map_err(|error| error.to_string())?;

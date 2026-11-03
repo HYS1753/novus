@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 const RTLD_NOW: c_int = 2;
 const RTLD_LOCAL: c_int = 4;
@@ -22,6 +22,9 @@ extern "C" {
         y: f64,
         width: f64,
         height: f64,
+        context: *mut c_void,
+        on_tap: unsafe extern "C" fn(*mut c_void),
+        on_destroy: unsafe extern "C" fn(*mut c_void),
     ) -> *mut c_void;
     fn novus_mpv_resize_view(surface: *mut c_void, x: f64, y: f64, width: f64, height: f64);
     fn novus_mpv_destroy_view(surface: *mut c_void);
@@ -76,7 +79,11 @@ pub fn find_bundled_library(app: &AppHandle) -> Option<PathBuf> {
     #[cfg(debug_assertions)]
     {
         dirs.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin"));
-        dirs.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin").join("mpv"));
+        dirs.push(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("bin")
+                .join("mpv"),
+        );
     }
 
     dirs.into_iter()
@@ -119,16 +126,54 @@ fn on_main_thread<T: Send + 'static>(
         .map_err(|error| format!("Video surface did not respond: {error}"))?
 }
 
-fn create_surface(app: &AppHandle, bounds: VideoBounds) -> Result<usize, String> {
+struct SurfaceInput {
+    app: AppHandle,
+    session_id: String,
+}
+
+unsafe extern "C" fn surface_tap(context: *mut c_void) {
+    let input = &*(context as *const SurfaceInput);
+    let _ = input.app.emit_to(
+        "main",
+        "embedded-video-input",
+        serde_json::json!({
+            "session_id": input.session_id,
+            "action": "toggle_controls",
+        }),
+    );
+}
+
+unsafe extern "C" fn surface_destroyed(context: *mut c_void) {
+    drop(Box::from_raw(context as *mut SurfaceInput));
+}
+
+fn create_surface(app: &AppHandle, bounds: VideoBounds, id: &str) -> Result<usize, String> {
     let window = app
         .get_window("main")
         .ok_or_else(|| "Main window not found".to_string())?;
+    let input = SurfaceInput {
+        app: app.clone(),
+        session_id: id.to_string(),
+    };
     on_main_thread(app, move || {
         let parent = window.ns_view().map_err(|error| error.to_string())?;
+        let context = Box::into_raw(Box::new(input));
         let surface = unsafe {
-            novus_mpv_create_view(parent, bounds.x, bounds.y, bounds.width, bounds.height)
+            novus_mpv_create_view(
+                parent,
+                bounds.x,
+                bounds.y,
+                bounds.width,
+                bounds.height,
+                context.cast(),
+                surface_tap,
+                surface_destroyed,
+            )
         };
         if surface.is_null() {
+            unsafe {
+                drop(Box::from_raw(context));
+            }
             Err("Could not create macOS video surface".into())
         } else {
             Ok(surface as usize)
@@ -157,7 +202,7 @@ pub fn open(
         stop_session(app, old)?;
     }
 
-    let surface = create_surface(app, bounds)?;
+    let surface = create_surface(app, bounds, &id)?;
     let (commands, receiver) = mpsc::channel();
     let (started_tx, started_rx) = mpsc::sync_channel(1);
     let thread =
@@ -399,42 +444,87 @@ impl Player {
     unsafe fn control(&self, action: EmbeddedPlayerAction) -> Result<(), String> {
         match action {
             EmbeddedPlayerAction::TogglePause => {
-                let args = [c"cycle".as_ptr(), c"pause".as_ptr(), std::ptr::null(), std::ptr::null()];
+                let args = [
+                    c"cycle".as_ptr(),
+                    c"pause".as_ptr(),
+                    std::ptr::null(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::Play => {
-                let args = [c"set".as_ptr(), c"pause".as_ptr(), c"no".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"set".as_ptr(),
+                    c"pause".as_ptr(),
+                    c"no".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::Pause => {
-                let args = [c"set".as_ptr(), c"pause".as_ptr(), c"yes".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"set".as_ptr(),
+                    c"pause".as_ptr(),
+                    c"yes".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::SeekBackward => {
-                let args = [c"seek".as_ptr(), c"-10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"seek".as_ptr(),
+                    c"-10".as_ptr(),
+                    c"relative".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::SeekForward => {
-                let args = [c"seek".as_ptr(), c"10".as_ptr(), c"relative".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"seek".as_ptr(),
+                    c"10".as_ptr(),
+                    c"relative".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::ToggleMute => {
-                let args = [c"cycle".as_ptr(), c"mute".as_ptr(), std::ptr::null(), std::ptr::null()];
+                let args = [
+                    c"cycle".as_ptr(),
+                    c"mute".as_ptr(),
+                    std::ptr::null(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::SeekTo(seconds) => {
                 let sec_str = CString::new(format!("{seconds:.2}")).map_err(|e| e.to_string())?;
-                let args = [c"seek".as_ptr(), sec_str.as_ptr(), c"absolute".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"seek".as_ptr(),
+                    sec_str.as_ptr(),
+                    c"absolute".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::SeekPercent(percent) => {
                 let pct_str = CString::new(format!("{percent:.2}")).map_err(|e| e.to_string())?;
-                let args = [c"seek".as_ptr(), pct_str.as_ptr(), c"absolute-percent".as_ptr(), std::ptr::null()];
+                let args = [
+                    c"seek".as_ptr(),
+                    pct_str.as_ptr(),
+                    c"absolute-percent".as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
             EmbeddedPlayerAction::SetVolume(volume) => {
                 let vol_str = CString::new(format!("{volume:.1}")).map_err(|e| e.to_string())?;
-                let args = [c"set".as_ptr(), c"volume".as_ptr(), vol_str.as_ptr(), std::ptr::null()];
+                let args = [
+                    c"set".as_ptr(),
+                    c"volume".as_ptr(),
+                    vol_str.as_ptr(),
+                    std::ptr::null(),
+                ];
                 self.run_cmd(&args)
             }
         }

@@ -1,4 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { isTauriRuntime } from "../../lib/runtime";
 
 export interface VideoBounds {
@@ -30,6 +32,32 @@ export interface EmbeddedVideoPlaybackState {
   paused: boolean;
   volume: number;
   muted: boolean;
+}
+
+export interface EmbeddedVideoInput {
+  session_id: string;
+  action: "toggle_controls" | "close" | "exit" | "fullscreen";
+}
+
+export function openEmbeddedVideoOverlay(sessionId: string, video: unknown): Promise<void> {
+  return invoke("open_embedded_video_overlay", { sessionId, video });
+}
+
+export function requestEmbeddedVideoOverlayAction(
+  sessionId: string,
+  action: "close" | "exit" | "fullscreen",
+): Promise<void> {
+  return invoke("request_embedded_video_overlay_action", { sessionId, action });
+}
+
+export function listenEmbeddedVideoInput(
+  sessionId: string,
+  onInput: (action: EmbeddedVideoInput["action"]) => void,
+): Promise<UnlistenFn> {
+  if (!isTauriRuntime()) return Promise.resolve(() => {});
+  return getCurrentWebview().listen<EmbeddedVideoInput>("embedded-video-input", ({ payload }) => {
+    if (payload.session_id === sessionId) onInput(payload.action);
+  });
 }
 
 export function getEmbeddedPlayerSupport(): Promise<EmbeddedPlayerSupport> {
