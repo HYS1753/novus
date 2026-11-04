@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   useCurrentTime,
   toggleFullscreen,
+  useDisplayMode,
   GlassButton,
   CloudSunIcon,
   SettingsIcon,
@@ -25,6 +26,7 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
   onSearchChange,
 }) => {
   const { time, date } = useCurrentTime();
+  const { appFullscreen } = useDisplayMode();
   const [isDark, setIsDark] = useState(
     () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
   );
@@ -172,12 +174,13 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={toggleFullscreen}
-            aria-label="전체화면 전환"
-            title="전체화면"
+            aria-label={appFullscreen ? "창 모드로 전환" : "전체화면으로 전환"}
+            aria-pressed={appFullscreen}
+            title={appFullscreen ? "창 모드로 전환 (F11)" : "전체화면으로 전환 (F11)"}
             className="quick-header__icon-btn quick-header__icon-btn--fullscreen"
           >
             <MotionIcon motion="pop">
-              <FullscreenIcon size={18} />
+              <FullscreenIcon size={18} isFullscreen={appFullscreen} />
             </MotionIcon>
           </GlassButton>
 

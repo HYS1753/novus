@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
 
@@ -13,12 +14,15 @@ pub struct PageBounds {
 
 #[derive(Debug, Clone)]
 pub struct ManagedPage {
+    pub generation: u64,
     pub id: String,
     pub url: String,
     pub label: String,
     pub bounds: PageBounds,
     pub is_visible: bool,
 }
+
+static NEXT_GENERATION: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Default)]
 pub struct PageManagerState {
@@ -46,7 +50,8 @@ pub fn list_streaming_pages(
     state: tauri::State<'_, PageManagerState>,
 ) -> Result<Vec<String>, String> {
     let pages = state.pages.lock().map_err(|e| e.to_string())?;
-    let mut ids: Vec<String> = pages.values()
+    let mut ids: Vec<String> = pages
+        .values()
         .filter(|page| app.get_webview(&page.label).is_some())
         .map(|page| page.id.clone())
         .collect();
@@ -77,6 +82,7 @@ pub async fn show_streaming_page(
 
         if let Some(ref prev_id) = *curr_guard {
             if prev_id != &id {
+                exit_content_before_hiding(&app, prev_id);
                 let prev_label = get_page_label(prev_id);
                 if let Some(prev_webview) = app.get_webview(&prev_label) {
                     let _ = prev_webview.hide();
@@ -101,16 +107,10 @@ pub async fn show_streaming_page(
         let _ = existing_webview.set_focus();
 
         let mut pages_guard = state.pages.lock().map_err(|e| e.to_string())?;
-        pages_guard.insert(
-            id.clone(),
-            ManagedPage {
-                id,
-                url,
-                label,
-                bounds,
-                is_visible: true,
-            },
-        );
+        if let Some(page) = pages_guard.get_mut(&id) {
+            page.bounds = bounds;
+            page.is_visible = true;
+        }
 
         return Ok(());
     }
@@ -153,6 +153,7 @@ pub async fn show_streaming_page(
 
     let mut webview_builder = WebviewBuilder::new(&label, WebviewUrl::External(parsed_url))
         .initialization_script(init_script)
+        .initialization_script(include_str!("streaming_fullscreen.js"))
         .accept_first_mouse(true);
 
     if !is_google_or_youtube {
@@ -173,17 +174,21 @@ pub async fn show_streaming_page(
         let _ = created_webview.set_focus();
     }
 
+    let generation = NEXT_GENERATION.fetch_add(1, Ordering::Relaxed);
     let mut pages_guard = state.pages.lock().map_err(|e| e.to_string())?;
     pages_guard.insert(
         id.clone(),
         ManagedPage {
-            id,
+            generation,
+            id: id.clone(),
             url,
             label,
             bounds,
             is_visible: true,
         },
     );
+    drop(pages_guard);
+    crate::display_mode::observe_streaming(&app, &id, generation)?;
 
     Ok(())
 }
@@ -196,6 +201,7 @@ pub async fn hide_streaming_page(
     state: tauri::State<'_, PageManagerState>,
     id: String,
 ) -> Result<(), String> {
+    exit_content_before_hiding(&app, &id);
     let label = get_page_label(&id);
 
     if let Some(existing_webview) = app.get_webview(&label) {
@@ -223,12 +229,35 @@ pub async fn update_streaming_page_bounds(
     state: tauri::State<'_, PageManagerState>,
     id: String,
     bounds: PageBounds,
+    revision: Option<u64>,
 ) -> Result<(), String> {
     let label = get_page_label(&id);
 
+    let mode = crate::display_mode::get_display_mode(app.clone())?;
+    if revision.is_some_and(|revision| revision != mode.revision) {
+        return Ok(());
+    }
+    if mode.content_page.as_deref() == Some(&id) {
+        crate::display_mode::sync_content_bounds(&app);
+        return Ok(());
+    }
+    let visible = state
+        .pages
+        .lock()
+        .map_err(|e| e.to_string())?
+        .get(&id)
+        .is_some_and(|page| page.is_visible);
+    if !visible {
+        return Ok(());
+    }
+
     if let Some(existing_webview) = app.get_webview(&label) {
-        let _ = existing_webview.set_position(LogicalPosition::new(bounds.x, bounds.y));
-        let _ = existing_webview.set_size(LogicalSize::new(bounds.width, bounds.height));
+        existing_webview
+            .set_bounds(tauri::Rect {
+                position: LogicalPosition::new(bounds.x, bounds.y).into(),
+                size: LogicalSize::new(bounds.width, bounds.height).into(),
+            })
+            .map_err(|e| e.to_string())?;
     }
 
     let mut pages_guard = state.pages.lock().map_err(|e| e.to_string())?;
@@ -242,6 +271,7 @@ pub async fn update_streaming_page_bounds(
 /// Reloads the contents of a streaming page without tearing down the browser process.
 #[tauri::command]
 pub async fn reload_streaming_page(app: AppHandle, id: String) -> Result<(), String> {
+    exit_content_before_hiding(&app, &id);
     let label = get_page_label(&id);
 
     if let Some(existing_webview) = app.get_webview(&label) {
@@ -259,6 +289,7 @@ pub async fn discard_streaming_page(
     state: tauri::State<'_, PageManagerState>,
     id: String,
 ) -> Result<(), String> {
+    exit_content_before_hiding(&app, &id);
     let label = get_page_label(&id);
 
     if let Some(existing_webview) = app.get_webview(&label) {
@@ -298,6 +329,10 @@ pub async fn go_back_or_close_streaming_page(
     let js = r#"
         (function() {
             try {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    return "navigated";
+                }
                 // 1. If Modern Navigation API is available, check canGoBack directly
                 if (window.navigation && typeof window.navigation.canGoBack === "boolean") {
                     if (window.navigation.canGoBack) {
@@ -346,4 +381,12 @@ pub async fn go_back_or_close_streaming_page(
             Ok(false)
         }
     }
+}
+
+fn exit_content_before_hiding(app: &AppHandle, id: &str) {
+    if let Some(webview) = app.get_webview(&get_page_label(id)) {
+        let _ =
+            webview.eval("if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});");
+    }
+    crate::display_mode::clear_content(app, id);
 }

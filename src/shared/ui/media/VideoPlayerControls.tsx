@@ -245,7 +245,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
               aria-label={isFullscreen ? "전체화면 종료" : "전체화면"}
             >
               <MotionIcon motion="pop">
-                <FullscreenIcon size={20} />
+                <FullscreenIcon size={20} isFullscreen={isFullscreen} />
               </MotionIcon>
             </button>
           )}

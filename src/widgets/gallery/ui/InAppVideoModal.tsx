@@ -20,6 +20,10 @@ import {
   isTauriRuntime,
   openEmbeddedVideo,
   updateEmbeddedVideoBounds,
+  useDisplayMode,
+  getDisplayMode,
+  exitWindowFullscreen,
+  reportWindowModeError,
 } from "@/shared";
 
 interface InAppVideoModalProps {
@@ -37,6 +41,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLVideoElement>(null);
+  const escapePendingRef = useRef(false);
   const { isPlaying, playVideo, feedback } = useNativeVideoPlayer();
 
   const [videoError, setVideoError] = useState(false);
@@ -53,7 +58,9 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const displayMode = useDisplayMode();
+  const [browserFullscreen, setBrowserFullscreen] = useState(false);
+  const isFullscreen = isTauriRuntime() ? displayMode.appFullscreen : browserFullscreen;
 
   // Auto-hide controls on inactivity
   const [userActive, setUserActive] = useState(true);
@@ -79,7 +86,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       if (cancelled) return;
       if (action === "close") onClose();
       else if (action === "exit") void closeWindow();
-      else if (action === "fullscreen") void toggleFullscreen();
+      else if (action === "fullscreen" && !overlaySessionId) void toggleFullscreen();
       else toggleControls();
     })
       .then((dispose) => {
@@ -94,7 +101,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       cancelled = true;
       unlisten?.();
     };
-  }, [nativeSessionId, onClose, toggleControls]);
+  }, [nativeSessionId, onClose, overlaySessionId, toggleControls]);
 
   useEffect(() => {
     const finish = () => setIsInteracting(false);
@@ -270,12 +277,12 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       notifyActivity();
       return;
     }
-    if (!document.fullscreenElement) {
+    if (isTauriRuntime()) {
+      void toggleFullscreen();
+    } else if (!document.fullscreenElement) {
       void modalRef.current?.requestFullscreen();
-      setIsFullscreen(true);
     } else {
       void document.exitFullscreen();
-      setIsFullscreen(false);
     }
     notifyActivity();
   }, [notifyActivity, overlaySessionId]);
@@ -283,7 +290,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
   // Fullscreen change listener
   useEffect(() => {
     const handleFsChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      setBrowserFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFsChange);
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
@@ -294,8 +301,18 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        event.stopPropagation();
-        onClose();
+        event.stopImmediatePropagation();
+        if (event.repeat || escapePendingRef.current) return;
+        escapePendingRef.current = true;
+        void getDisplayMode()
+          .then(async (mode) => {
+            if (mode.appFullscreen) await exitWindowFullscreen();
+            else onClose();
+          })
+          .catch(reportWindowModeError)
+          .finally(() => {
+            escapePendingRef.current = false;
+          });
         return;
       }
       if (

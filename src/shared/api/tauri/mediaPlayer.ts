@@ -93,10 +93,11 @@ export async function hideStreamingPage(id: string): Promise<void> {
 export async function updateStreamingPageBounds(
   id: string,
   bounds: StreamingPageBounds,
+  revision?: number,
 ): Promise<void> {
   if (!isTauriRuntime()) return;
   try {
-    await invoke("update_streaming_page_bounds", { id, bounds });
+    await invoke("update_streaming_page_bounds", { id, bounds, revision });
   } catch (error) {
     console.warn(`Failed to update streaming page bounds (${id}):`, error);
   }

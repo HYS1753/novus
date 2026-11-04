@@ -25,6 +25,10 @@ serde_json = "1"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "bmp", "gif"] }
 base64 = "0.22"
 
+[target.'cfg(windows)'.dependencies]
+# Reuse the bindings already used by Tauri for native fullscreen events.
+webview2-com = "0.38.2"
+
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

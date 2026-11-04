@@ -1,5 +1,8 @@
 import React from "react";
 import { RunningApps } from "@/shared/ui/nav/RunningApps";
+import { toggleFullscreen } from "@/shared/api/tauri/window";
+import { useDisplayMode } from "@/shared/hooks/useDisplayMode";
+import { FullscreenIcon } from "@/shared/ui/icons";
 import { useCurrentTime } from "../../hooks";
 import { ArrowLeftIcon, HomeIcon, MotionIcon, RefreshIcon } from "../icons";
 import { TouchButton } from "../button";
@@ -27,6 +30,7 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
   toolsSlot,
 }) => {
   const { time } = useCurrentTime();
+  const { appFullscreen } = useDisplayMode();
 
   return (
     <aside
@@ -52,6 +56,19 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
         )}
 
         {toolsSlot}
+        <TouchButton
+          variant="ghost"
+          size="sm"
+          className="in-app-dock__btn"
+          onClick={toggleFullscreen}
+          aria-label={appFullscreen ? "창 모드로 전환" : "전체화면으로 전환"}
+          aria-pressed={appFullscreen}
+          title={appFullscreen ? "창 모드로 전환 (F11)" : "전체화면으로 전환 (F11)"}
+        >
+          <MotionIcon motion="pop">
+            <FullscreenIcon size={20} isFullscreen={appFullscreen} />
+          </MotionIcon>
+        </TouchButton>
       </div>
 
       {/* Center: Clean Subpage Title */}

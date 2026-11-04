@@ -10,6 +10,9 @@ import {
   listStreamingPages,
   discardStreamingPage,
   STREAMING_PAGES_CHANGED,
+  useDisplayMode,
+  exitWindowFullscreen,
+  reportWindowModeError,
 } from "@/shared";
 import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
@@ -148,6 +151,27 @@ export const DashboardPage: React.FC = () => {
   const [closingId, setClosingId] = useState<string | null>(null);
   const closingRef = useRef(false);
   const [runningError, setRunningError] = useState("");
+  const { appFullscreen } = useDisplayMode();
+
+  useEffect(() => {
+    if (
+      !appFullscreen ||
+      activeApp ||
+      activeView !== "dashboard" ||
+      isSettingsOpen ||
+      isRemoteModalOpen ||
+      isAmbientModalOpen
+    )
+      return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented && !event.repeat) {
+        event.preventDefault();
+        void exitWindowFullscreen().catch(reportWindowModeError);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [appFullscreen, activeApp, activeView, isSettingsOpen, isRemoteModalOpen, isAmbientModalOpen]);
 
   useEffect(() => {
     let generation = 0;

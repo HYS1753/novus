@@ -9,6 +9,10 @@ import {
   reloadStreamingPage,
   goBackOrCloseStreamingPage,
   isTauriRuntime,
+  useDisplayMode,
+  exitStreamingFullscreen,
+  exitWindowFullscreen,
+  reportWindowModeError,
 } from "@/shared";
 import { useLaunchApp } from "@/features";
 import type { AppItem } from "@/entities";
@@ -21,6 +25,8 @@ export interface InAppPlayerProps {
 
 export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSettings }) => {
   const { dockPosition } = useDockPosition();
+  const displayMode = useDisplayMode();
+  const contentFullscreen = displayMode.contentPage === app.id;
   const { launchApp } = useLaunchApp();
   const viewportRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -36,13 +42,17 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
   const syncPageBounds = useCallback(() => {
     if (!isTauri || !isPageShownRef.current || !viewportRef.current) return;
     const rect = viewportRef.current.getBoundingClientRect();
-    updateStreamingPageBounds(app.id, {
-      x: Math.round(rect.left),
-      y: Math.round(rect.top),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height),
-    });
-  }, [app.id, isTauri]);
+    updateStreamingPageBounds(
+      app.id,
+      {
+        x: Math.round(rect.left),
+        y: Math.round(rect.top),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      },
+      displayMode.revision < 0 ? undefined : displayMode.revision,
+    );
+  }, [app.id, displayMode.revision, isTauri]);
 
   // Show / attach native child webview via singleton page manager
   useEffect(() => {
@@ -113,7 +123,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
         resizeObserver.disconnect();
       }
     };
-  }, [dockPosition, isTauri, syncPageBounds]);
+  }, [dockPosition, contentFullscreen, isTauri, syncPageBounds]);
 
   const startFallbackTimer = useCallback(() => {
     if (fallbackTimerRef.current) {
@@ -210,17 +220,23 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        handleHome();
+        if (contentFullscreen) {
+          void exitStreamingFullscreen(app.id).catch(reportWindowModeError);
+        } else if (displayMode.appFullscreen) {
+          void exitWindowFullscreen().catch(reportWindowModeError);
+        } else {
+          handleHome();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleHome]);
+  }, [app.id, contentFullscreen, displayMode.appFullscreen, handleHome]);
 
   return (
     <div
-      className={`in-app-player in-app-player--dock-${dockPosition}`}
+      className={`in-app-player in-app-player--dock-${dockPosition}${contentFullscreen ? " in-app-player--content-fullscreen" : ""}`}
       style={{
         ["--app-accent" as string]: app.accentColor,
       }}
@@ -250,15 +266,17 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
         )}
       </div>
 
-      <InAppDock
-        app={app}
-        dockPosition={dockPosition}
-        onHome={handleHome}
-        onBack={handleBack}
-        onReload={handleReload}
-        onOpenExternal={handleOpenExternal}
-        onOpenSettings={onOpenSettings}
-      />
+      {!contentFullscreen && (
+        <InAppDock
+          app={app}
+          dockPosition={dockPosition}
+          onHome={handleHome}
+          onBack={handleBack}
+          onReload={handleReload}
+          onOpenExternal={handleOpenExternal}
+          onOpenSettings={onOpenSettings}
+        />
+      )}
     </div>
   );
 };

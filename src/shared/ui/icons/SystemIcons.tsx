@@ -170,7 +170,12 @@ export const BatteryIcon: React.FC<IconProps> = ({ size = 20, className = "", ..
 );
 
 /** Action: Fullscreen Toggle icon */
-export const FullscreenIcon: React.FC<IconProps> = ({ size = 18, className = "", ...props }) => (
+export const FullscreenIcon: React.FC<IconProps & { isFullscreen?: boolean }> = ({
+  size = 18,
+  className = "",
+  isFullscreen = false,
+  ...props
+}) => (
   <svg
     width={size}
     height={size}
@@ -183,7 +188,13 @@ export const FullscreenIcon: React.FC<IconProps> = ({ size = 18, className = "",
     className={`inline-block ${className}`}
     {...props}
   >
-    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    <path
+      d={
+        isFullscreen
+          ? "M3 8h5V3m8 0v5h5M3 16h5v5m8 0v-5h5"
+          : "M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+      }
+    />
   </svg>
 );
 

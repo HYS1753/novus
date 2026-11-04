@@ -1,4 +1,5 @@
 mod commands;
+mod display_mode;
 pub mod page_manager;
 use tauri::Manager;
 
@@ -32,12 +33,17 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .manage(PageManagerState::new())
+        .manage(display_mode::DisplayModeState::default())
         .manage(MediaPageState::default())
         .manage(EmbeddedPlayerState::default())
         .manage(DeviceProfile::detect())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
+            display_mode::get_display_mode,
+            display_mode::toggle_window_fullscreen,
+            display_mode::exit_window_fullscreen,
+            display_mode::exit_streaming_fullscreen,
             get_system_status,
             get_device_profile,
             open_media_window,
@@ -77,6 +83,7 @@ pub fn run() {
                 event,
                 tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_)
             ) {
+                display_mode::sync_content_bounds(window.app_handle());
                 for (label, overlay) in window.app_handle().webview_windows() {
                     if !label.starts_with("video-controls-") {
                         continue;
@@ -86,6 +93,12 @@ pub fn run() {
                     }
                     if let Ok(size) = window.inner_size() {
                         let _ = overlay.set_size(size);
+                    }
+                    if window.is_focused().unwrap_or(false) || overlay.is_focused().unwrap_or(false) {
+                        let _ = overlay.set_focus();
+                        if let Some(webview) = window.app_handle().get_webview(&label) {
+                            let _ = webview.set_focus();
+                        }
                     }
                 }
             }
