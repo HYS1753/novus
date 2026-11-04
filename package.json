@@ -1,11 +1,11 @@
 {
   "name": "novus",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "pnpm release:check && tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit",
@@ -13,6 +13,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "release:check": "node scripts/release.mjs check",
+    "release:version": "node scripts/release.mjs set",
+    "release:info": "node scripts/release.mjs info",
+    "release:test": "node --test scripts/release.test.mjs",
+    "release:build:windows": "pnpm release:check && pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis",
     "setup:mpv": "python3 scripts/setup_mpv.py || python scripts/setup_mpv.py",
     "prepare": "simple-git-hooks"
   },

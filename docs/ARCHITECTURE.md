@@ -267,3 +267,10 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 - `streaming_fullscreen.js`는 전체화면 컨테이너에 보조 종료 버튼 한 개를 추가합니다. 진입 시와 상단 56px 영역의 포인터/터치 입력 시 3초 표시하고 opacity로 숨깁니다. video/iframe 자체의 전체화면에는 추가하지 않고 브라우저/서비스 조작을 사용합니다. 별도 웹뷰나 디코더를 만들지 않습니다.
 - Escape 해제는 `exit_window_fullscreen` 명령으로 처리합니다. 토글과 분리해 반복 입력이나 늦은 프런트엔드 상태로 전체화면에 재진입하지 않게 합니다. 내장 영상 Escape는 최신 네이티브 상태를 조회하고 처리 중 입력을 합칩니다. 소유 조작 창의 키보드 포커스는 창 전환과 활성 창 크기 변경 후 복원합니다.
 - 공통 SubpageDock에서도 창 전체화면 버튼을 제공하며 아이콘·접근성 상태는 실제 사용자 선택을 반영합니다. 대시보드 Escape는 열린 설정/모달이나 내부 화면이 없을 때 창 전체화면을 해제합니다.
+
+### 배포 버전과 설치 계약
+
+- `release.config.json`은 공개 소스/배포 저장소, stable 채널, Windows x64 NSIS currentUser 설치 및 `com.novus.hub` 식별자·제품명·실행 파일명을 고정합니다. Windows 빌드에는 `tauri.windows.conf.json`이 병합되어 NSIS만 생성합니다.
+- 버전의 기준은 package.json이며 `scripts/release.mjs`가 Tauri 설정, Cargo.toml, Cargo.lock의 로컬 novus 항목과의 일치를 검사합니다. `pnpm release:version`은 네 파일을 함께 갱신하고 의존 패키지 버전은 유지합니다. `pnpm build` 시작 시 이 검사를 실행합니다.
+- 전달된 배포 태그와 GitHub의 실제 tag ref는 모두 `v` + 앱 버전과 일치해야 합니다. source info는 버전·기대 태그·HEAD·dirty 여부와 설치 계약을 출력합니다. 태그의 실제 생성/Push 및 main 포함 여부 검증은 아직 구현한 자동 배포 기능이 아닙니다.
+- 이 도구는 빌드 단계에서만 실행됩니다. 앱 IPC, updater, 서명 키와 Release 게시는 아직 추가하지 않았습니다. 명령과 기존 MSI 설치본의 전환 제한은 RELEASING.md에 명시합니다.

@@ -1,0 +1,4 @@
+# Keep checkouts consistent with Prettier on Windows and CI runners.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

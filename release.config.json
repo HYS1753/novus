@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sourceRepository": "HYS1753/novus",
+  "releaseRepository": "HYS1753/novus",
+  "channel": "stable",
+  "windows": {
+    "target": "x86_64-pc-windows-msvc",
+    "bundle": "nsis",
+    "installMode": "currentUser",
+    "identifier": "com.novus.hub",
+    "productName": "novus",
+    "binaryName": "novus"
+  }
+}
