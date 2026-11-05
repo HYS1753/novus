@@ -1,4 +1,15 @@
 fn main() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        // Tauri 2.12 imports TaskDialogIndirect from Common Controls v6.
+        // tauri-build embeds the app manifest for binaries; lib unit-test EXEs
+        // also need this activation context to start on Windows.
+        println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
+        println!("cargo:rustc-link-arg=/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'");
+        // The app binary already gets manifest resource #1 from tauri-build.
+        // Do not generate a second resource for binaries; lib test EXEs still
+        // use the linker-generated manifest above.
+        println!("cargo:rustc-link-arg-bins=/MANIFEST:NO");
+    }
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
         use std::path::PathBuf;
         use std::process::Command;

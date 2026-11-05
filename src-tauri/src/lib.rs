@@ -1,6 +1,7 @@
 mod commands;
 mod display_mode;
 pub mod page_manager;
+mod updater;
 use tauri::Manager;
 
 use commands::device_profile::{get_device_profile, DeviceProfile};
@@ -31,14 +32,23 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .manage(PageManagerState::new())
         .manage(display_mode::DisplayModeState::default())
         .manage(MediaPageState::default())
         .manage(EmbeddedPlayerState::default())
         .manage(DeviceProfile::detect())
         .plugin(tauri_plugin_opener::init())
+        .manage(updater::UpdaterState::default());
+    #[cfg(windows)]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    builder
         .invoke_handler(tauri::generate_handler![
+            updater::get_update_state,
+            updater::check_for_update,
+            updater::download_update,
+            updater::install_update,
+            updater::cancel_update,
             greet,
             display_mode::get_display_mode,
             display_mode::toggle_window_fullscreen,
@@ -94,7 +104,8 @@ pub fn run() {
                     if let Ok(size) = window.inner_size() {
                         let _ = overlay.set_size(size);
                     }
-                    if window.is_focused().unwrap_or(false) || overlay.is_focused().unwrap_or(false) {
+                    if window.is_focused().unwrap_or(false) || overlay.is_focused().unwrap_or(false)
+                    {
                         let _ = overlay.set_focus();
                         if let Some(webview) = window.app_handle().get_webview(&label) {
                             let _ = webview.set_focus();

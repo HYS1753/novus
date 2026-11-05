@@ -3,3 +3,4 @@ export * from "./mediaPlayer";
 export * from "./mediaFs";
 export * from "./embeddedVideo";
 export * from "./deviceProfile";
+export * from "./updater";

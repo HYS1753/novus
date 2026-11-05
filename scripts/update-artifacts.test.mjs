@@ -29,6 +29,18 @@ test("production signing policy rejects disabled signatures, key drift and insec
   const original = readFileSync(path, "utf8");
   for (const mutate of [
     (config) => {
+      config.plugins.updater.dangerousAcceptInvalidCerts = true;
+    },
+    (config) => {
+      config.plugins.updater.dangerousAcceptInvalidHostnames = true;
+    },
+    (config) => {
+      config.plugins.updater.requireSignedVersion = false;
+    },
+    (config) => {
+      config.plugins.updater.allowDowngrades = true;
+    },
+    (config) => {
       config.bundle.createUpdaterArtifacts = false;
     },
     (config) => {

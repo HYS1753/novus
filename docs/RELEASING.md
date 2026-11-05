@@ -3,7 +3,7 @@
 ## 현재 범위
 
 - 배포 준비 버전은 `0.2.0`입니다. 버전 표시는 배포 완료를 의미하지 않습니다.
-- Windows 설치 규칙·서명 검증·배포 도구와 GitHub Actions 서명 빌드·Release 초안 생성을 구현했습니다. updater 런타임은 아직 없으며 앱이 업데이트를 조회하거나 설치하지 않습니다. 태그 생성과 최종 공개 게시는 별도 명시적 작업입니다.
+- Windows 설치 규칙·서명 검증·GitHub Actions와 main 전용 IPC로 동작하는 Windows updater 런타임을 구현했습니다. 자동 조회/설치와 ON/OFF·수동 업데이트 UI는 아직 없습니다. 태그 생성과 최종 공개 게시는 별도 명시적 작업입니다. 런타임 계약은 [UPDATE_RUNTIME.md](UPDATE_RUNTIME.md)를 따릅니다.
 - 정식 배포 대상은 Windows x64입니다. macOS와 Linux의 정식 지원 여부는 각 플랫폼 실행 검증 이후 결정합니다.
 - 소스 및 배포 저장소는 공개 저장소 `HYS1753/novus`입니다. 공개 여부는 2026-11-04 인증 없는 GitHub 저장소 API에서 확인했습니다. 저장소 공개 범위는 변경하지 않았습니다.
 
@@ -81,7 +81,7 @@ Windows 빌드 명령은 대상 아키텍처·NSIS 형식·Cargo --locked를 명
 
 ## 다음 단계의 시작 조건
 
-4단계(updater 런타임)는 사용자 시작 지시 이후 진행합니다. 현재 워크플로는 서명 빌드와 Release 초안까지만 자동화하며 앱 업데이트와 공개 게시는 실행하지 않습니다.
+5단계(자동 업데이트 ON/OFF·수동 업데이트 UI)는 사용자 시작 지시 이후 진행합니다. 현재 워크플로는 서명 빌드와 Release 초안까지만 자동화합니다. 런타임 업데이트는 명시적 IPC로만 실행하며 앱이 스스로 조회·다운로드·설치를 시작하지 않습니다.
 
 ## 업데이트 키 보관
 
@@ -102,7 +102,7 @@ GitHub Secrets에는 3단계에서 `TAURI_SIGNING_PRIVATE_KEY`(암호화된 키 
 
 ## 서명된 Windows 파일 구성
 
-Windows 설정은 `bundle.createUpdaterArtifacts: true`, 공개 키 내용, HTTPS `https://github.com/HYS1753/novus/releases/latest/download/latest.json`, updater 설치 모드 `passive`를 선언합니다. `currentUser`는 설치 범위, `passive`는 향후 updater의 설치 진행 UI 방식으로 서로 다른 설정입니다. 현재 앱에는 updater 플러그인이 없어서 설정만으로 자동 업데이트가 시작되지는 않습니다.
+Windows 설정은 `bundle.createUpdaterArtifacts: true`, 공개 키 내용, HTTPS `https://github.com/HYS1753/novus/releases/latest/download/latest.json`, `requireSignedVersion: true`, `allowDowngrades: false`, updater 설치 모드 `passive`를 선언합니다. `currentUser`는 설치 범위, `passive`는 updater의 설치 진행 UI 방식으로 서로 다른 설정입니다. 플러그인은 등록하지만 명시적 IPC 호출 전에는 업데이트를 조회하거나 설치하지 않습니다.
 
 사용자 터미널에서 로컬 키의 **경로만** 환경 변수로 전달합니다. Tauri가 패키징 후 비밀번호를 대화형으로 묻습니다. 개인 키나 비밀번호를 콘솔에 출력하지 않습니다.
 
@@ -148,7 +148,7 @@ Secrets 두 개는 Repository secrets에 등록합니다. 값은 서명 빌드 �
 자동 순서:
 
 1. 저장소 계약, 깨끗한 소스, 이벤트 종류, SHA, 태그, main 포함 여부 검사
-2. 잠금 파일 설치와 typecheck → lint → format:check → build, 배포/서명/의존성 무결성 테스트
+2. 잠금 파일 설치와 typecheck → lint → format:check → build, 배포/서명/의존성 무결성 및 네이티브 Rust 회귀 테스트
 3. MPV 압축본 및 DLL 해시 검사 후 준비
 4. Secrets로 Windows x64 NSIS EXE 서명 빌드
 5. 소스가 빌드 전과 같은지 확인하고 EXE 서명·MPV 해시 검사
@@ -157,7 +157,7 @@ Secrets 두 개는 Repository secrets에 등록합니다. 값은 서명 빌드 �
 
 `release-source.json`은 버전, 태그, 소스 commit/tree, workflow run ID/attempt, ref/event, 빌드 시각, 공개 키·MPV 및 파일 SHA256을 기록합니다. 이는 해당 CI에서 검사한 추적 정보이며 별도의 서명된 attestation은 아닙니다. `latest.json`의 EXE URL은 `/releases/download/v<버전>/...`으로 해당 버전에 고정합니다.
 
-수동 검증은 태그 없이 실제 Secrets와 서명 빌드를 확인할 때 사용합니다. Release 초안 생성 경로는 태그 Push에서 검증합니다. 현재 준비 버전에는 updater가 없으므로 초안을 바로 공개해 자동 업데이트 대상으로 사용하지 않습니다. 이후 updater·설치·데이터 보존 검증 후 담당자가 Release 화면에서 공개합니다. 초안 파일은 공개 updater의 latest endpoint로 배포되지 않습니다.
+수동 검증은 태그 없이 실제 Secrets와 서명 빌드를 확인할 때 사용합니다. Release 초안 생성 경로는 태그 Push에서 검증합니다. 업데이트 런타임이 있어도 UI·실제 설치/재시작·데이터 보존 검증 전에는 초안을 바로 공개하지 않습니다. 검증 후 담당자가 Release 화면에서 공개합니다. 초안 파일은 공개 updater의 latest endpoint로 배포되지 않습니다.
 
 실제 태그 배포 시에는 새 버전 변경·검증을 main에 병합하고 원격에 반영한 다음, 해당 커밋에서 다음 명령을 수행합니다. 아래 버전은 예시이며 같은 태그를 다시 사용하지 않습니다.
 

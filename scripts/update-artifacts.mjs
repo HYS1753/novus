@@ -97,6 +97,10 @@ export function checkSigning(projectRoot = root) {
   requireValue(config.bundle.createUpdaterArtifacts === true, "Updater artifacts must be enabled");
   const updater = config.plugins?.updater;
   requireValue(
+    updater?.requireSignedVersion === true && updater?.allowDowngrades === false,
+    "Signed versions are required and downgrades must be disabled",
+  );
+  requireValue(
     updater?.pubkey === publicKey,
     "Configured public key differs from signing/updater.pub",
   );
@@ -107,7 +111,9 @@ export function checkSigning(projectRoot = root) {
   );
   requireValue(updater.windows?.installMode === "passive", "Updater install mode must be passive");
   requireValue(
-    !updater.dangerousInsecureTransportProtocol,
+    !updater.dangerousInsecureTransportProtocol &&
+      !updater.dangerousAcceptInvalidCerts &&
+      !updater.dangerousAcceptInvalidHostnames,
     "Insecure updater transport is forbidden",
   );
   return { ...release, publicKey };
