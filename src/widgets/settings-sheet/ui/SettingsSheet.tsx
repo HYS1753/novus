@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { UpdateSettings } from "@/features";
 import {
   GlassSheet,
   GlassListRow,
@@ -79,6 +80,7 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
       }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <UpdateSettings />
         {/* 인앱 플레이어 독 위치 설정 */}
         <section>
           <GlassDivider label="인앱 플레이어 & 내비게이션 독" size="md" />

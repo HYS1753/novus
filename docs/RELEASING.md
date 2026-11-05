@@ -81,7 +81,7 @@ Windows 빌드 명령은 대상 아키텍처·NSIS 형식·Cargo --locked를 명
 
 ## 다음 단계의 시작 조건
 
-5단계(자동 업데이트 ON/OFF·수동 업데이트 UI)는 사용자 시작 지시 이후 진행합니다. 현재 워크플로는 서명 빌드와 Release 초안까지만 자동화합니다. 런타임 업데이트는 명시적 IPC로만 실행하며 앱이 스스로 조회·다운로드·설치를 시작하지 않습니다.
+현재 워크플로는 서명 빌드와 Release 초안까지만 자동화합니다. 설치본은 설정의 자동 업데이트 ON/OFF에 따라 새 버전을 확인·다운로드하고 수동 확인·진행률·설치 확인 UI를 제공합니다. 자동 설치는 하지 않습니다. 실제 설치·재시작·로그인 및 설정 보존을 검증하는 6단계는 사용자 시작 지시 후 진행합니다. 공개 전까지 새 태그·Release 게시는 별도 수행하지 않습니다. 런타임 계약은 UPDATE_RUNTIME.md를 따릅니다.
 
 ## 업데이트 키 보관
 
@@ -102,7 +102,7 @@ GitHub Secrets에는 3단계에서 `TAURI_SIGNING_PRIVATE_KEY`(암호화된 키 
 
 ## 서명된 Windows 파일 구성
 
-Windows 설정은 `bundle.createUpdaterArtifacts: true`, 공개 키 내용, HTTPS `https://github.com/HYS1753/novus/releases/latest/download/latest.json`, `requireSignedVersion: true`, `allowDowngrades: false`, updater 설치 모드 `passive`를 선언합니다. `currentUser`는 설치 범위, `passive`는 updater의 설치 진행 UI 방식으로 서로 다른 설정입니다. 플러그인은 등록하지만 명시적 IPC 호출 전에는 업데이트를 조회하거나 설치하지 않습니다.
+Windows 설정은 `bundle.createUpdaterArtifacts: true`, 공개 키 내용, HTTPS `https://github.com/HYS1753/novus/releases/latest/download/latest.json`, `requireSignedVersion: true`, `allowDowngrades: false`, updater 설치 모드 `passive`를 선언합니다. `currentUser`는 설치 범위, `passive`는 updater의 설치 진행 UI 방식으로 서로 다른 설정입니다. main 앱의 컨트롤러가 자동/수동 조회·다운로드 IPC를 호출하고 설치는 사용자의 최종 확인 뒤에만 호출합니다.
 
 사용자 터미널에서 로컬 키의 **경로만** 환경 변수로 전달합니다. Tauri가 패키징 후 비밀번호를 대화형으로 묻습니다. 개인 키나 비밀번호를 콘솔에 출력하지 않습니다.
 

@@ -263,7 +263,9 @@ pnpm build
 - 3단계 `Windows signed release` 워크플로는 v* 태그를 검사한 뒤 서명된 Windows x64 설치 파일과 Release 초안을 만듭니다. 수동 실행은 main에서 서명 빌드·산출물 검증만 수행합니다. 기존 Release 버전은 덮어쓰지 않으며 공개 게시는 설치·updater 검증 후 별도로 진행합니다. Repository secrets 2개와 실행 방법은 RELEASING.md를 따릅니다.
 - `release:ci guard/prepare/verify`는 main 포함 여부, 소스 커밋·Git tree·워크플로 실행 번호, 고정 MPV 해시와 산출물 목록·해시·서명을 검사합니다. 원래 실행과 다른 시도 번호의 산출물, 변조된 manifest와 예기치 않은 파일은 차단합니다.
 - Windows MPV 다운로드는 `scripts/mpv-windows.json`의 존재하는 고정 URL과 압축본/DLL SHA256을 사용합니다. 기존 로컬 DLL도 해시가 다르면 다시 준비합니다. 로컬에 DLL이 없거나 내려받기에 실패하면 CI가 중단됩니다. macOS 준비 방식은 기존과 같습니다.
-- 4단계 Windows updater 런타임은 main 전용 IPC 5개, 타입 안전한 shared 래퍼, 상태 이벤트, 취소·중복 요청 제어, HTTPS/버전 제한, 임시 파일 스트리밍과 서명 검증, NSIS 설치 시작 경로를 제공합니다. 시작 시 자동 조회나 설치는 없으며 5단계 UI는 아직 연결하지 않습니다. 상세 계약과 실제 설치 검증의 남은 범위는 UPDATE_RUNTIME.md를 따릅니다.
+- Windows updater 런타임은 main 전용 IPC, 타입 안전한 shared 래퍼, 상태 이벤트, 취소·중복 요청 제어, HTTPS/버전 제한, 임시 파일 스트리밍과 서명 검증, NSIS 설치 시작 경로를 제공합니다. 상세 계약과 실제 설치 검증의 남은 범위는 UPDATE_RUNTIME.md를 따릅니다.
 - Tauri updater 2.14.1의 요구사항으로 코어 2.12.5·WebView2 0.39.1·JS API/CLI 2.12.4를 사용합니다. Windows 라이브러리 단위 테스트에도 Common Controls v6 매니페스트를 링크해야 합니다. CI는 Rust updater/기존 회귀 테스트도 실행합니다.
 - 네이티브 updater 테스트는 임시 Tauri 서명과 루프백 서버·MockRuntime IPC로 동작합니다. 생산 개인 키나 Secret을 사용하지 않고 설치 프로그램을 실행하지 않습니다. 실제 설치·재시작·사용자 데이터 보존은 정식 설치본과 더 높은 서명 버전을 준비한 통합 검증 대상입니다.
-- 5단계 자동 업데이트 ON/OFF·수동 확인·진행/설치 UI는 사용자 시작 지시 후 진행합니다.
+- 설정 시트 맨 위 `UpdateSettings`는 자동 업데이트 ON/OFF, 수동 확인·다운로드·취소, 진행률, 릴리즈 내용, 오류·재연결, 명시적 설치 확인을 제공합니다. 기본 ON은 `<app_config_dir>/updater.json`에 저장하고 실패는 OFF로 처리합니다. 자동 작업은 설치본에서만 시작 30초 뒤·6시간 간격으로 조회·다운로드합니다. OFF는 자동 작업만 취소하며 수동 작업과 ready 파일은 유지합니다. 설치·재시작은 항상 사용자 확인이 필요합니다.
+- `features/update-app/model/controller.ts`는 단일 외부 스토어로 revision·중복 명령·설치 확인 버전을 보호합니다. 설정 닫기와 무관하게 작업을 유지하고 대시보드에만 새 버전/준비 알림을 표시합니다. 스트리밍 중 설정 열기에서는 자식 웹뷰를 순차적으로 숨기고 복원합니다. `pnpm update:test`의 가짜 시계·API 테스트와 네이티브 설정/자동 취소 테스트를 CI에서도 실행합니다.
+- 6단계 실제 설치·재시작·데이터 보존 및 정식 배포 검증은 사용자 시작 지시 후 진행합니다. 현재 공개 Release와 새 버전 태그는 생성하지 않습니다.

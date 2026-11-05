@@ -43,12 +43,17 @@ pub fn run() {
     #[cfg(windows)]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     builder
+        .setup(|app| {
+            updater::initialize(app.handle());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             updater::get_update_state,
             updater::check_for_update,
             updater::download_update,
             updater::install_update,
             updater::cancel_update,
+            updater::set_update_automatic,
             greet,
             display_mode::get_display_mode,
             display_mode::toggle_window_fullscreen,

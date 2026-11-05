@@ -50,6 +50,8 @@ jobs:
         run: pnpm build
       - name: Release and signature regression tests
         run: pnpm release:test
+      - name: Update settings and scheduling regression tests
+        run: pnpm update:test
       - name: Native dependency integrity regression tests
         run: python -m unittest discover -s scripts -p "*_test.py"
       - name: Native updater and application regression tests

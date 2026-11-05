@@ -273,7 +273,7 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 - `release.config.json`은 공개 소스/배포 저장소, stable 채널, Windows x64 NSIS currentUser 설치 및 `com.novus.hub` 식별자·제품명·실행 파일명을 고정합니다. Windows 빌드에는 `tauri.windows.conf.json`이 병합되어 NSIS만 생성합니다.
 - 버전의 기준은 package.json이며 `scripts/release.mjs`가 Tauri 설정, Cargo.toml, Cargo.lock의 로컬 novus 항목과의 일치를 검사합니다. `pnpm release:version`은 네 파일을 함께 갱신하고 의존 패키지 버전은 유지합니다. `pnpm build` 시작 시 이 검사를 실행합니다.
 - 전달된 배포 태그와 GitHub의 실제 tag ref는 모두 `v` + 앱 버전과 일치해야 합니다. source info는 버전·기대 태그·HEAD·dirty 여부와 설치 계약을 출력합니다. 자동 배포의 `ci-release.mjs guard`는 저장소, 깨끗한 체크아웃, 실행 커밋, 태그 대상 및 origin/main 포함 여부를 검사합니다. 수동 검증 실행은 main만 허용합니다.
-- 업데이트 서명은 저장소 밖의 암호화된 개인 키와 `signing/updater.pub`의 공개 키를 사용합니다. Windows 설정은 공개 키 내용, GitHub Release의 HTTPS `latest.json` 주소, passive 설치 모드와 `createUpdaterArtifacts: true`, 서명 버전 필수와 다운그레이드 금지를 선언합니다. Windows updater 런타임은 아래 명시적 IPC로 동작하며 시작 시 자동 조회는 하지 않습니다.
+- 업데이트 서명은 저장소 밖의 암호화된 개인 키와 `signing/updater.pub`의 공개 키를 사용합니다. Windows 설정은 공개 키 내용, GitHub Release의 HTTPS `latest.json` 주소, passive 설치 모드와 `createUpdaterArtifacts: true`, 서명 버전 필수와 다운그레이드 금지를 선언합니다. Windows updater 런타임은 아래 IPC로 동작하며 설치본에서는 사용자 설정에 따라 자동 확인·다운로드합니다.
 - `scripts/update-artifacts.mjs`는 Node 표준 암호화 기능으로 Tauri minisign의 파일 서명과 trusted comment 서명을 모두 검증합니다. 버전·파일명·공개 키·다운로드 주소 계약을 검사한 뒤 EXE 옆에 `latest.json`과 `SHA256SUMS`를 생성합니다. 이 단독 도구는 빌드 출처를 검사하지 않습니다.
 - `.github/workflows/release-windows.yml`은 v* 태그 Push 시 Windows x64 서명 빌드와 Release 초안을 생성합니다. workflow_dispatch는 main에서 동일한 빌드를 검증하되 Release를 만들지 않습니다. Node 24, pnpm 12.6.0, Rust 1.98.1과 잠금 파일을 사용하고 Actions는 커밋 SHA로 고정합니다. 네이티브 updater 및 기존 Rust 회귀 테스트도 실행합니다.
 - CI는 빌드 전·후 커밋과 Git tree를 비교하고, 고정 MPV DLL 해시 및 EXE 서명을 확인한 뒤 EXE·sig·latest.json·SHA256SUMS·release-source.json만 별도 폴더에 복사합니다. 메타데이터는 커밋·실행 번호·MPV 및 파일 해시를 연결하는 CI 추적 정보이며 별도의 서명된 attestation은 아닙니다. 별도 Release 작업은 내려받은 파일을 재검증하고 기존 버전의 덮어쓰기를 거부합니다. Secrets는 서명 빌드 단계에만, contents: write는 Release 작업에만 부여합니다. 절차는 RELEASING.md를 따릅니다.
@@ -281,6 +281,7 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 ### 업데이트 런타임
 
 - `src-tauri/src/updater/`는 Windows x64에서 Tauri updater 2.14.1과 OS TLS를 사용합니다. 요구 버전에 맞춰 Tauri 2.12.5, WebView2 0.39.1, JS API/CLI 2.12.4를 사용합니다. Common Controls v6 의존성을 테스트 EXE에도 링크합니다.
-- `check_for_update`, `download_update`, `install_update`, `cancel_update`, `get_update_state`는 실제 main 웹뷰에서만 호출할 수 있습니다. `shared/api/tauri/updater.ts`가 타입 안전한 경계를 제공하며 plugin updater JS 권한은 부여하지 않습니다.
-- 싱글톤 상태는 작업 세대·revision으로 중복 실행과 취소 후 늦은 응답을 차단하고 `novus-update-state` 이벤트를 main에 전달합니다. mutex는 네트워크나 설치 대기 중 보유하지 않습니다. 자동 조회·설치 타이머와 5단계 UI는 아직 없습니다.
+- `check_for_update`, `download_update`, `install_update`, `cancel_update`, `get_update_state`, `set_update_automatic`은 실제 main 웹뷰에서만 호출할 수 있습니다. `shared/api/tauri/updater.ts`가 타입 안전한 경계를 제공하며 plugin updater JS 권한은 부여하지 않습니다.
+- 싱글톤 상태는 작업 세대·revision으로 중복 실행과 취소 후 늦은 응답을 차단하고 `novus-update-state` 이벤트를 main에 전달합니다. mutex는 네트워크나 설치 대기 중 보유하지 않습니다. `<app_config_dir>/updater.json`에 기본 ON 설정을 원자적으로 저장하며 손상·저장 오류는 OFF로 처리합니다. OFF는 네이티브에서도 자동 명령을 차단하고 자동 작업만 취소합니다.
+- `features/update-app` 컨트롤러는 main 앱 루트에서 구독·타이머 수명을 관리하고 설정 시트는 외부 스토어를 구독합니다. 설치본에서만 시작 30초 뒤 및 6시간 간격으로 조회·다운로드하며 오프라인은 이벤트 복귀로 처리합니다. 다운로드·취소·재시도·진행률과 버전별 설치 확인을 제공하고 자동 설치는 하지 않습니다. 대시보드의 조용한 알림은 available/ready 변경만 구독합니다. 설정 시트를 닫아도 작업을 유지하며 스트리밍 자식 웹뷰는 시트 동안 숨겼다가 복원합니다.
 - 고정된 HTTPS 저장소와 높은 stable 버전만 허용합니다. 최대 128MiB를 캐시에 스트리밍하고 blocking pool에서 서명·서명된 버전을 검증합니다. ready 상태는 파일 경로만 보관하며 설치 직전에 다시 검증합니다. NSIS 설치본만 설치를 시작할 수 있고, 성공 시 플러그인이 설치·앱 종료·재시작을 처리합니다. 계약과 검증 범위는 [UPDATE_RUNTIME.md](UPDATE_RUNTIME.md)를 따릅니다.

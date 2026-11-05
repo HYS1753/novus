@@ -40,6 +40,10 @@ pub fn failure(code: &'static str, message: &'static str) -> UpdateFailure {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateStatus {
+    pub automatic_enabled: bool,
+    pub preferences_ready: bool,
+    pub preference_saving: bool,
+    pub preference_error: Option<UpdateFailure>,
     pub supported: bool,
     pub can_install: bool,
     pub phase: Phase,
@@ -54,6 +58,10 @@ pub struct UpdateStatus {
 impl UpdateStatus {
     pub fn new(can_install: bool) -> Self {
         Self {
+            automatic_enabled: false,
+            preferences_ready: !SUPPORTED,
+            preference_saving: false,
+            preference_error: None,
             supported: SUPPORTED,
             can_install,
             phase: if SUPPORTED {
@@ -110,19 +118,46 @@ pub fn get_update_state<R: tauri::Runtime>(
 }
 
 #[tauri::command]
-pub async fn check_for_update<R: tauri::Runtime>(
+pub async fn set_update_automatic<R: tauri::Runtime>(
     webview: Webview<R>,
     app: AppHandle<R>,
     state: State<'_, UpdaterState>,
+    enabled: bool,
 ) -> Result<UpdateStatus> {
     authorize(webview.label())?;
     #[cfg(windows)]
     {
-        windows::check(&app, &state).await
+        windows::set_automatic(&app, &state, enabled).await
     }
     #[cfg(not(windows))]
     {
-        let _ = (app, state);
+        let _ = (app, state, enabled);
+        unreachable!()
+    }
+}
+
+pub fn initialize<R: tauri::Runtime>(app: &AppHandle<R>) {
+    #[cfg(windows)]
+    windows::initialize_preferences(app);
+    #[cfg(not(windows))]
+    let _ = app;
+}
+
+#[tauri::command]
+pub async fn check_for_update<R: tauri::Runtime>(
+    webview: Webview<R>,
+    app: AppHandle<R>,
+    state: State<'_, UpdaterState>,
+    automatic: Option<bool>,
+) -> Result<UpdateStatus> {
+    authorize(webview.label())?;
+    #[cfg(windows)]
+    {
+        windows::check(&app, &state, automatic.unwrap_or(false)).await
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (app, state, automatic);
         unreachable!()
     }
 }
@@ -133,15 +168,16 @@ pub async fn download_update<R: tauri::Runtime>(
     app: AppHandle<R>,
     state: State<'_, UpdaterState>,
     expected_version: String,
+    automatic: Option<bool>,
 ) -> Result<UpdateStatus> {
     authorize(webview.label())?;
     #[cfg(windows)]
     {
-        windows::download(&app, &state, &expected_version).await
+        windows::download(&app, &state, &expected_version, automatic.unwrap_or(false)).await
     }
     #[cfg(not(windows))]
     {
-        let _ = (app, state, expected_version);
+        let _ = (app, state, expected_version, automatic);
         unreachable!()
     }
 }

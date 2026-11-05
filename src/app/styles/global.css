@@ -2531,6 +2531,196 @@ html:not(.dark) .media-card__text-logo {
   background: var(--color-surface-elevated);
 }
 
+/* Update settings keep progress isolated from dashboard layout and playback. */
+.update-settings__card {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.update-settings__version,
+.update-settings__automatic {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.update-settings__version {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.update-settings__version strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+.update-settings__automatic > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.update-settings__automatic > div:last-child {
+  flex: 0 0 48px;
+}
+.update-settings__automatic label,
+.update-settings__status strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.update-settings__automatic p,
+.update-settings__hint,
+.update-settings__confirm p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.update-settings__status {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+}
+.update-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.update-settings__actions .glass-btn,
+.update-settings__error .glass-btn {
+  min-height: 48px;
+  max-width: 100%;
+  white-space: normal;
+}
+.update-settings__error {
+  margin: 0;
+  padding: 12px;
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.update-settings__error p {
+  margin: 0 0 8px;
+}
+.update-settings__download {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.update-progress {
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-surface-hover);
+  border-radius: 6px;
+}
+.update-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+.update-progress--indeterminate > span {
+  width: 30%;
+  animation: update-progress 1.5s linear infinite;
+}
+@keyframes update-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .update-progress--indeterminate > span {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+.update-settings__notes {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.update-settings__notes summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.update-settings__notes summary::before {
+  content: "+";
+  margin-right: 8px;
+}
+.update-settings__notes[open] summary::before {
+  content: "−";
+}
+.update-settings__notes p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 140px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+.update-settings__confirm {
+  border-top: 1px solid var(--color-divider);
+  padding-top: 14px;
+}
+.update-settings__confirm strong {
+  font-size: 14px;
+}
+.update-settings__confirm .update-settings__actions {
+  margin-top: 12px;
+}
+.update-settings__checked {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+.update-notice {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  max-width: calc(100vw - 48px);
+  padding: 12px 18px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+.update-notice > span:first-child {
+  color: var(--color-primary);
+  font-size: 24px;
+}
+.update-notice small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  margin-top: 4px;
+}
+.update-notice:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
 .settings-device-card__head {
   display: flex;
   align-items: center;
@@ -3283,6 +3473,10 @@ button.sg__motion-chip {
 }
 
 /* Dock Right (Default) */
+.in-app-player--suspended {
+  z-index: 0;
+  pointer-events: none;
+}
 .in-app-player--dock-right {
   flex-direction: row;
 }

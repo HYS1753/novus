@@ -21,9 +21,15 @@ export interface InAppPlayerProps {
   app: AppItem;
   onClose: () => void;
   onOpenSettings?: () => void;
+  suspended?: boolean;
 }
 
-export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSettings }) => {
+export const InAppPlayer: React.FC<InAppPlayerProps> = ({
+  app,
+  onClose,
+  onOpenSettings,
+  suspended = false,
+}) => {
   const { dockPosition } = useDockPosition();
   const displayMode = useDisplayMode();
   const contentFullscreen = displayMode.contentPage === app.id;
@@ -35,6 +41,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
   const [showFallbackNotice, setShowFallbackNotice] = useState(false);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPageShownRef = useRef(false);
+  const visibilityTaskRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const isTauri = isTauriRuntime();
 
@@ -56,7 +63,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
 
   // Show / attach native child webview via singleton page manager
   useEffect(() => {
-    if (!isTauri) return;
+    if (!isTauri || suspended) return;
 
     let isMounted = true;
 
@@ -84,15 +91,17 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
       }
     };
 
-    setupChild();
+    // Serialize show/hide so a late hide cannot cover a newly reopened page.
+    visibilityTaskRef.current = visibilityTaskRef.current.then(setupChild, setupChild);
 
     return () => {
       isMounted = false;
       isPageShownRef.current = false;
       // In singleton page manager, hide rather than destroy to retain DOM & session cookies
-      hideStreamingPage(app.id);
+      const hide = () => hideStreamingPage(app.id);
+      visibilityTaskRef.current = visibilityTaskRef.current.then(hide, hide);
     };
-  }, [app.id, app.url, isTauri]);
+  }, [app.id, app.url, isTauri, suspended]);
 
   // Dynamically adjust bounds on dockPosition changes and window resize events
   useEffect(() => {
@@ -236,7 +245,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({ app, onClose, onOpenSe
 
   return (
     <div
-      className={`in-app-player in-app-player--dock-${dockPosition}${contentFullscreen ? " in-app-player--content-fullscreen" : ""}`}
+      className={`in-app-player in-app-player--dock-${dockPosition}${contentFullscreen ? " in-app-player--content-fullscreen" : ""}${suspended ? " in-app-player--suspended" : ""}`}
       style={{
         ["--app-accent" as string]: app.accentColor,
       }}

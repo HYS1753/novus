@@ -17,8 +17,12 @@ const KEY: &str = include_str!("../../../signing/updater.pub");
 const MAX_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
+mod preferences;
+pub use preferences::{initialize_preferences, set_automatic};
 
 struct Inner {
+    automatic_operation: bool,
+    preferences_path: Option<PathBuf>,
     status: UpdateStatus,
     generation: u64,
     pending: Option<Update>,
@@ -33,6 +37,8 @@ impl Default for UpdaterState {
         let (cancellation, _) = watch::channel(0);
         Self {
             inner: Mutex::new(Inner {
+                automatic_operation: false,
+                preferences_path: None,
                 status: UpdateStatus::new(super::SUPPORTED && is_nsis_install()),
                 generation: 0,
                 pending: None,
@@ -66,8 +72,17 @@ impl UpdaterState {
         &self,
         phase: Phase,
         expected: Option<&str>,
+        automatic: bool,
     ) -> Result<(u64, watch::Receiver<u64>, Option<Update>)> {
         let mut inner = self.lock()?;
+        if automatic
+            && (!inner.status.automatic_enabled
+                || !inner.status.preferences_ready
+                || !inner.status.can_install
+                || inner.status.preference_saving)
+        {
+            return Err(cancelled());
+        }
         if matches!(
             inner.status.phase,
             Phase::Checking | Phase::Downloading | Phase::Installing
@@ -91,6 +106,7 @@ impl UpdaterState {
             inner.status.notes = None;
         }
         inner.generation += 1;
+        inner.automatic_operation = automatic;
         self.cancellation.send_replace(inner.generation);
         inner.status.phase = phase;
         inner.status.downloaded_bytes = 0;
@@ -113,6 +129,7 @@ impl UpdaterState {
         if inner.generation != generation {
             return Err(cancelled());
         }
+        inner.automatic_operation = false;
         let error = match result {
             Ok(Completion::Checked(update)) => {
                 inner.status.phase = if update.is_some() {
@@ -158,6 +175,20 @@ enum Completion {
 }
 fn cancelled() -> UpdateFailure {
     failure("cancelled", "업데이트 작업을 취소했습니다.")
+}
+fn reset_operation(state: &UpdaterState, inner: &mut Inner) {
+    inner.generation += 1;
+    state.cancellation.send_replace(inner.generation);
+    inner.automatic_operation = false;
+    inner.status.phase = Phase::Idle;
+    inner.status.available_version = None;
+    inner.status.notes = None;
+    inner.status.downloaded_bytes = 0;
+    inner.status.total_bytes = None;
+    inner.status.error = None;
+    inner.status.revision += 1;
+    inner.pending = None;
+    inner.cached = None;
 }
 async fn cancellable<T>(
     cancel: &mut watch::Receiver<u64>,
@@ -331,8 +362,9 @@ async fn fetch_manifest(client: &Client, endpoint: &str) -> Result<Option<serde_
 pub async fn check<R: tauri::Runtime>(
     app: &AppHandle<R>,
     state: &UpdaterState,
+    automatic: bool,
 ) -> Result<UpdateStatus> {
-    let (generation, mut cancel, _) = state.begin(Phase::Checking, None)?;
+    let (generation, mut cancel, _) = state.begin(Phase::Checking, None, automatic)?;
     let _ = app.emit_to("main", EVENT, state.snapshot()?);
     let result = cancellable(&mut cancel, check_remote(app)).await;
     state.finish(app, generation, result)
@@ -438,8 +470,10 @@ pub async fn download<R: tauri::Runtime>(
     app: &AppHandle<R>,
     state: &UpdaterState,
     expected: &str,
+    automatic: bool,
 ) -> Result<UpdateStatus> {
-    let (generation, mut cancel, update) = state.begin(Phase::Downloading, Some(expected))?;
+    let (generation, mut cancel, update) =
+        state.begin(Phase::Downloading, Some(expected), automatic)?;
     let _ = app.emit_to("main", EVENT, state.snapshot()?);
     let operation = async {
         let update =
@@ -479,13 +513,7 @@ pub fn cancel<R: tauri::Runtime>(app: &AppHandle<R>, state: &UpdaterState) -> Re
     if inner.status.phase == Phase::Installing {
         return Err(failure("busy", "설치 시작 후에는 취소할 수 없습니다."));
     }
-    inner.generation += 1;
-    state.cancellation.send_replace(inner.generation);
-    let revision = inner.status.revision + 1;
-    inner.status = UpdateStatus::new(inner.status.can_install);
-    inner.status.revision = revision;
-    inner.pending = None;
-    inner.cached = None;
+    reset_operation(state, &mut inner);
     let snapshot = inner.status.clone();
     drop(inner);
     let _ = app.emit_to("main", EVENT, &snapshot);
@@ -498,6 +526,9 @@ pub async fn install<R: tauri::Runtime>(
 ) -> Result<UpdateStatus> {
     let (generation, update, path) = {
         let mut inner = state.lock()?;
+        if inner.status.preference_saving {
+            return Err(failure("busy", "업데이트 설정을 저장 중입니다."));
+        }
         if !inner.status.can_install || !is_nsis_install() {
             return Err(failure(
                 "installation_required",

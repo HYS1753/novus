@@ -14,7 +14,7 @@ import {
   exitWindowFullscreen,
   reportWindowModeError,
 } from "@/shared";
-import { useLaunchApp } from "@/features";
+import { useLaunchApp, UpdateNotice } from "@/features";
 import type { AppItem } from "@/entities";
 import { GalleryPage } from "../../gallery";
 import { FinderPage } from "../../finder";
@@ -306,6 +306,7 @@ export const DashboardPage: React.FC = () => {
           app={activeApp}
           onClose={() => setActiveApp(null)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          suspended={isSettingsOpen}
         />
         <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </div>,
@@ -375,6 +376,7 @@ export const DashboardPage: React.FC = () => {
       </main>
 
       {/* 앱 설정 사이드 패널 */}
+      <UpdateNotice onOpen={() => setIsSettingsOpen(true)} />
       <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       {/* 스마트폰 리모컨 QR 모달 */}

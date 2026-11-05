@@ -20,6 +20,7 @@ export interface UpdateFailure {
     | "stale_update"
     | "cancelled"
     | "configuration"
+    | "preferences"
     | "network"
     | "timeout"
     | "release_unavailable"
@@ -33,6 +34,10 @@ export interface UpdateFailure {
   message: string;
 }
 export interface UpdateState {
+  automaticEnabled: boolean;
+  preferencesReady: boolean;
+  preferenceSaving: boolean;
+  preferenceError: UpdateFailure | null;
   supported: boolean;
   canInstall: boolean;
   phase: UpdatePhase;
@@ -46,6 +51,10 @@ export interface UpdateState {
 }
 
 const browserState: UpdateState = {
+  automaticEnabled: false,
+  preferencesReady: true,
+  preferenceSaving: false,
+  preferenceError: null,
   supported: false,
   canInstall: false,
   phase: "unsupported",
@@ -61,21 +70,26 @@ const browserState: UpdateState = {
 export function getUpdateState(): Promise<UpdateState> {
   return isTauriRuntime() ? invoke("get_update_state") : Promise.resolve({ ...browserState });
 }
-function command(name: string, expectedVersion?: string): Promise<UpdateState> {
+function command(
+  name: string,
+  args?: { expectedVersion?: string; automatic?: boolean; enabled?: boolean },
+): Promise<UpdateState> {
   if (!isTauriRuntime())
     return Promise.reject({
       code: "unsupported",
       message: "데스크톱 앱에서만 업데이트를 사용할 수 있습니다.",
     } satisfies UpdateFailure);
-  return invoke(name, expectedVersion === undefined ? undefined : { expectedVersion });
+  return invoke(name, args);
 }
-/** Explicit operations only: no startup checks, timers or automatic installation. */
-export const checkForUpdate = (): Promise<UpdateState> => command("check_for_update");
-export const downloadUpdate = (expectedVersion: string): Promise<UpdateState> =>
-  command("download_update", expectedVersion);
+export const setAutomaticUpdates = (enabled: boolean): Promise<UpdateState> =>
+  command("set_update_automatic", { enabled });
+export const checkForUpdate = (automatic = false): Promise<UpdateState> =>
+  command("check_for_update", { automatic });
+export const downloadUpdate = (expectedVersion: string, automatic = false): Promise<UpdateState> =>
+  command("download_update", { expectedVersion, automatic });
 /** Launches NSIS and exits the installed app after a final signature check. */
 export const installUpdate = (expectedVersion: string): Promise<UpdateState> =>
-  command("install_update", expectedVersion);
+  command("install_update", { expectedVersion });
 export const cancelUpdate = (): Promise<UpdateState> => command("cancel_update");
 export function listenUpdateState(onChange: (state: UpdateState) => void): Promise<() => void> {
   return isTauriRuntime()

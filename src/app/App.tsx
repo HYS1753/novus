@@ -13,6 +13,7 @@ import "./styles/global.css";
 import { InAppVideoModal } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
+import { useUpdateLifecycle } from "@/features";
 
 const overlay = (
   window as Window & { __NOVUS_VIDEO_OVERLAY__?: { sessionId: string; video: FileItem } }
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
 };
 
 const DashboardApp: React.FC = () => {
+  useUpdateLifecycle();
   const [showStyleGuide, setShowStyleGuide] = useState(
     () => isStyleGuideRouteEnabled() && isStyleGuidePath(),
   );

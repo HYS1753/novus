@@ -174,7 +174,8 @@ fn mock_app(fixture: &SigningFixture, server: &Server) -> tauri::App<tauri::test
             crate::updater::check_for_update,
             crate::updater::download_update,
             crate::updater::install_update,
-            crate::updater::cancel_update
+            crate::updater::cancel_update,
+            crate::updater::set_update_automatic
         ])
         .plugin(tauri_plugin_updater::Builder::new().build())
         .build(context)
@@ -373,7 +374,7 @@ fn ipc_exposes_typed_state_and_blocks_overlay_calls_and_uninstalled_installation
     assert_eq!(status["phase"], "idle");
     assert_eq!(status["currentVersion"], env!("CARGO_PKG_VERSION"));
     assert_eq!(status["canInstall"], false);
-    let body = serde_json::json!({"expectedVersion":fixture.version});
+    let body = serde_json::json!({"expectedVersion":fixture.version,"enabled":false});
     assert_eq!(
         invoke(&main, "download_update", body.clone()).unwrap_err()["code"],
         "stale_update"
@@ -388,6 +389,7 @@ fn ipc_exposes_typed_state_and_blocks_overlay_calls_and_uninstalled_installation
         "download_update",
         "install_update",
         "cancel_update",
+        "set_update_automatic",
     ] {
         assert_eq!(
             invoke(&overlay, command, body.clone()).unwrap_err()["code"],
@@ -409,6 +411,57 @@ fn ipc_exposes_typed_state_and_blocks_overlay_calls_and_uninstalled_installation
 }
 
 #[test]
+fn automatic_off_cancels_auto_work_and_gates_queued_work_while_manual_work_survives() {
+    tauri::async_runtime::block_on(async {
+        let fixture = SigningFixture::new();
+        let server = Server::new(
+            &fixture.version,
+            &fixture.signature,
+            fixture.payload.clone(),
+            None,
+        );
+        let app = mock_app(&fixture, &server);
+        let state = UpdaterState::default();
+        let prefs = fixture.directory.path().join("updater.json");
+        {
+            let mut inner = state.lock().unwrap();
+            inner.preferences_path = Some(prefs.clone());
+            inner.status.preferences_ready = true;
+            inner.status.automatic_enabled = true;
+            inner.status.can_install = true;
+        }
+        let (generation, mut signal, _) = state.begin(Phase::Checking, None, true).unwrap();
+        set_automatic(app.handle(), &state, false).await.unwrap();
+        signal.changed().await.unwrap();
+        assert_eq!(state.snapshot().unwrap().phase, Phase::Idle);
+        assert!(!state.snapshot().unwrap().automatic_enabled);
+        assert_eq!(
+            state.begin(Phase::Checking, None, true).err().unwrap().code,
+            "cancelled"
+        );
+        assert_eq!(
+            state
+                .finish(app.handle(), generation, Ok(Completion::Checked(None)))
+                .unwrap_err()
+                .code,
+            "cancelled"
+        );
+        let (manual, _, _) = state.begin(Phase::Checking, None, false).unwrap();
+        set_automatic(app.handle(), &state, false).await.unwrap();
+        assert_eq!(state.snapshot().unwrap().phase, Phase::Checking);
+        state
+            .finish(app.handle(), manual, Ok(Completion::Checked(None)))
+            .unwrap();
+        assert_eq!(
+            serde_json::from_slice::<serde_json::Value>(&fs::read(prefs).unwrap()).unwrap()
+                ["automaticEnabled"],
+            false
+        );
+        assert_eq!(state.snapshot().unwrap().phase, Phase::UpToDate);
+    });
+}
+
+#[test]
 fn state_rejects_duplicate_work_stale_versions_and_late_completion_after_cancel() {
     let fixture = SigningFixture::new();
     let server = Server::new(
@@ -419,9 +472,13 @@ fn state_rejects_duplicate_work_stale_versions_and_late_completion_after_cancel(
     );
     let app = mock_app(&fixture, &server);
     let state = UpdaterState::default();
-    let (generation, _, _) = state.begin(Phase::Checking, None).unwrap();
+    let (generation, _, _) = state.begin(Phase::Checking, None, false).unwrap();
     assert_eq!(
-        state.begin(Phase::Checking, None).err().unwrap().code,
+        state
+            .begin(Phase::Checking, None, false)
+            .err()
+            .unwrap()
+            .code,
         "busy"
     );
     cancel(app.handle(), &state).unwrap();
@@ -435,7 +492,7 @@ fn state_rejects_duplicate_work_stale_versions_and_late_completion_after_cancel(
     assert_eq!(state.snapshot().unwrap().phase, Phase::Idle);
     assert_eq!(
         state
-            .begin(Phase::Downloading, Some("0.2.1"))
+            .begin(Phase::Downloading, Some("0.2.1"), false)
             .err()
             .unwrap()
             .code,
