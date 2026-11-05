@@ -9,6 +9,8 @@ Usage:
 """
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 import platform
 import shutil
@@ -22,11 +24,7 @@ MPV_DESTINATION = REPO_ROOT / "src-tauri/bin/mpv"
 
 # Pinned, tested releases for reproducible builds
 CONFIG = {
-    "windows": {
-        "version": "20260927-git-a1bf4b6559",
-        "url": "https://github.com/zhongfly/mpv-winbuild/releases/download/2026-09-27-a1bf4b6559/mpv-dev-x86_64-20260927-git-a1bf4b6559.7z",
-        "binary": "libmpv-2.dll",
-    },
+    "windows": json.loads((REPO_ROOT / "scripts/mpv-windows.json").read_text(encoding="utf-8")),
     "macos": {
         "version": "v0.38.0",
         "binary": "libmpv.2.dylib",
@@ -40,7 +38,8 @@ def log(message: str) -> None:
 
 def setup_windows(force: bool = False) -> bool:
     target_dll = MPV_DESTINATION / CONFIG["windows"]["binary"]
-    if target_dll.is_file() and not force:
+    if (target_dll.is_file() and not force
+            and hashlib.sha256(target_dll.read_bytes()).hexdigest() == CONFIG["windows"]["binarySha256"]):
         log(f"Windows libmpv binary already exists: {target_dll.name} (use --force to re-download)")
         return True
 
@@ -54,10 +53,15 @@ def setup_windows(force: bool = False) -> bool:
         archive_path = Path(tmp_dir) / "mpv-dev.7z"
         log("Downloading archive...")
         urllib.request.urlretrieve(url, archive_path)
+        if hashlib.sha256(archive_path.read_bytes()).hexdigest() != CONFIG["windows"]["archiveSha256"]:
+            log("Archive SHA256 mismatch; refusing to stage libmpv.")
+            return False
 
         log("Extracting libmpv-2.dll from archive...")
-        # Use bsdtar or tar (native on macOS and modern Windows 10/11)
-        extract_cmd = ["tar", "-C", tmp_dir, "-xf", str(archive_path), CONFIG["windows"]["binary"]]
+        # GitHub Windows images provide 7z; Windows built-in bsdtar also supports 7z.
+        seven_zip = shutil.which("7z")
+        extract_cmd = ([seven_zip, "e", str(archive_path), CONFIG["windows"]["binary"], f"-o{tmp_dir}", "-y"]
+                       if seven_zip else ["tar", "-C", tmp_dir, "-xf", str(archive_path), CONFIG["windows"]["binary"]])
         result = subprocess.run(extract_cmd, capture_output=True, text=True)
         if result.returncode != 0:
             log(f"Failed to extract with tar: {result.stderr}")
@@ -66,6 +70,9 @@ def setup_windows(force: bool = False) -> bool:
         extracted_file = Path(tmp_dir) / CONFIG["windows"]["binary"]
         if not extracted_file.is_file():
             log(f"Extracted file not found: {CONFIG['windows']['binary']}")
+            return False
+        if hashlib.sha256(extracted_file.read_bytes()).hexdigest() != CONFIG["windows"]["binarySha256"]:
+            log("DLL SHA256 mismatch; refusing to stage libmpv.")
             return False
 
         shutil.copy2(extracted_file, target_dll)

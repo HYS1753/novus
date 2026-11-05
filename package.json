@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.2.0",
   "type": "module",
+  "packageManager": "pnpm@12.6.0",
   "scripts": {
     "dev": "vite",
     "build": "pnpm release:check && tsc && vite build",
@@ -16,10 +17,11 @@
     "release:check": "node scripts/release.mjs check",
     "release:keygen": "node scripts/update-key.mjs",
     "release:signing": "node scripts/update-artifacts.mjs",
+    "release:ci": "node scripts/ci-release.mjs",
     "release:version": "node scripts/release.mjs set",
     "release:info": "node scripts/release.mjs info",
-    "release:test": "node --test scripts/release.test.mjs scripts/update-artifacts.test.mjs",
-    "release:build:windows": "pnpm release:check && pnpm release:signing check && pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis",
+    "release:test": "node --test scripts/release.test.mjs scripts/update-artifacts.test.mjs scripts/ci-release.test.mjs",
+    "release:build:windows": "pnpm release:check && pnpm release:signing check && pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis -- --locked",
     "setup:mpv": "python3 scripts/setup_mpv.py || python scripts/setup_mpv.py",
     "prepare": "simple-git-hooks"
   },

@@ -1,0 +1,7 @@
+{
+  "version": "20261105-git-3138fc8eea",
+  "url": "https://github.com/zhongfly/mpv-winbuild/releases/download/2026-11-05-3138fc8eea/mpv-dev-x86_64-20261105-git-3138fc8eea.7z",
+  "archiveSha256": "6bd6e877f9ee5bd111c970ea9e0f059217dfdbdf856c3d9b04a1a5053cdd574e",
+  "binary": "libmpv-2.dll",
+  "binarySha256": "20d77465695eb8e6344af92095ce5fb03de35d227aaaf41cc26ff3becca7cac9"
+}

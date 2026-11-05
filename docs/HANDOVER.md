@@ -253,11 +253,14 @@ pnpm build
 - Windows 실제 앱 검증: 대시보드/F11/공통 독의 모드 전환, 최대화 상태 복원, YouTube 전체화면 진입 시 독 제거와 해제 후 복원, Novus 전체화면 유지, 보조 종료 버튼의 자동 숨김 및 상단 입력을 통한 해제, Alt+왼쪽의 전체화면 해제 우선 처리와 다음 입력의 페이지 탐색을 확인했습니다.
 - 최종 내장 MPV 검증: 창 모드에서 재생 후 F로 전체화면 진입, 첫 Escape에서 영상 유지·창 모드 복원, 두 번째 Escape에서 영상/조작 창 정리·갤러리 복귀를 확인했습니다. 테스트에 사용한 임시 영상은 검증 후 제거합니다.
 
-### 배포 기반 1단계
+### 배포 기반 및 자동 빌드
 
 - 준비 버전은 0.2.0이며 아직 정식 Release 게시나 updater 탑재를 의미하지 않습니다. 일반 사용자 배포 형식은 Windows x64 NSIS EXE 하나로 통일했습니다. 기존 EXE의 currentUser 설치·제품명 novus·식별자 com.novus.hub를 유지합니다.
 - `pnpm release:version <버전>`으로 버전을 동기화하고 `pnpm release:check [--tag v<버전>]`으로 검사합니다. `release:test`는 잘못된 버전·태그·설치 계약 변경을 검증하며 `release:info`는 현재 체크아웃 추적 정보를 출력합니다. 자세한 절차는 RELEASING.md를 따릅니다.
 - 공개 저장소 HYS1753/novus를 소스와 배포 대상으로 사용합니다. 실제 기존 MSI 설치본이 있는지는 미확인으로, MSI에서 EXE로의 자동 이전을 보장하지 않습니다. 실제 설치·설정 보존 검증은 배포 전 검증 단계에서 수행합니다.
 - 2단계는 암호화된 업데이트 키와 Windows EXE·서명·`latest.json` 구성을 제공합니다. `pnpm release:keygen`은 사용자 터미널에서 키를 생성하고 검증 파일에 서명하며, 이미 있는 키는 재생성하지 않습니다. 공개 키만 저장소에 복사합니다. `pnpm release:signing check` 및 `verify <파일>`로 구성과 서명을 검증하고 `manifest <설치파일>`로 메타데이터와 SHA256SUMS를 만듭니다.
 - `release:test`는 실제 Tauri CLI의 임시 키·서명으로 변조 파일, 잘못된 공개 키, 변조된 trusted comment, 버전·파일명 불일치를 거부하는지 확인합니다. 테스트 키는 생산용 키와 분리하며 종료 후 삭제합니다.
-- 3단계 GitHub Actions와 Secrets 등록, 태그 Push, Release 게시는 사용자의 시작 지시 이후 진행합니다. updater 런타임 및 자동 업데이트 ON/OFF UI도 후속 단계입니다. 현재 앱은 서버를 조회하거나 업데이트를 설치하지 않습니다.
+- 3단계 `Windows signed release` 워크플로는 v* 태그를 검사한 뒤 서명된 Windows x64 설치 파일과 Release 초안을 만듭니다. 수동 실행은 main에서 서명 빌드·산출물 검증만 수행합니다. 기존 Release 버전은 덮어쓰지 않으며 공개 게시는 설치·updater 검증 후 별도로 진행합니다. Repository secrets 2개와 실행 방법은 RELEASING.md를 따릅니다.
+- `release:ci guard/prepare/verify`는 main 포함 여부, 소스 커밋·Git tree·워크플로 실행 번호, 고정 MPV 해시와 산출물 목록·해시·서명을 검사합니다. 원래 실행과 다른 시도 번호의 산출물, 변조된 manifest와 예기치 않은 파일은 차단합니다.
+- Windows MPV 다운로드는 `scripts/mpv-windows.json`의 존재하는 고정 URL과 압축본/DLL SHA256을 사용합니다. 기존 로컬 DLL도 해시가 다르면 다시 준비합니다. 로컬에 DLL이 없거나 내려받기에 실패하면 CI가 중단됩니다. macOS 준비 방식은 기존과 같습니다.
+- 4단계 updater 런타임 및 이후 자동 업데이트 ON/OFF UI는 사용자 시작 지시 후 진행합니다. 현재 앱은 서버를 조회하거나 업데이트를 설치하지 않습니다.
