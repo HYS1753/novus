@@ -273,4 +273,5 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 - `release.config.json`은 공개 소스/배포 저장소, stable 채널, Windows x64 NSIS currentUser 설치 및 `com.novus.hub` 식별자·제품명·실행 파일명을 고정합니다. Windows 빌드에는 `tauri.windows.conf.json`이 병합되어 NSIS만 생성합니다.
 - 버전의 기준은 package.json이며 `scripts/release.mjs`가 Tauri 설정, Cargo.toml, Cargo.lock의 로컬 novus 항목과의 일치를 검사합니다. `pnpm release:version`은 네 파일을 함께 갱신하고 의존 패키지 버전은 유지합니다. `pnpm build` 시작 시 이 검사를 실행합니다.
 - 전달된 배포 태그와 GitHub의 실제 tag ref는 모두 `v` + 앱 버전과 일치해야 합니다. source info는 버전·기대 태그·HEAD·dirty 여부와 설치 계약을 출력합니다. 태그의 실제 생성/Push 및 main 포함 여부 검증은 아직 구현한 자동 배포 기능이 아닙니다.
-- 이 도구는 빌드 단계에서만 실행됩니다. 앱 IPC, updater, 서명 키와 Release 게시는 아직 추가하지 않았습니다. 명령과 기존 MSI 설치본의 전환 제한은 RELEASING.md에 명시합니다.
+- 업데이트 서명은 저장소 밖의 암호화된 개인 키와 `signing/updater.pub`의 공개 키를 사용합니다. Windows 설정은 공개 키 내용, GitHub Release의 HTTPS `latest.json` 주소, passive 설치 모드와 `createUpdaterArtifacts: true`를 선언합니다. 현재 updater 런타임 플러그인은 등록하지 않았으므로 앱이 업데이트를 조회하거나 설치하지는 않습니다.
+- `scripts/update-artifacts.mjs`는 Node 표준 암호화 기능으로 Tauri minisign의 파일 서명과 trusted comment 서명을 모두 검증합니다. 버전·파일명·공개 키·다운로드 주소 계약을 검사한 뒤 EXE 옆에 `latest.json`과 `SHA256SUMS`를 생성합니다. 메타데이터는 파일 출처나 빌드 커밋을 증명하지 않으며, 앱 IPC나 네트워크 요청은 추가하지 않습니다. Release 게시와 자동 빌드는 아직 구성하지 않았습니다. 절차는 RELEASING.md를 따릅니다.

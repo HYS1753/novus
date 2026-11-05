@@ -258,4 +258,6 @@ pnpm build
 - 준비 버전은 0.2.0이며 아직 정식 Release 게시나 updater 탑재를 의미하지 않습니다. 일반 사용자 배포 형식은 Windows x64 NSIS EXE 하나로 통일했습니다. 기존 EXE의 currentUser 설치·제품명 novus·식별자 com.novus.hub를 유지합니다.
 - `pnpm release:version <버전>`으로 버전을 동기화하고 `pnpm release:check [--tag v<버전>]`으로 검사합니다. `release:test`는 잘못된 버전·태그·설치 계약 변경을 검증하며 `release:info`는 현재 체크아웃 추적 정보를 출력합니다. 자세한 절차는 RELEASING.md를 따릅니다.
 - 공개 저장소 HYS1753/novus를 소스와 배포 대상으로 사용합니다. 실제 기존 MSI 설치본이 있는지는 미확인으로, MSI에서 EXE로의 자동 이전을 보장하지 않습니다. 실제 설치·설정 보존 검증은 배포 전 검증 단계에서 수행합니다.
-- 2단계인 업데이트 서명 키/산출물 구성은 사용자 시작 지시 이후 진행합니다. 현재 키 생성, GitHub Secrets, updater 의존성, 배포 워크플로, 태그 Push, Release 게시를 수행하는 기능은 없습니다.
+- 2단계는 암호화된 업데이트 키와 Windows EXE·서명·`latest.json` 구성을 제공합니다. `pnpm release:keygen`은 사용자 터미널에서 키를 생성하고 검증 파일에 서명하며, 이미 있는 키는 재생성하지 않습니다. 공개 키만 저장소에 복사합니다. `pnpm release:signing check` 및 `verify <파일>`로 구성과 서명을 검증하고 `manifest <설치파일>`로 메타데이터와 SHA256SUMS를 만듭니다.
+- `release:test`는 실제 Tauri CLI의 임시 키·서명으로 변조 파일, 잘못된 공개 키, 변조된 trusted comment, 버전·파일명 불일치를 거부하는지 확인합니다. 테스트 키는 생산용 키와 분리하며 종료 후 삭제합니다.
+- 3단계 GitHub Actions와 Secrets 등록, 태그 Push, Release 게시는 사용자의 시작 지시 이후 진행합니다. updater 런타임 및 자동 업데이트 ON/OFF UI도 후속 단계입니다. 현재 앱은 서버를 조회하거나 업데이트를 설치하지 않습니다.

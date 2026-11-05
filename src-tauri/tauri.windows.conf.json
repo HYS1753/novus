@@ -6,6 +6,16 @@
       "nsis": {
         "installMode": "currentUser"
       }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBMDEyQTA4MDcyRDU2MDAKUldRQVZpMEhDQ29CK251b3NQZFE2UVpuUUhiR2hENWVSMi9JdHF0WlErUS91djFJWTVvMy9IQlcK",
+      "endpoints": ["https://github.com/HYS1753/novus/releases/latest/download/latest.json"],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
