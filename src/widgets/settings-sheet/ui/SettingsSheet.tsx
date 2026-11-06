@@ -11,6 +11,7 @@ import {
   GlassSegmentedControl,
   useMaterialIntensity,
   useDockPosition,
+  useTheme,
   describeMaterialIntensity,
   SettingsIcon,
   MoonIcon,
@@ -29,9 +30,7 @@ export interface SettingsSheetProps {
 export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose }) => {
   const { intensity, setIntensity } = useMaterialIntensity();
   const { dockPosition, setDockPosition } = useDockPosition();
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
+  const { isDark, setIsDark } = useTheme();
   const [autoStart, setAutoStart] = useState(true);
   const [batteryOptimization, setBatteryOptimization] = useState(true);
   const [deviceProfile, setDeviceProfile] = useState<RuntimeDeviceProfile | null | undefined>();
@@ -58,9 +57,6 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({ isOpen, onClose })
 
   const handleThemeChange = (nextDark: boolean) => {
     setIsDark(nextDark);
-    if (typeof document !== "undefined") {
-      document.documentElement.classList.toggle("dark", nextDark);
-    }
   };
 
   return (

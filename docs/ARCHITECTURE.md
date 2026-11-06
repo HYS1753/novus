@@ -280,6 +280,10 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 
 ### 업데이트 런타임
 
+- 테마는 `shared/lib/theme.ts`의 `novus-theme` localStorage 값으로 저장합니다. `main.tsx`가 React 마운트 전에 복원하며 헤더와 설정은 `useTheme` 외부 구독으로 같은 상태를 읽습니다. 같은 창의 변경 이벤트와 storage 이벤트로 동기화하고 폴링하지 않습니다. 기존 버전에서 저장하지 않았던 테마 값은 복원할 수 없으며 저장 값이 없으면 다크 모드입니다.
+
+- 공개 전 실설치 검증은 개발 도구 `scripts/update-qa.mjs`로 별도 식별자의 NSIS 사본 두 버전을 생성합니다. 로컬 전송·QA 키 변경은 Git에서 제외된 소스 사본에만 적용하며 제품 런타임에 테스트 endpoint나 우회 옵션을 추가하지 않습니다. 정식 배포 설정은 `release:signing check`로 계속 검증합니다. 실행 계약과 한계는 [UPDATE_VALIDATION.md](UPDATE_VALIDATION.md)를 따릅니다.
+
 - `src-tauri/src/updater/`는 Windows x64에서 Tauri updater 2.14.1과 OS TLS를 사용합니다. 요구 버전에 맞춰 Tauri 2.12.5, WebView2 0.39.1, JS API/CLI 2.12.4를 사용합니다. Common Controls v6 의존성을 테스트 EXE에도 링크합니다.
 - `check_for_update`, `download_update`, `install_update`, `cancel_update`, `get_update_state`, `set_update_automatic`은 실제 main 웹뷰에서만 호출할 수 있습니다. `shared/api/tauri/updater.ts`가 타입 안전한 경계를 제공하며 plugin updater JS 권한은 부여하지 않습니다.
 - 싱글톤 상태는 작업 세대·revision으로 중복 실행과 취소 후 늦은 응답을 차단하고 `novus-update-state` 이벤트를 main에 전달합니다. mutex는 네트워크나 설치 대기 중 보유하지 않습니다. `<app_config_dir>/updater.json`에 기본 ON 설정을 원자적으로 저장하며 손상·저장 오류는 OFF로 처리합니다. OFF는 네이티브에서도 자동 명령을 차단하고 자동 작업만 취소합니다.

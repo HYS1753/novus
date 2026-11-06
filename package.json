@@ -21,7 +21,7 @@
     "release:version": "node scripts/release.mjs set",
     "release:info": "node scripts/release.mjs info",
     "release:test": "node --test scripts/release.test.mjs scripts/update-artifacts.test.mjs scripts/ci-release.test.mjs",
-    "update:test": "node --test scripts/update-controller.test.mjs",
+    "update:test": "node --test scripts/update-controller.test.mjs scripts/update-qa.test.mjs scripts/theme.test.mjs",
     "release:build:windows": "pnpm release:check && pnpm release:signing check && pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis -- --locked",
     "setup:mpv": "python3 scripts/setup_mpv.py || python scripts/setup_mpv.py",
     "prepare": "simple-git-hooks"

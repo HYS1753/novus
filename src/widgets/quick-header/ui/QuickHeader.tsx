@@ -3,6 +3,7 @@ import {
   useCurrentTime,
   toggleFullscreen,
   useDisplayMode,
+  useTheme,
   GlassButton,
   CloudSunIcon,
   SettingsIcon,
@@ -27,9 +28,7 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
 }) => {
   const { time, date } = useCurrentTime();
   const { appFullscreen } = useDisplayMode();
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
+  const { isDark, setIsDark } = useTheme();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +36,6 @@ export const QuickHeader: React.FC<QuickHeaderProps> = ({
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
-    document.documentElement.classList.toggle("dark", nextDark);
   };
 
   const handleToggleSearch = () => {
