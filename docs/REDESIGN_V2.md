@@ -116,9 +116,11 @@ UI를 바꾼 페이즈는 추가로 `.claude/skills/impeccable/scripts/impeccabl
 
 ### P5. 하위 화면 이관
 
-- [ ] 스트리밍 독(InAppDock/SubpageDock): 글리프 레일 문법으로 통일, 홈·뒤로·새로고침·시계
-- [ ] 갤러리 격자 + 풀스크린 뷰어 + 영상 컨트롤 (Experience 규칙: 콘텐츠가 주인공, 크롬은 스크림 위 흰 글리프)
-- [ ] 파인더 + PathNavigation
+> 실제 진행: 네이티브 영상(libmpv)·자식 웹뷰와 엮인 로직은 그대로 두고, `.nv-root.nv-bridge` 토큰 브리지(`src/app/styles/v2/bridge.css`)로 v2 월드를 입혔습니다. 독은 글리프 레일 문법(원형 버튼, 채운 홈 원)으로 바꾸고, 하위 화면 문구 116개 키를 4개 언어로 옮겼습니다. 컴포넌트 단위 v2 재작성(Glass* 제거)은 P7.
+
+- [x] 스트리밍 독(InAppDock/SubpageDock): 글리프 레일 문법으로 통일, 홈·뒤로·새로고침·시계
+- [x] 갤러리 격자 + 풀스크린 뷰어 + 영상 컨트롤 (Experience 규칙: 콘텐츠가 주인공, 크롬은 스크림 위 흰 글리프)
+- [x] 파인더 + PathNavigation
 - impeccable: 화면별 `/impeccable critique` → `/impeccable polish`, 영상 컨트롤은 `/impeccable animate`
 - Gate: 기존 기능 회귀 없음(HANDOVER.md §2 ④⑤⑦ 항목별 확인), 가상 격자 DOM 상한 유지
 

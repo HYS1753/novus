@@ -3,7 +3,8 @@ import { RunningApps } from "@/shared/ui/nav/RunningApps";
 import { toggleFullscreen } from "@/shared/api/tauri/window";
 import { useDisplayMode } from "@/shared/hooks/useDisplayMode";
 import { FullscreenIcon } from "@/shared/ui/icons";
-import { useCurrentTime } from "../../hooks";
+import { useNow } from "../../hooks/useNow";
+import { useI18n } from "@/shared/hooks/useI18n";
 import { ArrowLeftIcon, HomeIcon, MotionIcon, RefreshIcon } from "../icons";
 import { TouchButton } from "../button";
 import type { DockPosition } from "../../types";
@@ -25,17 +26,18 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
   onHome,
   onBack,
   canGoBack = true,
-  backLabel = "이전 화면으로 이동",
+  backLabel,
   onReload,
   toolsSlot,
 }) => {
-  const { time } = useCurrentTime();
+  const { t, time: formatTime } = useI18n();
+  const time = formatTime(useNow());
   const { appFullscreen } = useDisplayMode();
 
   return (
     <aside
       className={`in-app-dock in-app-dock--${dockPosition}`}
-      aria-label={`${title} 시스템 독`}
+      aria-label={t("dock.label", { title })}
       style={{ zIndex: 30 }}
     >
       {/* Top Cluster: Tools, Sorting & Reload */}
@@ -46,8 +48,8 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
             size="sm"
             className="in-app-dock__btn"
             onClick={onReload}
-            aria-label="새로고침"
-            title="새로고침"
+            aria-label={t("common.refresh")}
+            title={t("common.refresh")}
           >
             <MotionIcon motion="rotate">
               <RefreshIcon size={18} />
@@ -61,9 +63,9 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
           size="sm"
           className="in-app-dock__btn"
           onClick={toggleFullscreen}
-          aria-label={appFullscreen ? "창 모드로 전환" : "전체화면으로 전환"}
+          aria-label={appFullscreen ? t("dock.fullscreenOff") : t("dock.fullscreenOn")}
           aria-pressed={appFullscreen}
-          title={appFullscreen ? "창 모드로 전환 (F11)" : "전체화면으로 전환 (F11)"}
+          title={appFullscreen ? t("dock.fullscreenOffHint") : t("dock.fullscreenOnHint")}
         >
           <MotionIcon motion="pop">
             <FullscreenIcon size={20} isFullscreen={appFullscreen} />
@@ -84,8 +86,8 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
           size="sm"
           className="in-app-dock__btn in-app-dock__btn--home"
           onClick={onHome}
-          aria-label="대시보드 홈으로 이동"
-          title="대시보드 홈으로 이동 (ESC)"
+          aria-label={t("dock.home")}
+          title={t("dock.homeHint")}
         >
           <MotionIcon motion="pop">
             <HomeIcon size={22} />
@@ -99,8 +101,8 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
             className="in-app-dock__btn"
             onClick={onBack}
             disabled={!canGoBack}
-            aria-label={backLabel}
-            title={backLabel}
+            aria-label={backLabel ?? t("dock.back")}
+            title={backLabel ?? t("dock.back")}
           >
             <MotionIcon motion="nudge-left">
               <ArrowLeftIcon size={20} />
@@ -108,7 +110,7 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
           </TouchButton>
         )}
 
-        <div className="in-app-dock__time" aria-label={`현재 시각 ${time}`}>
+        <div className="in-app-dock__time" aria-label={t("dock.time", { time })}>
           {time}
         </div>
       </div>

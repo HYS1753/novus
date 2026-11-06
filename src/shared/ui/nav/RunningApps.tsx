@@ -1,13 +1,17 @@
+import { useI18n } from "@/shared/hooks/useI18n";
 import { useContext } from "react";
 import { getBundledBrandAssetUrl } from "@/shared/lib/brandAssets";
 import { RunningAppsContext } from "@/shared/ui/nav/runningAppsContext";
 
 export function RunningApps() {
+  const { t } = useI18n();
   const state = useContext(RunningAppsContext);
   if (!state || state.apps.length === 0) return null;
   return (
-    <nav className="running-apps" aria-label="실행 중인 앱">
-      <span className="running-apps__label">실행 중 {state.apps.length}</span>
+    <nav className="running-apps" aria-label={t("running.label")}>
+      <span className="running-apps__label">
+        {t("running.count", { count: state.apps.length })}
+      </span>
       <div className="running-apps__list">
         {state.apps.map((app) => {
           const icon = getBundledBrandAssetUrl(app.id);
@@ -17,7 +21,11 @@ export function RunningApps() {
               <button
                 type="button"
                 className="running-apps__switch"
-                aria-label={`${app.title} ${active ? "현재 앱" : "백그라운드 실행 중, 열기"}`}
+                aria-label={
+                  active
+                    ? t("running.current", { name: app.title })
+                    : t("running.background", { name: app.title })
+                }
                 aria-current={active ? "page" : undefined}
                 title={app.title}
                 disabled={state.closingId === app.id}
@@ -29,8 +37,8 @@ export function RunningApps() {
               <button
                 type="button"
                 className="running-apps__close"
-                aria-label={`${app.title} 닫기`}
-                title={`${app.title} 닫기`}
+                aria-label={t("running.close", { name: app.title })}
+                title={t("running.close", { name: app.title })}
                 disabled={state.closingId !== null}
                 onClick={() => state.onClose(app.id)}
               >

@@ -10,6 +10,7 @@ import {
   WINDOW_MODE_ERROR,
   listenDisplayError,
   useResolvedTheme,
+  useI18n,
   usePreference,
   isHomeV2Enabled,
   NvRoot,
@@ -17,6 +18,7 @@ import {
 import "./styles/global.css";
 import "./styles/v2/tokens.css";
 import "./styles/v2/base.css";
+import "./styles/v2/bridge.css";
 import { InAppVideoModal, Onboarding } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
@@ -28,6 +30,7 @@ const overlay = (
 if (overlay) document.documentElement.classList.add("video-overlay-window");
 
 export const App: React.FC = () => {
+  const { t } = useI18n();
   const [modeError, setModeError] = useState<string | null>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -57,7 +60,7 @@ export const App: React.FC = () => {
       {modeError && (
         <div className="window-mode-error" role="alert">
           {modeError}
-          <button onClick={() => setModeError(null)}>닫기</button>
+          <button onClick={() => setModeError(null)}>{t("common.close")}</button>
         </div>
       )}
       {overlay ? (

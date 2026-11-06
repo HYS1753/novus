@@ -1,7 +1,7 @@
 import React from "react";
 import { useFileBrowser } from "@/features";
 import { SystemFinder } from "@/widgets";
-import { SubpageDock, useDockPosition } from "@/shared";
+import { SubpageDock, useDockPosition, useI18n } from "@/shared";
 
 interface FinderPageProps {
   onBackToDashboard: () => void;
@@ -10,6 +10,7 @@ interface FinderPageProps {
 }
 
 export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard, initialPath }) => {
+  const { t } = useI18n();
   const { dockPosition } = useDockPosition();
   const {
     locations,
@@ -61,11 +62,11 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard, initi
 
       {/* Standard Subpage Tablet System Dock */}
       <SubpageDock
-        title="파일 파인더"
+        title={t("finder.title")}
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
         onBack={() => (canGoBack ? navigateBack() : onBackToDashboard())}
-        backLabel={canGoBack ? "이전 폴더로 이동" : "대시보드 홈으로 이동"}
+        backLabel={canGoBack ? t("dock.backFolder") : t("dock.home")}
         onReload={refresh}
       />
     </div>

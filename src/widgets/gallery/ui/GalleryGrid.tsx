@@ -12,6 +12,7 @@ import {
   SearchIcon,
   SortDirectionIcon,
   getImageThumbnail,
+  useI18n,
 } from "@/shared";
 
 interface GalleryGridProps {
@@ -49,6 +50,7 @@ function formatBytes(bytes: number): string | undefined {
 
 const GalleryTile: React.FC<{ item: FileItem; onOpenItem: (item: FileItem) => void }> = React.memo(
   ({ item, onOpenItem }) => {
+    const { t } = useI18n();
     const [thumbnail, setThumbnail] = useState("");
 
     useEffect(() => {
@@ -76,7 +78,9 @@ const GalleryTile: React.FC<{ item: FileItem; onOpenItem: (item: FileItem) => vo
     return (
       <GlassMediaTile
         title={item.name}
-        typeLabel={item.is_dir ? "폴더" : item.extension.toUpperCase() || "파일"}
+        typeLabel={
+          item.is_dir ? t("files.folder") : item.extension.toUpperCase() || t("files.file")
+        }
         sizeLabel={item.is_dir ? undefined : formatBytes(item.size)}
         thumbnailUrl={thumbnail || undefined}
         category={item.is_dir ? "directory" : item.media_type}
@@ -113,6 +117,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
   onSelectImage,
   onSelectVideo,
 }) => {
+  const { t } = useI18n();
   const viewportRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -207,7 +212,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
   );
 
   return (
-    <section className="gallery-browser" aria-label="미디어 갤러리">
+    <section className="gallery-browser" aria-label={t("gallery.title")}>
       <div className="gallery-browser__toolbar">
         <div className="gallery-browser__navigation">
           <GlassMenu
@@ -217,7 +222,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
                 <MotionIcon motion="pop">
                   <FolderIcon size={18} />
                 </MotionIcon>
-                <span>위치</span>
+                <span>{t("files.location")}</span>
               </button>
             }
             items={locations.map((location) => ({
@@ -234,7 +239,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
             onNavigate={onNavigateTo}
           />
           <small className="gallery-browser__count">
-            이미지 {imageCount} ∙ 동영상 {videoCount}
+            {t("gallery.counts", { images: imageCount, videos: videoCount })}
           </small>
         </div>
 
@@ -246,9 +251,9 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
               onSortFieldChange(value);
             }}
             options={[
-              { id: "name", label: "파일명" },
-              { id: "modified", label: "날짜" },
-              { id: "size", label: "크기" },
+              { id: "name", label: t("files.sortFileName") },
+              { id: "modified", label: t("files.sortDate") },
+              { id: "size", label: t("files.sortSize") },
             ]}
           />
           <button
@@ -258,8 +263,8 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
               resetScroll();
               onToggleSortOrder();
             }}
-            aria-label={sortOrder === "asc" ? "내림차순으로 변경" : "오름차순으로 변경"}
-            title="정렬 방향 변경"
+            aria-label={sortOrder === "asc" ? t("files.sortDesc") : t("files.sortAsc")}
+            title={t("files.sortToggle")}
           >
             <MotionIcon motion="pop">
               <SortDirectionIcon size={17} direction={sortOrder} />
@@ -274,33 +279,37 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
                 resetScroll();
                 onSearchChange(event.target.value);
               }}
-              placeholder="미디어 검색"
-              aria-label="미디어 검색"
+              placeholder={t("gallery.search")}
+              aria-label={t("gallery.search")}
             />
           </label>
         </div>
       </div>
 
       <div className="subpage-summary">
-        <strong>{breadcrumbs.at(-1)?.label || "미디어"}</strong>
-        <span>{searchQuery ? `검색 결과 ${totalCount}개` : `이 폴더의 항목 ${totalCount}개`}</span>
+        <strong>{breadcrumbs.at(-1)?.label || t("gallery.media")}</strong>
+        <span>
+          {searchQuery
+            ? t("files.searchResults", { count: totalCount })
+            : t("gallery.folderCount", { count: totalCount })}
+        </span>
       </div>
       <div ref={viewportRef} className="gallery-browser__viewport">
         {isLoading ? (
           <div className="subpage-state" role="status">
             <span className="subpage-state__spinner" />
-            <span>미디어를 불러오는 중…</span>
+            <span>{t("gallery.loading")}</span>
           </div>
         ) : error ? (
           <div className="subpage-state" role="alert">
-            <strong>폴더를 열 수 없습니다</strong>
+            <strong>{t("files.loadError")}</strong>
             <span>{error}</span>
           </div>
         ) : items.length === 0 ? (
           <div className="subpage-state">
             <ImageIcon size={42} />
-            <strong>표시할 미디어가 없습니다</strong>
-            <span>다른 폴더로 이동하거나 검색어를 지워보세요.</span>
+            <strong>{t("gallery.empty")}</strong>
+            <span>{t("gallery.emptyHint")}</span>
           </div>
         ) : (
           <div
@@ -322,15 +331,15 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
         )}
         {!isLoading && !error && loadMoreError && (
           <div className="gallery-browser__load-more" role="alert">
-            <span>다음 사진을 불러오지 못했습니다.</span>
+            <span>{t("gallery.moreFailed")}</span>
             <button type="button" onClick={onLoadMore}>
-              다시 시도
+              {t("common.retry")}
             </button>
           </div>
         )}
         {!isLoading && !error && isLoadingMore && (
           <div className="gallery-browser__load-more" role="status">
-            다음 사진을 불러오는 중…
+            {t("gallery.moreLoading")}
           </div>
         )}
       </div>

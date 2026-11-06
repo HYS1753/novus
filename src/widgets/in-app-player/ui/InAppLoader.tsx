@@ -9,6 +9,7 @@ import {
   MotionIcon,
   getBundledBrandAssetUrl,
   getBuiltinBrandLogo,
+  useI18n,
 } from "@/shared";
 import type { AppItem } from "@/entities";
 
@@ -29,6 +30,7 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
   onOpenExternal,
   onClose,
 }) => {
+  const { t } = useI18n();
   const bundledAsset = getBundledBrandAssetUrl(app.id);
   const logoUrl = app.imageUrl || bundledAsset;
   const BuiltinLogo = getBuiltinBrandLogo(app.id);
@@ -64,14 +66,12 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
         <div className="in-app-loader__meta">
           <div className="in-app-loader__badge-row">
             <GlassBadge variant="primary" pulse>
-              연결 중
+              {t("loader.connecting")}
             </GlassBadge>
           </div>
           <h2 className="in-app-loader__title">{app.title}</h2>
           <p className="in-app-loader__subtitle">
-            {showFallbackNotice
-              ? "외부 스트리밍 보안 정책을 확인하고 있습니다..."
-              : "보안 채널을 통해 스트리밍 뷰를 연결하고 있습니다."}
+            {showFallbackNotice ? t("loader.checking") : t("loader.linking")}
           </p>
         </div>
 
@@ -86,30 +86,26 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
             <MotionIcon motion="nudge-right">
               <ExternalLinkIcon size={16} />
             </MotionIcon>
-            독립 플레이어로 즉시 열기
+            {t("loader.openStandalone")}
           </GlassButton>
         </div>
 
         {/* Fallback Notice & Direct Options (shown if loading takes longer or is blocked) */}
         {showFallbackNotice && (
           <div className="in-app-loader__fallback">
-            <p className="in-app-loader__fallback-desc">
-              스트리밍 보안 정책(X-Frame-Options / Widevine DRM)으로 인해 인앱 프레임 표시가 제한될
-              수 있습니다. 독립 플레이어 모드에서 1080p 고화질 하드웨어 가속으로 끊김 없이 감상하실
-              수 있습니다.
-            </p>
+            <p className="in-app-loader__fallback-desc">{t("loader.drmHint")}</p>
             <div className="in-app-loader__fallback-actions">
               <GlassButton variant="secondary" size="sm" onClick={onReload}>
                 <MotionIcon motion="rotate">
                   <RefreshIcon size={16} />
                 </MotionIcon>
-                다시 시도
+                {t("common.retry")}
               </GlassButton>
               <GlassButton variant="ghost" size="sm" onClick={onClose}>
                 <MotionIcon motion="pop">
                   <HomeIcon size={16} />
                 </MotionIcon>
-                대시보드
+                {t("common.home")}
               </GlassButton>
             </div>
           </div>

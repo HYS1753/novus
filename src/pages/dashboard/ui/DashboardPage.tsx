@@ -119,6 +119,17 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  // v2 mode: v1 subpages render inside a bridged v2 root (tokens, theme, language).
+  // Gallery and streaming keep their own arrow keys, so spatial navigation is off there.
+  const bridged = (content: React.ReactNode, spatialNavigation = true) =>
+    homeV2 ? (
+      <NvRoot className="nv-bridge" spatialNavigation={spatialNavigation}>
+        {content}
+      </NvRoot>
+    ) : (
+      content
+    );
+
   const withRunningApps = (content: React.ReactNode) => (
     <RunningAppsContext.Provider
       value={{
@@ -206,41 +217,48 @@ export const DashboardPage: React.FC = () => {
   // Dedicated In-App TV Player view
   if (activeApp) {
     return withRunningApps(
-      <div className="dashboard-page dashboard-page--in-app-mode">
-        <InAppPlayer
-          key={activeApp.id}
-          app={activeApp}
-          onClose={() => setActiveApp(null)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          suspended={isSettingsOpen}
-        />
-        {homeV2 ? (
-          <NvRoot className="nv-contents">
-            <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-          </NvRoot>
-        ) : (
-          <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-        )}
-      </div>,
+      bridged(
+        <div className="dashboard-page dashboard-page--in-app-mode">
+          <InAppPlayer
+            key={activeApp.id}
+            app={activeApp}
+            onClose={() => setActiveApp(null)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            suspended={isSettingsOpen}
+          />
+          {homeV2 ? (
+            <NvRoot className="nv-contents">
+              <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            </NvRoot>
+          ) : (
+            <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+          )}
+        </div>,
+        false,
+      ),
     );
   }
 
   // Dedicated Gallery view (Images & Videos)
   if (activeView === "gallery") {
-    return withRunningApps(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />);
+    return withRunningApps(
+      bridged(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />, false),
+    );
   }
 
   // Dedicated System Finder view (All files)
   if (activeView === "finder") {
     return withRunningApps(
-      <FinderPage
-        key={finderPath ?? "default"}
-        initialPath={finderPath}
-        onBackToDashboard={() => {
-          setFinderPath(undefined);
-          setActiveView("dashboard");
-        }}
-      />,
+      bridged(
+        <FinderPage
+          key={finderPath ?? "default"}
+          initialPath={finderPath}
+          onBackToDashboard={() => {
+            setFinderPath(undefined);
+            setActiveView("dashboard");
+          }}
+        />,
+      ),
     );
   }
 

@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { FileItem } from "@/entities";
 import { useImageViewer } from "@/features";
-import { ArrowLeftIcon, CloseIcon, MotionIcon, GlassProgress, getImageThumbnail } from "@/shared";
+import {
+  ArrowLeftIcon,
+  CloseIcon,
+  MotionIcon,
+  GlassProgress,
+  getImageThumbnail,
+  useI18n,
+} from "@/shared";
 
 interface FullscreenImageViewerProps {
   images: FileItem[];
@@ -36,6 +43,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
   onNeedMore,
   onClose,
 }) => {
+  const { t } = useI18n();
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [playing, setPlaying] = useState(false);
@@ -296,7 +304,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
       }}
       role="dialog"
       aria-modal="true"
-      aria-label={`${currentImage.name} 이미지 뷰어`}
+      aria-label={t("viewer.label", { name: currentImage.name })}
     >
       <header
         className={`image-viewer__header ${isUiVisible ? "" : "image-viewer__chrome--hidden"}`}
@@ -307,7 +315,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
           <MotionIcon motion="nudge-left">
             <ArrowLeftIcon size={20} />
           </MotionIcon>
-          <span>갤러리</span>
+          <span>{t("nav.gallery")}</span>
         </button>
         <div className="image-viewer__title">
           <strong title={currentImage.name}>{currentImage.name}</strong>
@@ -319,7 +327,7 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
           type="button"
           className="image-viewer__close"
           onClick={onClose}
-          aria-label="이미지 뷰어 닫기"
+          aria-label={t("viewer.close")}
         >
           <MotionIcon motion="pop">
             <CloseIcon size={20} />
@@ -345,8 +353,8 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
           />
         ) : failedPath === currentImage.path ? (
           <div className="subpage-state" role="alert">
-            <strong>이미지를 표시할 수 없습니다</strong>
-            <span>파일 형식을 지원하지 않거나 파일을 읽을 수 없습니다.</span>
+            <strong>{t("viewer.cantShow")}</strong>
+            <span>{t("viewer.cantShowHint")}</span>
             <button
               type="button"
               data-viewer-control
@@ -355,27 +363,27 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
                 setRetryVersion((value) => value + 1);
               }}
             >
-              다시 시도
+              {t("common.retry")}
             </button>
           </div>
         ) : (
           <div className="media-viewer-loading" role="status">
-            <GlassProgress label="이미지를 불러오는 중…" />
+            <GlassProgress label={t("viewer.loading")} />
           </div>
         )}
       </div>
 
       {isWaitingForImage && !loadMoreError && (
         <div className="image-viewer__load-error" data-viewer-control role="status">
-          다음 사진을 불러오는 중…
+          {t("gallery.moreLoading")}
         </div>
       )}
 
       {currentIndex >= images.length && loadMoreError && (
         <div className="image-viewer__load-error" data-viewer-control role="alert">
-          <span>다음 사진을 불러오지 못했습니다.</span>
+          <span>{t("gallery.moreFailed")}</span>
           <button type="button" onClick={onNeedMore}>
-            다시 시도
+            {t("common.retry")}
           </button>
         </div>
       )}
@@ -385,54 +393,54 @@ export const FullscreenImageViewer: React.FC<FullscreenImageViewerProps> = ({
         data-viewer-control
         inert={!isUiVisible}
       >
-        <button type="button" onClick={goToPrev} disabled={!hasPrev} aria-label="이전 사진">
+        <button type="button" onClick={goToPrev} disabled={!hasPrev} aria-label={t("viewer.prev")}>
           ‹
         </button>
         <button
           type="button"
           onClick={() => changeZoom(zoom - 0.5)}
           disabled={zoom <= 1}
-          aria-label="축소"
+          aria-label={t("viewer.zoomOut")}
         >
           −
         </button>
-        <button type="button" onClick={() => changeZoom(1)} aria-label="원래 크기로">
+        <button type="button" onClick={() => changeZoom(1)} aria-label={t("viewer.zoomReset")}>
           {Math.round(zoom * 100)}%
         </button>
         <button
           type="button"
           onClick={() => changeZoom(zoom + 0.5)}
           disabled={zoom >= 4}
-          aria-label="확대"
+          aria-label={t("viewer.zoomIn")}
         >
           +
         </button>
-        <button type="button" onClick={goToNext} disabled={!hasNext} aria-label="다음 사진">
+        <button type="button" onClick={goToNext} disabled={!hasNext} aria-label={t("viewer.next")}>
           ›
         </button>
         <span className="image-viewer__control-divider" />
         <button
           type="button"
           onClick={() => setPlaying((value) => !value)}
-          aria-label={playing ? "자동 재생 일시정지" : "자동 재생 시작"}
+          aria-label={playing ? t("viewer.slideshowPause") : t("viewer.slideshowStart")}
         >
-          {playing ? "일시정지" : "자동 재생"}
+          {playing ? t("viewer.pause") : t("viewer.autoplay")}
         </button>
         <select
-          aria-label="사진 전환 간격"
+          aria-label={t("viewer.interval")}
           value={intervalSeconds}
           onChange={(event) => setIntervalSeconds(Number(event.target.value))}
         >
-          <option value={10}>10초</option>
-          <option value={15}>15초</option>
-          <option value={30}>30초</option>
+          <option value={10}>{t("viewer.seconds", { count: 10 })}</option>
+          <option value={15}>{t("viewer.seconds", { count: 15 })}</option>
+          <option value={30}>{t("viewer.seconds", { count: 30 })}</option>
         </select>
         <button
           type="button"
           onClick={() => setFill((value) => !value)}
-          aria-label="사진 맞춤 방식 변경"
+          aria-label={t("viewer.fitToggle")}
         >
-          {fill ? "맞춤" : "채우기"}
+          {fill ? t("viewer.fit") : t("viewer.fill")}
         </button>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { useI18n } from "@/shared/hooks/useI18n";
 import React from "react";
 import { ArrowUpIcon, MotionIcon } from "../icons";
 import { GlassMenu } from "../common";
@@ -23,6 +24,7 @@ export const PathNavigation: React.FC<PathNavigationProps> = ({
   onNavigate,
   className = "",
 }) => {
+  const { t } = useI18n();
   const hiddenItems = items.slice(0, -2);
   const visibleItems = items.slice(-2);
 
@@ -33,13 +35,13 @@ export const PathNavigation: React.FC<PathNavigationProps> = ({
         className="path-navigation__up"
         onClick={onUp}
         disabled={!canGoUp}
-        aria-label="상위 폴더로 이동"
-        title="상위 폴더"
+        aria-label={t("path.up")}
+        title={t("path.upTitle")}
       >
         <MotionIcon motion="nudge-up">
           <ArrowUpIcon size={18} />
         </MotionIcon>
-        <span>상위</span>
+        <span>{t("path.upShort")}</span>
       </button>
 
       {hiddenItems.length > 0 && (
@@ -49,8 +51,8 @@ export const PathNavigation: React.FC<PathNavigationProps> = ({
             <button
               type="button"
               className="path-navigation__ellipsis"
-              aria-label="앞쪽 경로 보기"
-              title="앞쪽 경로 보기"
+              aria-label={t("path.more")}
+              title={t("path.more")}
             >
               …
             </button>
@@ -63,7 +65,7 @@ export const PathNavigation: React.FC<PathNavigationProps> = ({
         />
       )}
 
-      <nav className="path-navigation__breadcrumbs" aria-label="현재 폴더 경로">
+      <nav className="path-navigation__breadcrumbs" aria-label={t("path.label")}>
         {visibleItems.map((item, index) => {
           const current = index === visibleItems.length - 1;
           return (

@@ -189,6 +189,7 @@ v2는 v1 옆에 병행 구축되며 화면 단위로 교체됩니다. 진행 순
 - **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
 - **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
 - **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
+- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파인더·뷰어·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 독(`in-app-dock`)은 원형 글리프 레일(채운 홈 원)로 바뀝니다. 갤러리·스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 파인더는 켭니다.
 - **기본 앰비언트 아트워크**: `src/assets/ambient/*.svg`, `getAmbientArtworkForDay()`가 날짜별로 하나를 고릅니다.
 - **v2 Style Guide**: DEV 브라우저에서 `/styleguide/v2`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 

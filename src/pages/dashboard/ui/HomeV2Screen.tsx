@@ -110,13 +110,19 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
     if (item) onOpenItem(item);
   };
 
+  // Internal tools carry localized names; services keep their proper names.
+  const titleOf = (app: AppItem) =>
+    app.id === "photos" ? t("gallery.title") : app.id === "finder" ? t("finder.title") : app.title;
+
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return ALL_APPS.filter((app) => app.category !== "system");
     return ALL_APPS.filter(
-      (app) => app.category !== "system" && app.title.toLowerCase().includes(needle),
+      (app) => app.category !== "system" && titleOf(app).toLowerCase().includes(needle),
     );
-  }, [query]);
+    // titleOf only depends on the language, which `t` tracks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, t]);
 
   const closeSearch = () => {
     setSearchOpen(false);
@@ -174,7 +180,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
             {results.map((app) => (
               <NvListRow
                 key={app.id}
-                title={app.title}
+                title={titleOf(app)}
                 onPress={() => {
                   closeSearch();
                   onOpenItem(app);

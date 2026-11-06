@@ -17,6 +17,7 @@ import {
   SortDirectionIcon,
   VideoIcon,
   openFileInOs,
+  useI18n,
 } from "@/shared";
 
 interface SystemFinderProps {
@@ -74,6 +75,7 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
   onNavigateTo,
   onNavigateUp,
 }) => {
+  const { t } = useI18n();
   const [layout, setLayout] = useState<"grid" | "list">("list");
   const [message, setMessage] = useState<string | null>(null);
   const [page, setPage] = useState(0);
@@ -96,17 +98,17 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
     }
     try {
       await openFileInOs(item.path);
-      setMessage(`“${item.name}”을(를) 열었습니다.`);
+      setMessage(t("finder.opened", { name: item.name }));
     } catch (error) {
-      setMessage(`파일을 열지 못했습니다: ${String(error)}`);
+      setMessage(t("finder.openFailed", { error: String(error) }));
     }
   };
 
   return (
-    <section className="finder" aria-label="파일 파인더">
+    <section className="finder" aria-label={t("finder.title")}>
       <aside className="finder__sidebar">
-        <span className="finder__eyebrow">위치</span>
-        <nav className="finder__locations" aria-label="빠른 위치">
+        <span className="finder__eyebrow">{t("files.location")}</span>
+        <nav className="finder__locations" aria-label={t("files.quickLocations")}>
           {locations.map((location) => {
             const selected = currentPath === location.path;
             return (
@@ -149,11 +151,11 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                 setPage(0);
                 onSearchChange(event.target.value);
               }}
-              placeholder="파일 검색"
-              aria-label="파일 검색"
+              placeholder={t("finder.search")}
+              aria-label={t("finder.search")}
             />
           </label>
-          <div className="finder__sort" aria-label="정렬 방식">
+          <div className="finder__sort" aria-label={t("files.sort")}>
             <GlassSegmentedControl<SortField>
               value={sortField}
               onChange={(field) => {
@@ -161,22 +163,22 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                 onSortFieldChange(field);
               }}
               options={[
-                { id: "name", label: "이름" },
-                { id: "modified", label: "날짜" },
-                { id: "size", label: "크기" },
+                { id: "name", label: t("files.sortName") },
+                { id: "modified", label: t("files.sortDate") },
+                { id: "size", label: t("files.sortSize") },
               ]}
             />
             <button
               type="button"
               className="gallery-browser__sort-order"
               onClick={onToggleSortOrder}
-              aria-label={sortOrder === "asc" ? "내림차순으로 변경" : "오름차순으로 변경"}
-              title="정렬 방향 변경"
+              aria-label={sortOrder === "asc" ? t("files.sortDesc") : t("files.sortAsc")}
+              title={t("files.sortToggle")}
             >
               <SortDirectionIcon size={17} direction={sortOrder} />
             </button>
           </div>
-          <div className="finder__layout" aria-label="보기 방식">
+          <div className="finder__layout" aria-label={t("finder.view")}>
             <button
               type="button"
               className={
@@ -185,7 +187,7 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                   : "finder__layout-button"
               }
               onClick={() => setLayout("list")}
-              aria-label="목록 보기"
+              aria-label={t("finder.listView")}
             >
               <MotionIcon motion="pop">
                 <ListIcon size={17} />
@@ -199,7 +201,7 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                   : "finder__layout-button"
               }
               onClick={() => setLayout("grid")}
-              aria-label="격자 보기"
+              aria-label={t("finder.gridView")}
             >
               <MotionIcon motion="pop">
                 <GridIcon size={17} />
@@ -209,11 +211,11 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
         </div>
 
         <div className="subpage-summary finder__summary">
-          <strong title={currentPath}>{breadcrumbs.at(-1)?.label || "파일"}</strong>
+          <strong title={currentPath}>{breadcrumbs.at(-1)?.label || t("files.file")}</strong>
           <span>
             {searchQuery
-              ? `검색 결과 ${items.length}개`
-              : `폴더 ${folderCount}개 · 파일 ${items.length - folderCount}개`}
+              ? t("files.searchResults", { count: items.length })
+              : t("finder.counts", { folders: folderCount, files: items.length - folderCount })}
           </span>
         </div>
 
@@ -228,20 +230,18 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
           {isLoading ? (
             <div className="subpage-state" role="status">
               <span className="subpage-state__spinner" />
-              <span>폴더를 불러오는 중…</span>
+              <span>{t("finder.loading")}</span>
             </div>
           ) : error ? (
             <div className="subpage-state" role="alert">
-              <strong>폴더를 열 수 없습니다</strong>
+              <strong>{t("files.loadError")}</strong>
               <span>{error}</span>
             </div>
           ) : items.length === 0 ? (
             <div className="subpage-state">
               <FolderIcon size={42} />
-              <strong>{searchQuery ? "검색 결과가 없습니다" : "폴더가 비어 있습니다"}</strong>
-              <span>
-                {searchQuery ? "다른 검색어를 입력해 보세요." : "다른 위치를 선택해 보세요."}
-              </span>
+              <strong>{searchQuery ? t("finder.noResults") : t("finder.empty")}</strong>
+              <span>{searchQuery ? t("finder.noResultsHint") : t("finder.emptyHint")}</span>
             </div>
           ) : layout === "grid" ? (
             <div className="finder__grid">
@@ -249,7 +249,11 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                 <GlassMediaTile
                   key={item.path}
                   title={item.name}
-                  typeLabel={item.is_dir ? "폴더" : item.extension.toUpperCase() || "파일"}
+                  typeLabel={
+                    item.is_dir
+                      ? t("files.folder")
+                      : item.extension.toUpperCase() || t("files.file")
+                  }
                   sizeLabel={item.is_dir ? undefined : formatBytes(item.size)}
                   category={item.is_dir ? "directory" : item.media_type}
                   onClick={() => void openItem(item)}
@@ -257,12 +261,12 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
               ))}
             </div>
           ) : (
-            <div className="finder-list" role="table" aria-label="파일 목록">
+            <div className="finder-list" role="table" aria-label={t("finder.table")}>
               <div className="finder-list__row finder-list__row--header" role="row">
-                <span>이름</span>
-                <span>유형</span>
-                <span>크기</span>
-                <span>수정일</span>
+                <span>{t("files.sortName")}</span>
+                <span>{t("finder.colType")}</span>
+                <span>{t("files.sortSize")}</span>
+                <span>{t("finder.colModified")}</span>
               </div>
               {visibleItems.map((item) => (
                 <button
@@ -276,7 +280,11 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                     <MotionIcon motion="nudge-right">{fileIcon(item)}</MotionIcon>
                     <strong>{item.name}</strong>
                   </span>
-                  <span>{item.is_dir ? "폴더" : item.extension.toUpperCase() || "파일"}</span>
+                  <span>
+                    {item.is_dir
+                      ? t("files.folder")
+                      : item.extension.toUpperCase() || t("files.file")}
+                  </span>
                   <span>{item.is_dir ? "—" : formatBytes(item.size)}</span>
                   <span>{formatDate(item.modified_ms)}</span>
                 </button>
@@ -284,13 +292,13 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
             </div>
           )}
           {!isLoading && pageCount > 1 && (
-            <nav className="subpage-pagination" aria-label="파일 목록 페이지">
+            <nav className="subpage-pagination" aria-label={t("finder.pages")}>
               <button
                 type="button"
                 onClick={() => setPage((value) => value - 1)}
                 disabled={safePage === 0}
               >
-                이전
+                {t("common.previous")}
               </button>
               <span>
                 {safePage + 1} / {pageCount}
@@ -300,7 +308,7 @@ export const SystemFinder: React.FC<SystemFinderProps> = ({
                 onClick={() => setPage((value) => value + 1)}
                 disabled={safePage === pageCount - 1}
               >
-                다음
+                {t("common.next")}
               </button>
             </nav>
           )}

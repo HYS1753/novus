@@ -9,6 +9,7 @@ import {
   FullscreenIcon,
 } from "@/shared/ui/icons/SystemIcons";
 import { MotionIcon } from "@/shared/ui/icons/MotionIcon";
+import { useI18n } from "@/shared/hooks/useI18n";
 
 export interface VideoPlayerControlsProps {
   currentTime: number;
@@ -54,6 +55,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
   onToggleFullscreen,
   className = "",
 }) => {
+  const { t } = useI18n();
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState<number | null>(null);
   const [isVolumeHovered, setIsVolumeHovered] = useState(false);
@@ -105,7 +107,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
     <div
       className={`video-player-controls ${className}`}
       role="region"
-      aria-label="동영상 플레이어 컨트롤"
+      aria-label={t("video.controls")}
       onClick={(e) => e.stopPropagation()}
     >
       {/* 1. Timeline Seek Bar */}
@@ -130,7 +132,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
             onTouchEnd={handleSeekCommit}
             onKeyUp={handleSeekCommit}
             className="video-player-controls__timeline-input"
-            aria-label="재생 위치 탐색 바"
+            aria-label={t("video.seek")}
             aria-valuemin={0}
             aria-valuemax={duration}
             aria-valuenow={displayTime}
@@ -148,8 +150,8 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
             type="button"
             className="video-player-controls__btn video-player-controls__btn--play"
             onClick={onTogglePlay}
-            title={isPaused ? "재생 (스페이스)" : "일시정지 (스페이스)"}
-            aria-label={isPaused ? "재생" : "일시정지"}
+            title={isPaused ? t("video.playHint") : t("video.pauseHint")}
+            aria-label={isPaused ? t("video.play") : t("video.pause")}
           >
             <MotionIcon motion="pop" active={!isPaused}>
               {isPaused ? <PlayIcon size={24} /> : <PauseIcon size={24} />}
@@ -161,8 +163,8 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
             type="button"
             className="video-player-controls__btn"
             onClick={() => onSeekRelative(-10)}
-            title="10초 뒤로 (←)"
-            aria-label="10초 뒤로"
+            title={t("video.back10Hint")}
+            aria-label={t("video.back10")}
           >
             <MotionIcon motion="nudge-left">
               <Replay10Icon size={22} />
@@ -174,8 +176,8 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
             type="button"
             className="video-player-controls__btn"
             onClick={() => onSeekRelative(10)}
-            title="10초 앞으로 (→)"
-            aria-label="10초 앞으로"
+            title={t("video.fwd10Hint")}
+            aria-label={t("video.fwd10")}
           >
             <MotionIcon motion="nudge-right">
               <Forward10Icon size={22} />
@@ -203,8 +205,8 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
               type="button"
               className="video-player-controls__btn"
               onClick={onToggleMute}
-              title={isMuted ? "음소거 해제 (M)" : "음소거 (M)"}
-              aria-label={isMuted ? "음소거 해제" : "음소거"}
+              title={isMuted ? t("video.unmuteHint") : t("video.muteHint")}
+              aria-label={isMuted ? t("video.unmute") : t("video.mute")}
             >
               <MotionIcon motion="pop">
                 {isMuted || effectiveVolume === 0 ? (
@@ -230,7 +232,7 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
                 value={effectiveVolume}
                 onChange={(e) => onVolumeChange(Number(e.target.value))}
                 className="video-player-controls__volume-input"
-                aria-label="음량 조절"
+                aria-label={t("video.volume")}
               />
             </div>
           </div>
@@ -241,8 +243,8 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
               type="button"
               className="video-player-controls__btn"
               onClick={onToggleFullscreen}
-              title={isFullscreen ? "전체화면 종료 (F)" : "전체화면 (F)"}
-              aria-label={isFullscreen ? "전체화면 종료" : "전체화면"}
+              title={isFullscreen ? t("video.exitFullscreenHint") : t("video.fullscreenHint")}
+              aria-label={isFullscreen ? t("video.exitFullscreen") : t("video.fullscreen")}
             >
               <MotionIcon motion="pop">
                 <FullscreenIcon size={20} isFullscreen={isFullscreen} />

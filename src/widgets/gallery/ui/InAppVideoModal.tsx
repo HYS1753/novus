@@ -24,6 +24,7 @@ import {
   getDisplayMode,
   exitWindowFullscreen,
   reportWindowModeError,
+  useI18n,
 } from "@/shared";
 
 interface InAppVideoModalProps {
@@ -39,6 +40,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
   overlaySessionId,
   onExit,
 }) => {
+  const { t } = useI18n();
   const modalRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLVideoElement>(null);
   const escapePendingRef = useRef(false);
@@ -365,7 +367,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       className={`video-modal ${usesNativeOverlay && !videoError ? "video-modal--native-host" : ""} ${overlaySessionId ? "video-modal--overlay-window" : ""}`}
       role="dialog"
       aria-modal="true"
-      aria-label={`${video.name} 재생`}
+      aria-label={t("video.playing", { name: video.name })}
       onPointerMove={(event) => {
         if (event.pointerType === "mouse") notifyActivity();
       }}
@@ -380,7 +382,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
           <MotionIcon motion="nudge-left">
             <ArrowLeftIcon size={20} />
           </MotionIcon>
-          <span>갤러리</span>
+          <span>{t("nav.gallery")}</span>
         </button>
         <div className="video-modal__title">
           <strong title={video.name}>{video.name}</strong>
@@ -391,7 +393,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
         <div className="video-modal__actions">
           <span className="video-modal__engine">
             {engine === "checking"
-              ? "NOVUS · 확인 중"
+              ? t("video.engineCheckingShort")
               : engine === "native"
                 ? "NOVUS · MPV"
                 : "NOVUS · WEBVIEW"}
@@ -400,10 +402,10 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
             type="button"
             className="image-viewer__back"
             onClick={() => (onExit ? onExit() : void closeWindow())}
-            aria-label="Novus 종료"
-            title="Novus 종료"
+            aria-label={t("video.quit")}
+            title={t("video.quit")}
           >
-            종료
+            {t("video.quitShort")}
           </button>
         </div>
       </header>
@@ -420,12 +422,10 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
                 <PlayIcon size={34} />
               </MotionIcon>
             </span>
-            <h2>동영상을 재생할 수 없습니다</h2>
-            <p>
-              재생 엔진이 파일을 열지 못했습니다. 파일 형식이나 설치된 재생 엔진을 확인해 주세요.
-            </p>
+            <h2>{t("video.cantPlay")}</h2>
+            <p>{t("video.cantPlayHint")}</p>
             <GlassButton variant="primary" onClick={handleExternalFallback} isLoading={isPlaying}>
-              시스템 플레이어로 열기
+              {t("video.openSystem")}
             </GlassButton>
           </div>
         ) : overlaySessionId ? null : engine === "native" ? (
@@ -437,7 +437,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
             onClosed={clearNativeSession}
           />
         ) : engine === "checking" ? (
-          <div className="video-modal__loading">재생 엔진 확인 중…</div>
+          <div className="video-modal__loading">{t("video.engineChecking")}</div>
         ) : (
           <video
             ref={playerRef}
@@ -498,7 +498,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
 
       {nativeControlError && (
         <div className="video-modal__feedback video-modal__feedback--native">
-          재생 조작을 완료하지 못했습니다.
+          {t("video.controlFailed")}
         </div>
       )}
 
@@ -514,6 +514,7 @@ const NativeVideoSurface: React.FC<{
   overlayReady?: (sessionId: string) => void;
   onClosed: () => void;
 }> = ({ video, onError, onReady, overlayReady, onClosed }) => {
+  const { t } = useI18n();
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -572,6 +573,6 @@ const NativeVideoSurface: React.FC<{
   }, [video, onError, onReady, overlayReady, onClosed]);
 
   return (
-    <div ref={surfaceRef} className="video-modal__native-surface" aria-label="동영상 재생 영역" />
+    <div ref={surfaceRef} className="video-modal__native-surface" aria-label={t("video.surface")} />
   );
 };

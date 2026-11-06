@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import type { FileItem } from "@/entities";
 import { useFileBrowser } from "@/features";
 import { GalleryGrid, FullscreenImageViewer, InAppVideoModal } from "@/widgets";
-import { SubpageDock, useDockPosition } from "@/shared";
+import { SubpageDock, useDockPosition, useI18n } from "@/shared";
 
 interface GalleryPageProps {
   onBackToDashboard: () => void;
 }
 
 export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) => {
+  const { t } = useI18n();
   const { dockPosition } = useDockPosition();
   const {
     locations,
@@ -80,7 +81,7 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
 
       {/* Standard Subpage Tablet System Dock */}
       <SubpageDock
-        title="미디어 갤러리"
+        title={t("gallery.title")}
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
         onBack={() => {
@@ -89,7 +90,7 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
           else if (canGoBack) navigateBack();
           else onBackToDashboard();
         }}
-        backLabel={canGoBack ? "이전 폴더로 이동" : "대시보드 홈으로 이동"}
+        backLabel={canGoBack ? t("dock.backFolder") : t("dock.home")}
         onReload={refresh}
       />
 
