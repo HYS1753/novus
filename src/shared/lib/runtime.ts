@@ -20,3 +20,8 @@ export function isStyleGuidePath(pathname: string = window.location.pathname): b
   const normalized = pathname.replace(/\/+$/, "") || "/";
   return normalized === "/styleguide";
 }
+
+export function isStyleGuideV2Path(pathname: string = window.location.pathname): boolean {
+  const normalized = pathname.replace(/\/+$/, "") || "/";
+  return normalized === "/styleguide/v2";
+}

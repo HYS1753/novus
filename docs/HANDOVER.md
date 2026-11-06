@@ -45,6 +45,7 @@
 - **0–100 머티리얼 강도**: `<html>`의 `--material-intensity`(0–1)로 제어되며, 기본값은 `0`(완전 불투명). 저사양 환경에서 불필요한 GPU 오버헤드를 막기 위해 기본 상태에서는 `backdrop-filter` 속성을 전혀 렌더링하지 않습니다.
 - **모션 시스템**: 모든 상호작용은 6개 레시피(`press`, `lift`, `reveal`, `emerge`, `enter`, `pulse`)와 `transform: translateZ(0)` 하드웨어 레이어 승격으로 60fps 무지연 반응을 보장합니다.
 - **대시보드 스크롤 안내**: 상단·하단 그라데이션은 현재 대시보드 스크롤 위치가 실제로 더 이동할 수 있을 때만 표시합니다. 갤러리·파인더·스트리밍 화면에서 홈으로 돌아오면 새 스크롤 영역에 감시를 다시 연결하고 첫 화면 상태를 다시 계산합니다.
+- **v2 디자인 시스템 (전환 중)**: `.nv-root` 범위의 v2 토큰(`src/app/styles/v2/`)과 `Nv*` 컴포넌트(`src/shared/ui/v2/`)가 v1 옆에 있습니다. DEV 브라우저 `/styleguide/v2`에서 확인합니다. 단계별 진행은 `docs/REDESIGN_V2.md`, 제품 사실은 `PRODUCT.md`.
 
 ### ④ 초경량 미디어 갤러리 및 비디오 플레이어 (`GalleryPage`, `GalleryGrid`, `FullscreenImageViewer`, `InAppVideoModal`)
 

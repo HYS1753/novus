@@ -27,7 +27,7 @@ export const NovusLogo: React.FC<NovusLogoProps> = ({
         alignItems: "center",
         gap: "10px",
         userSelect: "none",
-        color: "var(--color-text-primary)",
+        color: "var(--nv-logo-color, var(--nv-text, var(--color-text-primary)))",
       }}
       {...props}
     >

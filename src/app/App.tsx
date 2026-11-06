@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { DashboardPage, StyleGuidePage } from "@/pages";
+import { DashboardPage, StyleGuidePage, StyleGuideV2Page } from "@/pages";
 import {
   getDeviceProfile,
   isStyleGuidePath,
+  isStyleGuideV2Path,
   isStyleGuideRouteEnabled,
   useMaterialIntensity,
   toggleFullscreen,
@@ -10,6 +11,8 @@ import {
   listenDisplayError,
 } from "@/shared";
 import "./styles/global.css";
+import "./styles/v2/tokens.css";
+import "./styles/v2/base.css";
 import { InAppVideoModal } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
@@ -67,11 +70,15 @@ export const App: React.FC = () => {
   );
 };
 
+function readStyleGuideRoute(): "v1" | "v2" | null {
+  if (!isStyleGuideRouteEnabled()) return null;
+  if (isStyleGuideV2Path()) return "v2";
+  return isStyleGuidePath() ? "v1" : null;
+}
+
 const DashboardApp: React.FC = () => {
   useUpdateLifecycle();
-  const [showStyleGuide, setShowStyleGuide] = useState(
-    () => isStyleGuideRouteEnabled() && isStyleGuidePath(),
-  );
+  const [styleGuide, setStyleGuide] = useState<"v1" | "v2" | null>(() => readStyleGuideRoute());
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
@@ -84,7 +91,7 @@ const DashboardApp: React.FC = () => {
   useEffect(() => {
     if (!isStyleGuideRouteEnabled()) return;
 
-    const sync = () => setShowStyleGuide(isStyleGuidePath());
+    const sync = () => setStyleGuide(readStyleGuideRoute());
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
@@ -92,7 +99,15 @@ const DashboardApp: React.FC = () => {
   return (
     <>
       <div className="app-ambient" aria-hidden="true" />
-      <div className="app-shell">{showStyleGuide ? <StyleGuidePage /> : <DashboardPage />}</div>
+      <div className="app-shell">
+        {styleGuide === "v2" ? (
+          <StyleGuideV2Page />
+        ) : styleGuide === "v1" ? (
+          <StyleGuidePage />
+        ) : (
+          <DashboardPage />
+        )}
+      </div>
     </>
   );
 };

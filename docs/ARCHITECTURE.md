@@ -171,6 +171,19 @@ novus/
 - **모션 시스템**: 인터랙션 → 레시피 매핑을 고정합니다. `press`(누름) · `lift`(호버) · `reveal`(제자리 등장) · `emerge`(트리거 기반 오버레이) · `enter`(가장자리 진입) · `pulse`(무한 진행). 컴포넌트는 duration/easing을 직접 쓰지 않고 `--motion-*`, `--ease-*`, `--press-scale`, `--lift-distance` 토큰과 `.motion-*` 클래스를 참조합니다. `prefers-reduced-motion: reduce`에서 이동은 제거되고 상태 변화만 남습니다.
 - **Style Guide 페이지** (`StyleGuidePage`): Vite 브라우저 DEV에서만 `/styleguide`로 접근. Tauri 런타임 및 프로덕션 빌드에서는 마운트되지 않음 (`isStyleGuideRouteEnabled`). 제품 설정 화면이 아니라 톤앤매너·토큰·컴포넌트 스펙시먼 문서입니다.
 
+### v2 디자인 시스템 (전환 중)
+
+v2는 v1 옆에 병행 구축되며 화면 단위로 교체됩니다. 진행 순서는 [`REDESIGN_V2.md`](REDESIGN_V2.md).
+
+- **범위**: v2 토큰은 `.nv-root` 요소 아래에서만 적용됩니다. v1 화면(`html.dark`, `--color-*`)에는 영향이 없습니다.
+- **토큰**: `src/app/styles/v2/tokens.css`. 중립 9단 램프(`--nv-n0`~`--nv-n8`) → 역할 토큰(`--nv-ground`, `--nv-surface`, `--nv-text` 등). 의미색은 `--nv-live`(실행 중), `--nv-attention`(확인 필요), `--nv-sun`/`--nv-sat`(달력 주말) 네 개뿐입니다.
+- **테마**: `data-theme` 없음 = OS 설정 추종, `light`/`dark` = 사용자 고정.
+- **보기 모드**: `data-posture="tablet"`(배율 1, 터치 48px) / `"tv"`(배율 1.25, 터치 64px). 모든 크기 토큰은 `--nv-scale`을 곱합니다.
+- **사진 위 크롬**: `.nv-on-media` 안에서는 테마와 무관하게 흰색. 유일한 반투명은 사진 하단 스크림(`--nv-scrim`)이며, 머티리얼 강도는 스크림 농도로만 반영됩니다. 블러는 쓰지 않습니다.
+- **컴포넌트**: `src/shared/ui/v2/` (`Nv*` 접두사). 원형 `NvGlyphButton` = 전역 동작, 사각 `NvButton`/`NvServicePlate` = 콘텐츠의 동작.
+- **기본 앰비언트 아트워크**: `src/assets/ambient/*.svg`, `getAmbientArtworkForDay()`가 날짜별로 하나를 고릅니다.
+- **v2 Style Guide**: DEV 브라우저에서 `/styleguide/v2`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
+
 ---
 
 ## 6. 로컬 미디어 및 파일 탐색 상태
