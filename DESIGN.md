@@ -291,7 +291,7 @@ Novus is flat and opaque. Depth comes from the photograph and from the order of 
 
 ## Shapes
 
-Two shapes carry meaning. Rectangles have gently squared corners (4px for content and for content actions). Circles (50%) are global actions: the glyph rail on the home and the streaming dock, where home is the one filled circle.
+Two shapes carry meaning. Rectangles have gently squared corners (4px for content and for content actions). Circles (50%) are global actions: the glyph rail on the home and the theater rail, where home is the one filled circle.
 
 Rectangles: buttons, service plates, fields, dialogs, segmented options (the segmented track is 7px, the option radius plus its 3px padding), toasts, the onboarding posture cards. Hairline rules (1px) separate list rows, calendar weeks, and sheet sections; controls use a 2px border.
 
@@ -315,9 +315,24 @@ Rectangular, bold, and quiet unless primary.
 
 The circle grammar. Each glyph is a 56px circle (TV 72px) on surface with a 1px rule edge, a 22px icon (×scale), and a caption-size bold label under it. Hover fills surface-raised; press scales 0.97. Over a photo the circle is rgba(0,0,0,0.38) with a white 28% edge. A "준비 중" hint marks unbuilt entries and dims the circle to 60%. Rails stack vertically with 16px gaps.
 
+### Theater rail (the dock)
+
+The dock beside streaming, gallery, and finder (`shared/ui/nav/SubpageDock.tsx`, `dock.css`). The streaming page is a native view that nothing can float over, so the rail sits beside it like a TV bezel. Benchmarked on iPadOS Stage Manager (running apps as thumbnails), the Android tablet / DeX taskbar (no outlines; running state as a pill), and the tvOS / Google TV side nav (plain glyphs; a platter only on focus).
+
+- Always dark (#0a0a0c, 1px #222227 rule toward the content) whatever the theme: it frames video.
+- Top: the clock (label, bold, tabular) and the page name (caption, text-3, one line with ellipsis).
+- Middle, filling the rest: "실행 중 N" and each running service as a 16:9 plate (the same art as its home tile). The one on screen is at full strength with a 4px ink pill at the rail's inner edge (under it on a bottom dock); the others sit at 55% and come up on hover. A 22px round × on each plate's corner ends that session (hit area +10px).
+- Tools: plain glyphs (reload, fullscreen, open externally, settings) at the touch target, text-2, no platter at rest; a #222227 circle on hover, focus, or while pressed (fullscreen on).
+- End: back (platter circle) and home (the one filled white circle), after a rule, within thumb reach in tablet posture.
+- Width: the glyph target + 2 × 14px × scale + 12px; on a bottom dock the same groups run left to right as a taskbar.
+
+### Launch screen
+
+While a service connects (`widgets/in-app-player/ui/InAppLoader.tsx`): centred on ground, the service's plate at 240px × scale over a bloom of its own art (blurred once; only opacity 0.35–0.75 and scale 1.04–1.22 animate, 2.4s alternate; 0.15–0.35 on light ground so a dark plate does not read as a shadow), a soft light band sweeping across the plate every 2.2s as the progress, the name at title size, one status line, and "독립 플레이어로 열기". After the slow-load delay the DRM hint, retry, and home follow. Reduced motion holds everything still. The sheen is the one gradient outside the photo scrim, and it only exists while loading.
+
 ### Service plates (signature)
 
-The rectangle grammar. A 4px plate on surface: a 16:9 brand field on the service's own ground (Netflix #000000, YouTube #ffffff, Disney+ #0b1d4d, TVING #000000, Wavve #1a3cff, Watcha #0d0d0f, Coupang Play #000000) showing the official asset (key art covers, wide wordmarks are contained with 12% by 14% padding), then a 36px bar with the name in label type and either the number-key shortcut (text-3, tabular) or the session state. Narrow plates (under 170px) keep the name whole and reduce the state to its dot. An ended session dims the field to 45%.
+The rectangle grammar. A 4px plate on surface: a 16:9 brand field on the service's own ground (Netflix #000000, YouTube #ffffff, Disney+ #0b1d4d, TVING #000000, Wavve #1a3cff, Watcha #0d0d0f, Coupang Play #000000) showing the official asset (key art covers, wide wordmarks are contained inside a per-brand inset positioned from the field's edges), then a 36px bar with the name in label type and either the number-key shortcut (text-3, tabular) or the session state. Narrow plates (under 170px) keep the name whole and reduce the state to its dot. An ended session dims the field to 45%.
 
 ### Status
 
@@ -381,7 +396,7 @@ After the ambient delay (default 10 minutes, one timeout reset on input, no poll
 
 ### The bridge
 
-Gallery, Finder, the viewer, video, and the streaming dock still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The dock becomes a glyph rail of glyph-target circles on ground with a 1px rule, home as the one filled ink circle; the rail's width is the glyph target plus 2× space-4, so no circle is clipped at any scale, and the service name stays on one line with an ellipsis. The middle of the rail is multitasking: "실행 중 N" and each running service as a 16:9 plate (the same art as its home tile), the one on screen ringed in ink, a round × on each plate's corner to end it. The streaming loader is v2 (`widgets/in-app-player/ui/in-app-loader.css`): centred on ground, the service's plate at 240px × scale, the name at title size, one status line, a 2px hairline with a sliding ink segment (static under reduced motion), and the standalone button; after the slow-load delay, the DRM hint plus retry and home.
+Gallery, Finder, the viewer, video, and the streaming dock still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The dock (theater rail) and the streaming launch screen are v2 components of their own; see their sections.
 
 ## Do's and Don'ts
 

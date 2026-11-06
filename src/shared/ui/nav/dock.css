@@ -1,0 +1,367 @@
+/* ==========================================================================
+   Theater rail (v2 dock) — beside streaming, gallery, and finder.
+   Benchmarked on iPadOS Stage Manager (running apps as thumbnails), the
+   Android/DeX taskbar (no outlines, running state as a pill), and the
+   tvOS / Google TV side nav (plain glyphs, a platter only on focus).
+   Always dark: it frames video like a TV bezel, whatever the theme.
+   ========================================================================== */
+
+.nvd {
+  /* Dark ramp pinned locally (roles resolve here, not at the root). */
+  --nvd-ground: #0a0a0c;
+  --nvd-platter: #222227;
+  --nvd-platter-strong: #34343b;
+  --nvd-rule: #222227;
+  --nvd-text: #ffffff;
+  --nvd-text-2: #bcbcc5;
+  --nvd-text-3: #8e8e99;
+  --nvd-live: #ff453a;
+  --nvd-pad: calc(14px * var(--nv-scale, 1));
+  --nvd-glyph: var(--nv-target, 48px);
+  --nvd-circle: var(--nv-target-glyph, 56px);
+
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-5, 20px);
+  padding: var(--nv-space-5, 20px) var(--nvd-pad);
+  background: var(--nvd-ground);
+  color: var(--nvd-text);
+  font-family: var(--nv-font, inherit);
+  color-scheme: dark;
+}
+
+/* ---------- Vertical (right / left) ---------- */
+.nvd--right,
+.nvd--left {
+  flex-direction: column;
+  width: calc(var(--nvd-circle) + 2 * var(--nvd-pad) + 12px);
+  height: 100%;
+}
+
+.nvd--right {
+  border-left: 1px solid var(--nvd-rule);
+}
+
+.nvd--left {
+  border-right: 1px solid var(--nvd-rule);
+}
+
+/* ---------- Horizontal (bottom) ---------- */
+.nvd--bottom {
+  flex-direction: row;
+  width: 100%;
+  height: calc(var(--nvd-circle) + 2 * var(--nv-space-2, 8px));
+  padding: var(--nv-space-2, 8px) var(--nv-space-6, 32px);
+  border-top: 1px solid var(--nvd-rule);
+}
+
+/* ---------- Now: clock and the page name ---------- */
+.nvd__now {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.nvd--bottom .nvd__now {
+  width: auto;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.nvd__time {
+  font-family: var(--nv-font-display, inherit);
+  font-size: var(--nv-size-label, 14px);
+  font-weight: var(--nv-weight-bold, 700);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.nvd__title {
+  max-width: 100%;
+  font-size: var(--nv-size-caption, 12px);
+  color: var(--nvd-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Running services ---------- */
+.nvd__run {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-3, 12px);
+}
+
+.nvd__run-label {
+  font-size: var(--nv-size-caption, 12px);
+  color: var(--nvd-text-3);
+  white-space: nowrap;
+}
+
+.nvd__run-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-4, 16px);
+  margin: 0;
+  padding: var(--nv-space-2, 8px) 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.nvd--bottom .nvd__run {
+  flex-direction: row;
+}
+
+.nvd--bottom .nvd__run-list {
+  flex-direction: row;
+  padding: 0 var(--nv-space-2, 8px);
+  overflow: visible;
+}
+
+.nvd__run-item {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nvd__run-switch {
+  display: block;
+  /* Nearly the rail's inner width: plates read as thumbnails, and the corner × stays inside. */
+  width: calc(var(--nvd-circle) + 4px);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity var(--nv-dur-move, 200ms) var(--nv-ease-out, ease-out),
+    transform var(--nv-dur-press, 90ms) var(--nv-ease-out, ease-out);
+}
+
+.nvd--bottom .nvd__run-switch {
+  width: calc(var(--nvd-circle) * 1.25);
+}
+
+.nvd__run-art.nv-plate__field {
+  display: grid;
+  width: 100%;
+  border-radius: var(--nv-radius-content, 4px);
+}
+
+.nvd__run-switch:hover,
+.nvd__run-item[data-active] .nvd__run-switch {
+  opacity: 1;
+}
+
+.nvd__run-switch:active {
+  transform: scale(var(--nv-press-scale, 0.96));
+}
+
+.nvd__run-switch:focus-visible {
+  outline: none;
+  opacity: 1;
+}
+
+.nvd__run-switch:focus-visible .nvd__run-art {
+  outline: 3px solid var(--nvd-text);
+  outline-offset: 3px;
+}
+
+/* The pill: the service on screen, marked at the rail's inner edge. */
+.nvd__run-item[data-active]::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--nvd-pad) + 3px);
+  width: 4px;
+  height: 60%;
+  border-radius: var(--nv-radius-content, 4px);
+  background: var(--nvd-text);
+  transform: translateY(-50%);
+}
+
+.nvd--left .nvd__run-item[data-active]::before {
+  left: auto;
+  right: calc(-1 * var(--nvd-pad) + 3px);
+}
+
+.nvd--bottom .nvd__run-item[data-active]::before {
+  top: auto;
+  bottom: calc(-1 * var(--nv-space-2, 8px) + 1px);
+  left: 50%;
+  width: 40%;
+  height: 4px;
+  transform: translateX(-50%);
+}
+
+/* Close: a small round action on the plate's corner, with a larger hit area. */
+.nvd__run-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--nvd-platter-strong);
+  color: var(--nvd-text);
+  box-shadow: 0 0 0 2px var(--nvd-ground);
+  cursor: pointer;
+}
+
+.nvd__run-close::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+
+.nvd__run-close:hover,
+.nvd__run-close:focus-visible {
+  background: var(--nvd-text);
+  color: var(--nvd-ground);
+  outline: none;
+}
+
+.nvd__run-close:disabled,
+.nvd__run-switch:disabled {
+  opacity: 0.35;
+  cursor: wait;
+}
+
+.nvd__run-error {
+  font-size: var(--nv-size-caption, 12px);
+  color: var(--nvd-text-2);
+  text-align: center;
+}
+
+/* ---------- Tools: plain glyphs ---------- */
+.nvd__tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-1, 4px);
+}
+
+.nvd--bottom .nvd__tools,
+.nvd--bottom .nvd__nav {
+  flex-direction: row;
+}
+
+.nvd__tool {
+  display: grid;
+  place-items: center;
+  width: var(--nvd-glyph);
+  height: var(--nvd-glyph);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--nvd-text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move, 200ms) var(--nv-ease-out, ease-out),
+    color var(--nv-dur-move, 200ms) var(--nv-ease-out, ease-out),
+    transform var(--nv-dur-press, 90ms) var(--nv-ease-out, ease-out);
+}
+
+.nvd__tool:hover,
+.nvd__tool:focus-visible,
+.nvd__tool[aria-pressed="true"] {
+  background: var(--nvd-platter);
+  color: var(--nvd-text);
+  outline: none;
+}
+
+.nvd__tool:focus-visible {
+  box-shadow: 0 0 0 3px var(--nvd-text);
+}
+
+.nvd__tool:active {
+  transform: scale(var(--nv-press-scale, 0.96));
+}
+
+.nvd__tool svg,
+.nvd__circle svg {
+  stroke: currentColor;
+}
+
+/* ---------- Navigation: back and home, the only filled circle ---------- */
+.nvd__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-3, 12px);
+  padding-top: var(--nv-space-4, 16px);
+  border-top: 1px solid var(--nvd-rule);
+}
+
+.nvd--bottom .nvd__nav {
+  padding: 0 0 0 var(--nv-space-4, 16px);
+  border-top: 0;
+  border-left: 1px solid var(--nvd-rule);
+}
+
+.nvd__circle {
+  display: grid;
+  place-items: center;
+  width: var(--nvd-circle);
+  height: var(--nvd-circle);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--nvd-platter);
+  color: var(--nvd-text);
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move, 200ms) var(--nv-ease-out, ease-out),
+    transform var(--nv-dur-press, 90ms) var(--nv-ease-out, ease-out);
+}
+
+.nvd__circle:hover {
+  background: var(--nvd-platter-strong);
+}
+
+.nvd__circle:active {
+  transform: scale(var(--nv-press-scale, 0.96));
+}
+
+.nvd__circle:focus-visible {
+  outline: 3px solid var(--nvd-text);
+  outline-offset: 3px;
+}
+
+.nvd__circle:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nvd__circle--home {
+  background: var(--nvd-text);
+  color: var(--nvd-ground);
+}
+
+.nvd__circle--home:hover {
+  background: var(--nvd-text-2);
+}
+
+.nvd__run--empty {
+  flex: 1;
+}

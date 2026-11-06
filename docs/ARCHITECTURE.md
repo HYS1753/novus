@@ -181,7 +181,7 @@ novus/
 - **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
 - **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
 - **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
-- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파인더·뷰어·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 독(`in-app-dock`)은 원형 글리프 레일(채운 홈 원)로 바뀝니다. 갤러리·스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 파인더는 켭니다.
+- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파인더·뷰어·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다. 독과 스트리밍 로딩 화면은 v1 스타일 없이 자체 v2 CSS를 씁니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 갤러리·스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 파인더는 켭니다.
 - **기본 앰비언트 아트워크**: `src/assets/ambient/*.jpg`(1600×1000 절차 생성 래스터, 생성기 `scripts/design/generate-ambient-art.py`). 각 이미지에 초점 높이(`focusY`)가 있어, 사진이 접힐 때 띠가 그 높이(수평선 등)를 중심으로 보입니다. 사용자 사진은 0.5.
 - **v2 Style Guide**: DEV 브라우저에서 `/styleguide`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 
@@ -252,7 +252,7 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 ### 실행 중인 웹 앱과 공통 독
 
 - 홈 이동은 웹뷰를 숨겨 DOM·재생 상태를 유지합니다. 홈 1화면 캡션 아래 "실행 중 N" 트레이와 2화면 서비스 타일의 닫기 버튼이 같은 목록을 씁니다.
-- 스트리밍 앱·갤러리·파인더의 공통 `SubpageDock`은 `RunningAppsContext`로 실행 목록을 받아 레일 가운데에 서비스별 16:9 플레이트(`NvBrandArt`, 홈 타일과 같은 아트)로 보여 줍니다. 현재 앱은 잉크 링, 각 플레이트 모서리의 원형 ×가 종료입니다. 레일 폭은 `--nv-target-glyph` + 여백으로 계산되어 어떤 배율에서도 원이 잘리지 않습니다. 기본 우측 독 외에 좌측·하단 설정도 따릅니다.
+- 스트리밍 앱·갤러리·파인더의 공통 `SubpageDock`(`shared/ui/nav`, `dock.css`)은 테마와 무관하게 어두운 "시어터 레일"입니다. 위에서부터 시계·화면 이름, `RunningAppsContext`의 실행 목록(서비스별 16:9 플레이트 `NvBrandArt`, 현재 앱은 100% + 안쪽 가장자리 알약 표시, 나머지는 55%, 모서리 원형 ×로 종료), 평소엔 배경 없는 도구 글리프(`DockTool`: 새로고침·전체화면·외부로 열기·설정), 뒤로·홈(유일한 채운 원) 순입니다. 스트리밍 페이지는 네이티브 뷰라 위에 겹칠 수 없어 레일은 항상 옆에 붙습니다. 기본 우측 외에 좌측·하단(작업 표시줄 형태)도 따릅니다.
 - `list_streaming_pages` / `listStreamingPages()`는 PageManager에 등록되고 실제 웹뷰가 존재하는 앱 ID를 반환합니다. 웹뷰 생성·닫기·이전 탐색 완료 후 프론트엔드 이벤트로 목록을 갱신하며 폴링하지 않습니다.
 - 아이콘 선택은 기존 웹뷰를 다시 표시하고, 닫기는 `discard_streaming_page`로 웹뷰를 파괴합니다. 현재 앱을 닫으면 홈으로 이동합니다. 닫기 실패 시 목록을 유지하고 오류를 표시합니다. 로그인 프로필 쿠키는 유지됩니다.
 - 목록은 앱이 열려 있다는 표시이며 오디오 재생 여부를 감지하지 않습니다. 외부 브라우저 프로세스는 추적하지 않습니다. 브라우저 개발 서버(`pnpm dev`)에서는 PageManager가 없으므로 `InAppPlayer`가 `markWebStreamingPageOpen`으로 메모리 목록에 등록하고, `listStreamingPages`/`discardStreamingPage`가 그 목록을 씁니다(다시 열면 iframe은 새로 로드됨). 넷플릭스 등은 iframe을 거부하므로 실제 재생 확인은 `pnpm tauri dev`로 합니다.

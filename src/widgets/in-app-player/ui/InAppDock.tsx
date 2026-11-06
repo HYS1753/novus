@@ -1,14 +1,7 @@
 import React from "react";
 import type { AppItem } from "@/entities";
 import type { DockPosition } from "@/shared";
-import {
-  ExternalLinkIcon,
-  MotionIcon,
-  SettingsIcon,
-  SubpageDock,
-  TouchButton,
-  useI18n,
-} from "@/shared";
+import { DockTool, ExternalLinkIcon, SettingsIcon, SubpageDock, useI18n } from "@/shared";
 
 export interface InAppDockProps {
   app: AppItem;
@@ -40,33 +33,19 @@ export const InAppDock: React.FC<InAppDockProps> = ({
       onReload={onReload}
       toolsSlot={
         <>
-          {onOpenSettings && (
-            <TouchButton
-              variant="ghost"
-              size="sm"
-              className="in-app-dock__btn"
-              onClick={onOpenSettings}
-              aria-label={t("common.settings")}
-              title={t("common.settings")}
-            >
-              <MotionIcon motion="rotate">
-                <SettingsIcon size={20} />
-              </MotionIcon>
-            </TouchButton>
-          )}
           {onOpenExternal && (
-            <TouchButton
-              variant="ghost"
-              size="sm"
-              className="in-app-dock__btn"
+            <DockTool
+              label={t("dock.openExternal")}
+              icon={<ExternalLinkIcon size={20} />}
               onClick={onOpenExternal}
-              aria-label={t("dock.openExternal")}
-              title={t("dock.openExternal")}
-            >
-              <MotionIcon motion="nudge-right">
-                <ExternalLinkIcon size={18} />
-              </MotionIcon>
-            </TouchButton>
+            />
+          )}
+          {onOpenSettings && (
+            <DockTool
+              label={t("common.settings")}
+              icon={<SettingsIcon size={20} />}
+              onClick={onOpenSettings}
+            />
           )}
         </>
       }

@@ -19,10 +19,104 @@
   text-align: center;
 }
 
-/* The same plate as the home tile, at launch size. */
-.nvl__art.nv-plate__field {
+/* The same plate as the home tile, at launch size, over a soft bloom of its art. */
+.nvl__media {
+  position: relative;
   width: calc(240px * var(--nv-scale));
+  margin-bottom: var(--nv-space-3);
+}
+
+.nvl__art.nv-plate__field {
+  position: relative;
+  z-index: 1;
+  width: 100%;
   border-radius: var(--nv-radius-content);
+  animation: nvl-breathe 2.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+/* The bloom: the art itself, blurred once and only scaled/faded afterwards
+   (transform + opacity), so the GPU never re-blurs per frame. */
+.nvl__glow.nv-plate__field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  filter: blur(calc(28px * var(--nv-scale))) saturate(1.3);
+  opacity: 0.55;
+  transform: scale(1.12);
+  will-change: transform, opacity;
+  animation: nvl-bloom 2.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+/* A soft band of light drifting across the plate: the progress itself. */
+.nvl__sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  pointer-events: none;
+}
+
+.nvl__sheen::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  will-change: transform;
+  animation: nvl-sheen 2.2s var(--nv-ease-in-out) infinite;
+}
+
+.in-app-loader--hidden .nvl__art,
+.in-app-loader--hidden .nvl__glow,
+.in-app-loader--hidden .nvl__sheen::before {
+  animation: none;
+}
+
+@keyframes nvl-breathe {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes nvl-bloom {
+  from {
+    opacity: var(--nvl-bloom-min, 0.35);
+    transform: scale(1.04);
+  }
+  to {
+    opacity: var(--nvl-bloom-max, 0.75);
+    transform: scale(1.22);
+  }
+}
+
+@keyframes nvl-sheen {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nvl__art,
+  .nvl__glow,
+  .nvl__sheen::before {
+    animation: none;
+  }
 }
 
 .nvl__meta {
@@ -52,47 +146,22 @@
   max-width: 36em;
 }
 
-/* Indeterminate: a short ink segment sliding along a hairline. */
-.nvl__progress {
-  position: relative;
-  width: calc(240px * var(--nv-scale));
-  height: 2px;
-  overflow: hidden;
-  background: var(--nv-rule);
-}
-
-.nvl__progress-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 32%;
-  background: var(--nv-text);
-  animation: nvl-slide 1.4s var(--nv-ease-in-out) infinite;
-}
-
-.in-app-loader--hidden .nvl__progress-bar {
-  animation: none;
-}
-
-@keyframes nvl-slide {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(320%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nvl__progress-bar {
-    animation: none;
-    width: 100%;
-    opacity: 0.4;
-  }
-}
-
 .nvl__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--nv-space-3);
+}
+
+/* On a light ground a dark plate's bloom reads as a shadow; keep it a whisper. */
+@media (prefers-color-scheme: light) {
+  .nv-root:not([data-theme="dark"]) .nvl__glow {
+    --nvl-bloom-min: 0.15;
+    --nvl-bloom-max: 0.35;
+  }
+}
+
+.nv-root[data-theme="light"] .nvl__glow {
+  --nvl-bloom-min: 0.15;
+  --nvl-bloom-max: 0.35;
 }

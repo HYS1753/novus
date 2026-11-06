@@ -14,7 +14,7 @@ export interface InAppLoaderProps {
 
 /**
  * The launch screen while a service connects: the service's own plate,
- * its name, one status line, a quiet progress line, and the standalone
+ * its name, one status line, a bloom and sheen as progress, and the standalone
  * escape. Centred on ground, the same world as today's page.
  */
 export const InAppLoader: React.FC<InAppLoaderProps> = ({
@@ -34,17 +34,18 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
       aria-live="polite"
     >
       <div className="nvl__stack">
-        <NvBrandArt id={app.id} name={app.title} className="nvl__art" />
+        {/* The plate breathes over a blurred bloom of its own art while the service connects. */}
+        <div className="nvl__media" role="progressbar" aria-label={t("loader.connecting")}>
+          <NvBrandArt id={app.id} name={app.title} className="nvl__glow" />
+          <NvBrandArt id={app.id} name={app.title} className="nvl__art" />
+          <span className="nvl__sheen" aria-hidden="true" />
+        </div>
 
         <div className="nvl__meta">
           <h2 className="nvl__title">{app.title}</h2>
           <p className="nvl__status">
             {showFallbackNotice ? t("loader.checking") : t("loader.linking")}
           </p>
-        </div>
-
-        <div className="nvl__progress" role="progressbar" aria-label={t("loader.connecting")}>
-          <span className="nvl__progress-bar" />
         </div>
 
         {showFallbackNotice && <p className="nvl__hint">{t("loader.drmHint")}</p>}
