@@ -319,4 +319,5 @@ export const ja: Messages = {
   "onboarding.previewTv": "ソファから 1–2 m · リモコンや方向キーで移動",
   "onboarding.previewTablet": "手に持って 30–50 cm · タッチで操作",
   "home.drives": "ドライブ",
+  "home.photoHint": "写真",
 };

@@ -68,6 +68,9 @@ export const NvServicePlate: React.FC<NvServicePlateProps> = ({
           alt=""
           draggable={false}
           decoding="async"
+          onLoad={(event) => {
+            event.currentTarget.dataset.loaded = "";
+          }}
         />
       ) : (
         <span className="nv-plate__wordmark">{name}</span>

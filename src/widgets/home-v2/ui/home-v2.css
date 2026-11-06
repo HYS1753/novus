@@ -454,37 +454,19 @@
   flex: 1;
 }
 
-.nvh__handle {
-  align-self: center;
-  margin-top: calc(var(--nv-space-1) * -1);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nv-space-2);
-  min-height: var(--nv-target-glyph);
-  padding: 0 var(--nv-space-4);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: var(--nv-radius-action);
-  background: rgba(0, 0, 0, 0.45);
-  color: var(--nv-on-media);
-  font-family: var(--nv-font);
-  font-size: var(--nv-size-caption);
-  font-weight: var(--nv-weight-bold);
-  cursor: pointer;
-}
-
 .nvt {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   /* Row 1: glance | month. Row 2: shortcuts | services, so peer headings share a
      baseline and both bottoms align. Spare height is shared above and below;
      "safe" keeps the top visible if the content ever outgrows the frame. */
   align-content: safe center;
   column-gap: calc(56px * var(--nv-vscale, 1));
-  row-gap: var(--nv-space-6);
-  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-5);
+  row-gap: var(--nv-space-5);
+  padding: var(--nv-space-3) var(--nv-gutter) var(--nv-space-4);
   background: var(--nv-ground);
   color: var(--nv-text);
 }
@@ -519,6 +501,12 @@
   font-size: var(--nv-size-heading);
   font-weight: var(--nv-weight-semibold);
   color: var(--nv-text-2);
+}
+
+/* The date reads as one line; only the small day line may wrap. */
+.nvt__weekday,
+.nvt__month {
+  white-space: nowrap;
 }
 
 .nvt__dayline {
@@ -581,81 +569,6 @@
   color: var(--nv-text);
 }
 
-/* ---------- Shortcuts: a two-column grid of compact rows ---------- */
-.nvt__glance {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-.nvt__shortcuts {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-/* Six shortcuts, two columns, three rows that stretch to the tiles' height. */
-.nvt__shortcut-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(var(--nv-target), 1fr));
-  gap: var(--nv-space-2);
-}
-
-.nvt__shortcut {
-  display: flex;
-  align-items: center;
-  gap: var(--nv-space-3);
-  min-width: 0;
-  padding: 0 var(--nv-space-4);
-  border: 0;
-  border-radius: var(--nv-radius-action);
-  background: var(--nv-surface);
-  color: var(--nv-text);
-  font-family: var(--nv-font);
-  font-size: var(--nv-size-label);
-  font-weight: var(--nv-weight-semibold);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color var(--nv-dur-move) var(--nv-ease-out),
-    transform var(--nv-dur-press) var(--nv-ease-out);
-}
-
-.nvt__shortcut:hover {
-  background: var(--nv-surface-raised);
-}
-
-.nvt__shortcut:active {
-  transform: scale(var(--nv-press-scale));
-}
-
-.nvt__shortcut svg {
-  flex: none;
-  width: calc(20px * var(--nv-scale));
-  height: calc(20px * var(--nv-scale));
-  color: var(--nv-text-2);
-}
-
-.nvt__shortcut > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nvt__shortcut small {
-  margin-left: var(--nv-space-2);
-  font-size: var(--nv-size-caption);
-  font-weight: var(--nv-weight-medium);
-  color: var(--nv-text-3);
-}
-
-.nvt__shortcut--muted svg {
-  opacity: 0.55;
-}
-
 /* ---------- This month ---------- */
 .nvt__calendar {
   flex: none;
@@ -667,7 +580,7 @@
 }
 
 .nvt__calendar .nv-calendar td {
-  height: min(calc(40px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.046));
+  height: min(calc(40px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.034));
   padding: 0;
   text-align: center;
   vertical-align: middle;
@@ -729,16 +642,6 @@
   font-size: var(--nv-size-label);
   font-weight: var(--nv-weight-bold);
   color: var(--nv-text);
-}
-
-/* Shortcut icons follow the chrome colour (some shared icons carry a hue). */
-.nvt__shortcut svg[stroke]:not([stroke="none"]),
-.nvt__shortcut svg [stroke]:not([stroke="none"]) {
-  stroke: currentColor;
-}
-
-.nvt__shortcut svg [fill]:not([fill="none"]) {
-  fill: currentColor;
 }
 
 /* ---------- Tiles: bare art, label beneath; numbers and lift on focus ---------- */
@@ -826,4 +729,91 @@
   padding: var(--nv-space-2) var(--nv-space-1) 0;
   font-weight: var(--nv-weight-semibold);
   color: var(--nv-text-2);
+}
+
+/* ---------- Row 1: date on the left, the time large on the right ---------- */
+.nvt__glance {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--nv-space-5);
+  padding-bottom: var(--nv-space-2);
+}
+
+.nvt__glance .nvt__now {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--nv-space-2);
+  margin-top: 0;
+  text-align: right;
+}
+
+.nvt__glance .nvt__time {
+  /* Large, but never wider than the glance column leaves beside the date. */
+  font-size: min(calc(52px * var(--nv-scale)), 4.2vw);
+  font-weight: var(--nv-weight-semibold);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* ---------- Row 2: services across the full width, two rows of six ---------- */
+.nvt__services {
+  grid-column: 1 / -1;
+}
+
+/* Columns are set inline from the width (6–9) so two rows always fit the frame. */
+.nvt__tiles {
+  row-gap: var(--nv-space-4);
+}
+
+/* Reserved slot for services added later: the space reads as a quiet frame. */
+.nvt__slot {
+  display: flex;
+  flex-direction: column;
+}
+
+.nvt__slot::before {
+  content: "";
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--nv-rule);
+  border-radius: var(--nv-radius-content);
+}
+
+/* ---------- Row 3: explorer ---------- */
+.nvt__files {
+  grid-column: 1 / -1;
+  /* A scroll container's minimum height is 0; keep the row's own height. */
+  min-height: calc(var(--nv-target) + 8px);
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nvt__files-title {
+  flex: none;
+  margin-right: var(--nv-space-2);
+  white-space: nowrap;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+}
+
+.nvt__files .nvh__spacer {
+  flex: 1;
+}
+
+/* ---------- Band: the way back up mirrors the frame-one hint ---------- */
+.nvh__band > .nvh__hint--up {
+  position: absolute;
+  top: var(--nv-space-3);
+  bottom: auto;
+  z-index: 1;
+}
+
+.nvh__chev--up {
+  margin-top: 4px;
+  transform: rotate(-135deg);
 }

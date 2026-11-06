@@ -313,4 +313,5 @@ export const zhCN: Messages = {
   "onboarding.previewTv": "在沙发上 1–2 米外 · 用遥控器或方向键移动",
   "onboarding.previewTablet": "拿在手上 30–50 厘米 · 直接触控",
   "home.drives": "驱动器",
+  "home.photoHint": "照片",
 };

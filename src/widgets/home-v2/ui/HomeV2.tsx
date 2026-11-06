@@ -27,9 +27,16 @@ import {
 import "./home-v2.css";
 
 /** Share of the viewport the folded photo keeps as the band on today's page. */
-const BAND_RATIO = 0.16;
+const BAND_RATIO = 0.13;
 /** Default wait on today's page before the home returns to the photo frame. */
 const AUTO_RETURN_MS = 60_000;
+/**
+ * Service grid: always two rows. Tiles are as large as the height left on
+ * today's page allows; the column count follows from that and the width.
+ */
+const TILE_ROWS = 2;
+const MIN_TILE_COLS = 4;
+const MAX_TILE_COLS = 9;
 const ACTIVITY_EVENTS = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
 
 export interface HomeService {
@@ -135,6 +142,8 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef(0);
+  const tilesRef = useRef<HTMLDivElement>(null);
+  const [tileCols, setTileCols] = useState(6);
   const focusRef = useRef(photoFocus);
   useEffect(() => {
     focusRef.current = photoFocus;
@@ -213,6 +222,42 @@ export const HomeV2: React.FC<HomeV2Props> = ({
       cancelAnimationFrame(frameRef.current);
     };
   }, [applyFold]);
+
+  // Largest tiles that fit two rows in the height left over; unused cells are reserved slots.
+  useEffect(() => {
+    const tiles = tilesRef.current;
+    const grid = tiles?.closest<HTMLElement>(".nvt");
+    if (!tiles || !grid) return;
+    const measure = () => {
+      const gridStyle = getComputedStyle(grid);
+      const tileStyle = getComputedStyle(tiles);
+      const rowGap = parseFloat(gridStyle.rowGap) || 0;
+      const colGap = parseFloat(tileStyle.columnGap) || 0;
+      const tileRowGap = parseFloat(tileStyle.rowGap) || 0;
+      const height = (selector: string) =>
+        grid.querySelector<HTMLElement>(selector)?.getBoundingClientRect().height ?? 0;
+      const used =
+        (parseFloat(gridStyle.paddingTop) || 0) +
+        (parseFloat(gridStyle.paddingBottom) || 0) +
+        Math.max(height(".nvt__glance"), height(".nvt__calendar")) +
+        height(".nvt__services .nvt__row-head") +
+        height(".nvt__files") +
+        rowGap * 2 +
+        tileRowGap;
+      const label = height(".nvt__tiles .nv-plate__bar") || 32;
+      const rowHeight = (grid.clientHeight - used) / TILE_ROWS;
+      const tileWidth = Math.max(80, ((rowHeight - label) * 16) / 9);
+      const cols = Math.ceil((tiles.clientWidth + colGap) / (tileWidth + colGap));
+      setTileCols(Math.min(MAX_TILE_COLS, Math.max(MIN_TILE_COLS, cols)));
+    };
+    // The frame is fixed, but fonts and the calendar settle after first paint.
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid);
+    grid
+      .querySelectorAll<HTMLElement>(".nvt__glance, .nvt__calendar, .nvt__files")
+      .forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
 
   // Ambient always shows the first frame.
   useEffect(() => {
@@ -297,28 +342,6 @@ export const HomeV2: React.FC<HomeV2Props> = ({
       })
     : null;
   const liveCount = live.length;
-
-  // ---------- Shortcuts: always six, so the grid is two full columns ----------
-  const downloads = locations.find((location) => location.kind === "downloads");
-  const drive = locations.find((location) => location.kind === "drive");
-  const shortcuts = [
-    { key: "gallery", icon: <ImageIcon />, label: t("nav.gallery"), onPress: onOpenGallery },
-    { key: "files", icon: <FolderIcon />, label: t("nav.files"), onPress: () => onOpenFinder() },
-    {
-      key: "downloads",
-      icon: <FolderIcon />,
-      label: t("home.downloads"),
-      onPress: () => onOpenFinder(downloads?.path),
-    },
-    {
-      key: "drive",
-      icon: <FolderIcon />,
-      label: drive?.label ?? t("home.drives"),
-      onPress: () => onOpenFinder(drive?.path),
-    },
-    { key: "radio", icon: <VolumeIcon />, label: t("home.radio"), onPress: onOpenRadio },
-    { key: "ambient", icon: <MoonIcon />, label: t("home.ambient"), onPress: onEnterAmbient },
-  ];
 
   // ---------- Caption content per state ----------
   let caption: React.ReactNode;
@@ -498,12 +521,12 @@ export const HomeV2: React.FC<HomeV2Props> = ({
         {/* ---------- Frame 2: today's page ---------- */}
         <section className="nvh__frame nvh__frame--today" aria-label={t("home.today")}>
           <div className="nvh__band nv-on-media">
+            <button type="button" className="nvh__hint nvh__hint--up" onClick={goTop}>
+              <span aria-hidden="true" className="nvh__chev nvh__chev--up" />
+              {t("home.photoHint")}
+            </button>
             <NovusLogo height="calc(30px * var(--nv-scale))" className="nvh__band-logo" />
             <span className="nvh__spacer" />
-            <button type="button" className="nvh__handle" onClick={goTop}>
-              <span aria-hidden="true" className="nvh__up" />
-              {t("home.backToTop")}
-            </button>
             <NvGlyphButton
               onMedia
               showLabel={false}
@@ -528,7 +551,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           </div>
 
           <div className="nvt">
-            {/* Row 1: today at a glance | this month */}
+            {/* Row 1: today (date | time) beside this month */}
             <div className="nvt__glance">
               <div className="nvt__date">
                 <span className="nv-numeral nvt__numeral">{now.getDate()}</span>
@@ -556,26 +579,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
               <NvMonthCalendar date={now} locale={locale} />
             </div>
 
-            {/* Row 2: shortcuts | services, headings on one baseline, bottoms aligned */}
-            <nav className="nvt__shortcuts" aria-label={t("home.explorer")}>
-              <div className="nvt__row-head">
-                <h3 className="nvt__heading">{t("home.explorer")}</h3>
-              </div>
-              <div className="nvt__shortcut-grid">
-                {shortcuts.map((shortcut) => (
-                  <button
-                    key={shortcut.key}
-                    type="button"
-                    className="nvt__shortcut"
-                    onClick={shortcut.onPress}
-                  >
-                    {shortcut.icon}
-                    <span>{shortcut.label}</span>
-                  </button>
-                ))}
-              </div>
-            </nav>
-
+            {/* Row 2: services, full width, two rows with room for more */}
             <div className="nvt__services">
               <div className="nvt__row-head">
                 <h3 className="nvt__heading">{t("home.services")}</h3>
@@ -585,7 +589,11 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                     : t("home.servicesHintIdle", { max: services.length })}
                 </span>
               </div>
-              <div className="nvt__tiles">
+              <div
+                ref={tilesRef}
+                className="nvt__tiles"
+                style={{ gridTemplateColumns: `repeat(${tileCols}, minmax(0, 1fr))` }}
+              >
                 {services.map((service, index) => (
                   <NvServicePlate
                     key={service.id}
@@ -606,6 +614,12 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                   </span>
                   <span className="nvt__all-apps-bar">{t("home.allApps")}</span>
                 </button>
+                {Array.from(
+                  { length: Math.max(0, tileCols * TILE_ROWS - services.length - 1) },
+                  (_, k) => (
+                    <span key={`slot-${k}`} className="nvt__slot" aria-hidden="true" />
+                  ),
+                )}
               </div>
               {error && (
                 <p className="nvh__error" role="alert">
@@ -613,6 +627,37 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                 </p>
               )}
             </div>
+
+            {/* Row 3: the explorer row */}
+            <nav className="nvt__files" aria-label={t("home.explorer")}>
+              <span className="nvt__files-title">{t("home.explorer")}</span>
+              <NvButton icon={<ImageIcon />} onClick={onOpenGallery}>
+                {t("nav.gallery")}
+              </NvButton>
+              {locations.map((location) => (
+                <NvButton
+                  key={location.path}
+                  icon={<FolderIcon />}
+                  onClick={() => onOpenFinder(location.path)}
+                >
+                  {location.label}
+                </NvButton>
+              ))}
+              <NvButton icon={<FolderIcon />} onClick={() => onOpenFinder()}>
+                {t("nav.files")}
+              </NvButton>
+              <NvButton icon={<VolumeIcon />} onClick={onOpenRadio}>
+                {t("home.radio")}
+              </NvButton>
+              <span className="nvh__spacer" />
+              <NvButton variant="quiet" icon={<MoonIcon />} onClick={onEnterAmbient}>
+                {t("home.ambient")}
+              </NvButton>
+              <NvButton variant="quiet" icon={<RemoteIcon />} onClick={onOpenRemote}>
+                {t("home.mobileRemote")}
+                <span className="nvh__soon">{t("home.soon")}</span>
+              </NvButton>
+            </nav>
           </div>
         </section>
       </div>
