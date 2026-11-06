@@ -36,6 +36,7 @@ function resolveDark(theme: "system" | "light" | "dark") {
 export interface HomeV2ScreenProps {
   runningIds: string[];
   endedIds: string[];
+  /** Localized running-list error, empty when there is none. */
   error: string;
   /** True while a v1 overlay (settings) covers the home. */
   suspended: boolean;
@@ -138,7 +139,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
         services={services}
         locations={homeLocations}
         ambient={idle}
-        error={error ? t("home.listFailed") : undefined}
+        error={error || undefined}
         onOpenService={openById}
         onEndSession={onEndSession}
         onOpenGallery={onOpenGallery}

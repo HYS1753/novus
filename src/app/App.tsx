@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { DashboardPage, StyleGuidePage, StyleGuideV2Page } from "@/pages";
+import { DashboardPage, StyleGuideV2Page } from "@/pages";
 import {
   getDeviceProfile,
   isStyleGuidePath,
-  isStyleGuideV2Path,
   isStyleGuideRouteEnabled,
   useMaterialIntensity,
   toggleFullscreen,
@@ -12,7 +11,6 @@ import {
   useResolvedTheme,
   useI18n,
   usePreference,
-  isHomeV2Enabled,
   NvRoot,
 } from "@/shared";
 import "./styles/global.css";
@@ -77,17 +75,16 @@ export const App: React.FC = () => {
   );
 };
 
-function readStyleGuideRoute(): "v1" | "v2" | null {
-  if (!isStyleGuideRouteEnabled()) return null;
-  if (isStyleGuideV2Path()) return "v2";
-  return isStyleGuidePath() ? "v1" : null;
+/** The design guide is a dev-browser-only route (`/styleguide`). */
+function readStyleGuideRoute(): boolean {
+  return isStyleGuideRouteEnabled() && isStyleGuidePath();
 }
 
 const DashboardApp: React.FC = () => {
   useUpdateLifecycle();
-  const [styleGuide, setStyleGuide] = useState<"v1" | "v2" | null>(() => readStyleGuideRoute());
+  const [styleGuide, setStyleGuide] = useState(() => readStyleGuideRoute());
   const [onboardingDone] = usePreference("onboardingDone");
-  const showOnboarding = !styleGuide && !onboardingDone && isHomeV2Enabled();
+  const showOnboarding = !styleGuide && !onboardingDone;
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
@@ -119,10 +116,8 @@ const DashboardApp: React.FC = () => {
           <NvRoot>
             <Onboarding />
           </NvRoot>
-        ) : styleGuide === "v2" ? (
+        ) : styleGuide ? (
           <StyleGuideV2Page />
-        ) : styleGuide === "v1" ? (
-          <StyleGuidePage />
         ) : (
           <DashboardPage />
         )}

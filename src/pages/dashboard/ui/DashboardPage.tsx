@@ -1,24 +1,19 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
-import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer, SettingsV2 } from "@/widgets";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { InAppPlayer, SettingsV2 } from "@/widgets";
 import {
-  GlassDivider,
-  GlassModal,
-  GlassButton,
-  RemoteIcon,
-  MoonIcon,
-  RunningAppsContext,
-  listStreamingPages,
   discardStreamingPage,
+  exitWindowFullscreen,
+  listStreamingPages,
+  markSessionUsed,
+  NvRoot,
+  reportWindowModeError,
+  RunningAppsContext,
   STREAMING_PAGES_CHANGED,
   useDisplayMode,
-  exitWindowFullscreen,
-  reportWindowModeError,
-  isHomeV2Enabled,
-  NvRoot,
-  markSessionUsed,
+  useI18n,
 } from "@/shared";
-import { useLaunchApp, UpdateNotice, UpdateNoticeV2 } from "@/features";
-import { ALL_APPS, QUICK_CONTROLS, SMART_TOOLS, STREAMING_APPS, type AppItem } from "@/entities";
+import { useLaunchApp, UpdateNoticeV2 } from "@/features";
+import { ALL_APPS, type AppItem } from "@/entities";
 import { GalleryPage } from "../../gallery";
 import { FinderPage } from "../../finder";
 import { HomeV2Screen } from "./HomeV2Screen";
@@ -26,25 +21,25 @@ import { HomeV2Screen } from "./HomeV2Screen";
 /** How long a closed session shows "종료됨" before it leaves the list. */
 const ENDED_BEAT_MS = 1500;
 
+type RunningError = "" | "list" | "close";
+
+/**
+ * Owns which surface is on screen (Home, a streaming page, Gallery, Finder),
+ * the running-session list, and the settings sheet shared by all of them.
+ */
 export const DashboardPage: React.FC = () => {
+  const { t } = useI18n();
   const [activeView, setActiveView] = useState<"dashboard" | "gallery" | "finder">("dashboard");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeApp, setActiveApp] = useState<AppItem | null>(null);
-  const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
-  const [isAmbientModalOpen, setIsAmbientModalOpen] = useState(false);
-  const [canScrollUp, setCanScrollUp] = useState(false);
-  const [canScrollDown, setCanScrollDown] = useState(false);
-  const contentRef = useRef<HTMLElement>(null);
   const { launchApp } = useLaunchApp();
   const [runningIds, setRunningIds] = useState<string[]>([]);
   const [closingId, setClosingId] = useState<string | null>(null);
   const closingRef = useRef(false);
-  const [runningError, setRunningError] = useState("");
+  const [runningError, setRunningError] = useState<RunningError>("");
   const { appFullscreen } = useDisplayMode();
   const [endedIds, setEndedIds] = useState<string[]>([]);
   const [finderPath, setFinderPath] = useState<string | undefined>(undefined);
-  const homeV2 = isHomeV2Enabled();
 
   // Record when each service is on screen and when the user leaves it.
   useEffect(() => {
@@ -54,16 +49,9 @@ export const DashboardPage: React.FC = () => {
     return () => markSessionUsed(id);
   }, [activeApp]);
 
+  // Escape on Home leaves app fullscreen (streaming pages handle their own Escape).
   useEffect(() => {
-    if (
-      !appFullscreen ||
-      activeApp ||
-      activeView !== "dashboard" ||
-      isSettingsOpen ||
-      isRemoteModalOpen ||
-      isAmbientModalOpen
-    )
-      return;
+    if (!appFullscreen || activeApp || activeView !== "dashboard" || isSettingsOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.defaultPrevented && !event.repeat) {
         event.preventDefault();
@@ -72,7 +60,7 @@ export const DashboardPage: React.FC = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [appFullscreen, activeApp, activeView, isSettingsOpen, isRemoteModalOpen, isAmbientModalOpen]);
+  }, [appFullscreen, activeApp, activeView, isSettingsOpen]);
 
   useEffect(() => {
     let generation = 0;
@@ -83,7 +71,7 @@ export const DashboardPage: React.FC = () => {
           if (request === generation) setRunningIds(ids);
         })
         .catch(() => {
-          if (request === generation) setRunningError("실행 목록을 불러오지 못했습니다.");
+          if (request === generation) setRunningError("list");
         });
     };
     refresh();
@@ -94,111 +82,75 @@ export const DashboardPage: React.FC = () => {
     };
   }, []);
 
-  const closeRunningApp = async (id: string) => {
-    if (closingRef.current) return;
-    closingRef.current = true;
-    setClosingId(id);
-    setRunningError("");
-    try {
-      await discardStreamingPage(id);
-      setRunningIds((ids) => ids.filter((entry) => entry !== id));
-      setEndedIds((ids) => [...ids, id]);
-      window.setTimeout(
-        () => setEndedIds((ids) => ids.filter((entry) => entry !== id)),
-        ENDED_BEAT_MS,
-      );
-      if (activeApp?.id === id) {
-        setActiveApp(null);
-        setActiveView("dashboard");
+  const closeRunningApp = useCallback(
+    async (id: string) => {
+      if (closingRef.current) return;
+      closingRef.current = true;
+      setClosingId(id);
+      setRunningError("");
+      try {
+        await discardStreamingPage(id);
+        setRunningIds((ids) => ids.filter((entry) => entry !== id));
+        setEndedIds((ids) => [...ids, id]);
+        window.setTimeout(
+          () => setEndedIds((ids) => ids.filter((entry) => entry !== id)),
+          ENDED_BEAT_MS,
+        );
+        if (activeApp?.id === id) {
+          setActiveApp(null);
+          setActiveView("dashboard");
+        }
+      } catch {
+        setRunningError("close");
+      } finally {
+        closingRef.current = false;
+        setClosingId(null);
       }
-    } catch {
-      setRunningError("앱을 닫지 못했습니다. 다시 시도하세요.");
-    } finally {
-      closingRef.current = false;
-      setClosingId(null);
-    }
-  };
-
-  // v2 mode: v1 subpages render inside a bridged v2 root (tokens, theme, language).
-  // Gallery and streaming keep their own arrow keys, so spatial navigation is off there.
-  const bridged = (content: React.ReactNode, spatialNavigation = true) =>
-    homeV2 ? (
-      <NvRoot className="nv-bridge" spatialNavigation={spatialNavigation}>
-        {content}
-      </NvRoot>
-    ) : (
-      content
-    );
-
-  const withRunningApps = (content: React.ReactNode) => (
-    <RunningAppsContext.Provider
-      value={{
-        apps: ALL_APPS.filter((app) => runningIds.includes(app.id)),
-        activeId: activeApp?.id,
-        closingId,
-        error: runningError,
-        onSelect: (id) => {
-          if (closingRef.current) return;
-          const app = ALL_APPS.find((entry) => entry.id === id);
-          if (app) {
-            setActiveView("dashboard");
-            setActiveApp(app);
-          }
-        },
-        onClose: (id) => {
-          void closeRunningApp(id);
-        },
-      }}
-    >
-      {content}
-    </RunningAppsContext.Provider>
+    },
+    [activeApp],
   );
 
-  const updateScrollIndicators = useCallback(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const { scrollTop, scrollHeight, clientHeight } = el;
-    setCanScrollUp(scrollTop > 10);
-    setCanScrollDown(scrollTop + clientHeight < scrollHeight - 10);
+  const selectRunningApp = useCallback((id: string) => {
+    if (closingRef.current) return;
+    const app = ALL_APPS.find((entry) => entry.id === id);
+    if (app) {
+      setActiveView("dashboard");
+      setActiveApp(app);
+    }
   }, []);
 
-  useLayoutEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
+  const errorMessage =
+    runningError === "list"
+      ? t("home.listFailed")
+      : runningError === "close"
+        ? t("home.closeFailed")
+        : "";
 
-    updateScrollIndicators();
+  // Gallery, Finder, and streaming run v1 components inside a bridged v2 root.
+  // Gallery and streaming keep their own arrow keys, so spatial navigation is off there.
+  const bridged = (content: React.ReactNode, spatialNavigation = true) => (
+    <NvRoot className="nv-bridge" spatialNavigation={spatialNavigation}>
+      {content}
+    </NvRoot>
+  );
 
-    el.addEventListener("scroll", updateScrollIndicators, { passive: true });
-    window.addEventListener("resize", updateScrollIndicators);
+  const runningApps = useMemo(
+    () => ({
+      apps: ALL_APPS.filter((app) => runningIds.includes(app.id)),
+      activeId: activeApp?.id,
+      closingId,
+      error: errorMessage,
+      onSelect: selectRunningApp,
+      onClose: (id: string) => void closeRunningApp(id),
+    }),
+    [runningIds, activeApp, closingId, errorMessage, selectRunningApp, closeRunningApp],
+  );
 
-    const resizeObserver = new ResizeObserver(updateScrollIndicators);
-    resizeObserver.observe(el);
-
-    return () => {
-      el.removeEventListener("scroll", updateScrollIndicators);
-      window.removeEventListener("resize", updateScrollIndicators);
-      resizeObserver.disconnect();
-    };
-  }, [activeView, activeApp, updateScrollIndicators]);
-
-  const isSearching = searchQuery.trim().length > 0;
-  const filteredApps = isSearching
-    ? ALL_APPS.filter(
-        (app) =>
-          app.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.category.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : [];
+  const withRunningApps = (content: React.ReactNode) => (
+    <RunningAppsContext.Provider value={runningApps}>{content}</RunningAppsContext.Provider>
+  );
 
   const handleItemClick = (item: AppItem) => {
-    if (item.id === "remote") {
-      setIsRemoteModalOpen(true);
-      return;
-    }
-    if (item.id === "ambient") {
-      setIsAmbientModalOpen(true);
-      return;
-    }
     if (item.id === "photos") {
       setActiveView("gallery");
       return;
@@ -214,7 +166,8 @@ export const DashboardPage: React.FC = () => {
     launchApp(item);
   };
 
-  // Dedicated In-App TV Player view
+  const settings = <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />;
+
   if (activeApp) {
     return withRunningApps(
       bridged(
@@ -226,27 +179,19 @@ export const DashboardPage: React.FC = () => {
             onOpenSettings={() => setIsSettingsOpen(true)}
             suspended={isSettingsOpen}
           />
-          {homeV2 ? (
-            <NvRoot className="nv-contents">
-              <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-            </NvRoot>
-          ) : (
-            <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-          )}
+          {settings}
         </div>,
         false,
       ),
     );
   }
 
-  // Dedicated Gallery view (Images & Videos)
   if (activeView === "gallery") {
     return withRunningApps(
       bridged(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />, false),
     );
   }
 
-  // Dedicated System Finder view (All files)
   if (activeView === "finder") {
     return withRunningApps(
       bridged(
@@ -262,158 +207,23 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  if (homeV2) {
-    return (
-      <>
-        <HomeV2Screen
-          runningIds={runningIds}
-          endedIds={endedIds}
-          error={runningError}
-          suspended={isSettingsOpen}
-          onOpenItem={handleItemClick}
-          onEndSession={(id) => void closeRunningApp(id)}
-          onOpenGallery={() => setActiveView("gallery")}
-          onOpenFinder={(path) => {
-            setFinderPath(path);
-            setActiveView("finder");
-          }}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        >
-          <UpdateNoticeV2 onOpen={() => setIsSettingsOpen(true)} />
-          <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-        </HomeV2Screen>
-      </>
-    );
-  }
-
   return (
-    <div className="dashboard-page">
-      {/* Scroll indicator fades: indicates more content above or below */}
-      <div
-        className={`dashboard-page__scroll-fade dashboard-page__scroll-fade--top ${
-          canScrollUp ? "dashboard-page__scroll-fade--visible" : ""
-        }`}
-        aria-hidden="true"
-      />
-      <div
-        className={`dashboard-page__scroll-fade dashboard-page__scroll-fade--bottom ${
-          canScrollDown ? "dashboard-page__scroll-fade--visible" : ""
-        }`}
-        aria-hidden="true"
-      />
-
-      <main ref={contentRef} className="dashboard-page__content">
-        {/* Header with integrated expandable search, actions, and status */}
-        <QuickHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
-
-        {isSearching ? (
-          <section className="dashboard-section">
-            <GlassDivider label={`검색 결과 (${filteredApps.length})`} />
-            <MediaShelf items={filteredApps} onItemClick={handleItemClick} />
-          </section>
-        ) : (
-          <>
-            {/* 섹션 1: 스트리밍 & 미디어 */}
-            <section className="dashboard-section">
-              <GlassDivider label="스트리밍 & 미디어" />
-              <MediaShelf items={STREAMING_APPS} onItemClick={handleItemClick} />
-            </section>
-
-            {/* 섹션 2: 스마트 도구 & 허브 */}
-            <section className="dashboard-section">
-              <GlassDivider label="스마트 도구 & 허브" />
-              <MediaShelf items={SMART_TOOLS} onItemClick={handleItemClick} />
-            </section>
-
-            {/* 섹션 3: 시스템 빠른 제어 */}
-            <section className="dashboard-section">
-              <GlassDivider label="시스템 빠른 제어" />
-              <MediaShelf items={QUICK_CONTROLS} onItemClick={handleItemClick} />
-            </section>
-          </>
-        )}
-      </main>
-
-      {/* 앱 설정 사이드 패널 */}
-      <UpdateNotice onOpen={() => setIsSettingsOpen(true)} />
-      <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-
-      {/* 스마트폰 리모컨 QR 모달 */}
-      <GlassModal
-        isOpen={isRemoteModalOpen}
-        onClose={() => setIsRemoteModalOpen(false)}
-        title="스마트폰 리모컨 연결"
-        description="동일한 Wi-Fi에 연결된 스마트폰 카메라로 QR 코드를 스캔하세요."
-        footer={
-          <GlassButton variant="primary" size="md" onClick={() => setIsRemoteModalOpen(false)}>
-            닫기
-          </GlassButton>
-        }
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "16px",
-            padding: "12px 0",
-          }}
-        >
-          <div
-            style={{
-              width: "160px",
-              height: "160px",
-              background: "#FFFFFF",
-              borderRadius: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "var(--glass-shadow-raised)",
-            }}
-          >
-            <RemoteIcon size={64} style={{ color: "#10B981" }} />
-          </div>
-          <div
-            style={{
-              textAlign: "center",
-              fontSize: "13px",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            <p style={{ margin: 0, fontWeight: 600, color: "var(--color-text-primary)" }}>
-              로컬 연결 주소: http://192.168.0.15:1420/remote
-            </p>
-            <p style={{ margin: "4px 0 0 0" }}>
-              침대나 소파에서 스마트폰으로 볼륨과 재생을 편리하게 제어합니다.
-            </p>
-          </div>
-        </div>
-      </GlassModal>
-
-      {/* 앰비언트 대기 모드 안내 모달 */}
-      <GlassModal
-        isOpen={isAmbientModalOpen}
-        onClose={() => setIsAmbientModalOpen(false)}
-        title="앰비언트 대기 모드"
-        description="화면 밝기를 최소화하고 저전력 탁상 시계 모드로 전환합니다."
-        footer={
-          <GlassButton variant="primary" size="md" onClick={() => setIsAmbientModalOpen(false)}>
-            확인
-          </GlassButton>
-        }
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "12px 0" }}>
-          <MoonIcon size={48} style={{ color: "#6366F1", flexShrink: 0 }} />
-          <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-            화면 아무 곳이나 터치하면 즉시 60fps로 대시보드로 복귀합니다. Surface Pro 4의 발열과
-            번인을 방지하는 미세 픽셀 시프트가 적용됩니다.
-          </div>
-        </div>
-      </GlassModal>
-    </div>
+    <HomeV2Screen
+      runningIds={runningIds}
+      endedIds={endedIds}
+      error={errorMessage}
+      suspended={isSettingsOpen}
+      onOpenItem={handleItemClick}
+      onEndSession={(id) => void closeRunningApp(id)}
+      onOpenGallery={() => setActiveView("gallery")}
+      onOpenFinder={(path) => {
+        setFinderPath(path);
+        setActiveView("finder");
+      }}
+      onOpenSettings={() => setIsSettingsOpen(true)}
+    >
+      <UpdateNoticeV2 onOpen={() => setIsSettingsOpen(true)} />
+      {settings}
+    </HomeV2Screen>
   );
 };
