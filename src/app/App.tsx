@@ -113,7 +113,7 @@ const DashboardApp: React.FC = () => {
       <div className="app-ambient" aria-hidden="true" />
       <div className="app-shell">
         {showOnboarding ? (
-          <NvRoot>
+          <NvRoot postureOverride="tablet">
             <Onboarding />
           </NvRoot>
         ) : styleGuide ? (

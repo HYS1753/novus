@@ -11,14 +11,15 @@ import {
   type PosturePreference,
 } from "@/shared";
 import { FolderPicker } from "@/features";
+import { PosturePreview } from "./PosturePreview";
 import "./onboarding.css";
 
 const STEPS = 3;
 
 /**
- * First run after install: language → viewing mode → photo folder. Each
- * choice applies immediately (the posture scale changes as you pick it) and
- * is stored in preferences; the last step marks onboarding done.
+ * First run after install: language → viewing mode → photo folder. Choices
+ * are stored as they are made. The onboarding keeps one fixed scale; the
+ * viewing-mode step explains each mode with an animated preview instead.
  */
 export const Onboarding: React.FC = () => {
   const { t, language } = useI18n();
@@ -131,6 +132,12 @@ export const Onboarding: React.FC = () => {
           </NvButton>
         </div>
       </main>
+
+      {step === 1 && (
+        <div className="nvo__preview">
+          <PosturePreview mode={posture} />
+        </div>
+      )}
 
       <NvSheet
         open={pickerOpen}

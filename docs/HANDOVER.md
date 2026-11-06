@@ -41,7 +41,7 @@
 
 ### ①-2 첫 실행 온보딩 · 설정 v2
 
-- **온보딩** (`widgets/onboarding`): `onboardingDone`이 false이고 v2 홈일 때 앱 시작 화면으로 나옵니다. 언어 → 보기 모드(고르는 즉시 배율 적용) → 사진 폴더(폴더 선택기, 건너뛰면 OS 사진 폴더). 마지막 단계에서 `onboardingDone=true`.
+- **온보딩** (`widgets/onboarding`): `onboardingDone`이 false이고 v2 홈일 때 앱 시작 화면으로 나옵니다. 언어 → 보기 모드 → 사진 폴더. 온보딩 자체는 태블릿형 배율로 고정되고, 보기 모드 단계에서는 오른쪽 애니메이션 미리보기(`PosturePreview`: TV형은 소파·1–2m·방향키 포커스, 태블릿형은 손에 든 기기·터치)로 차이를 보여줍니다(폴더 선택기, 건너뛰면 OS 사진 폴더). 마지막 단계에서 `onboardingDone=true`.
 - **설정 v2** (`widgets/settings-v2`): 오른쪽 시트 하나에 화면·홈·시스템·업데이트·현재 기기 구역. 언어·사진 폴더·날씨 지역은 시트 안 하위 화면(뒤로 버튼)입니다. 스트리밍 화면에서 열 때도 같은 시트를 씁니다(네이티브 웹뷰는 그동안 숨김).
 - **날씨 지역 검색**: Open-Meteo 지오코딩을 350ms 대기 후 호출, 2자 이상일 때만. 고른 도시는 `weatherCity`에 저장.
 - **부팅 시 자동 시작**: `tauri-plugin-autostart`(Windows 레지스트리 Run 키, macOS LaunchAgent). 프런트는 `shared/api/tauri/autostart.ts`가 `plugin:autostart|*` 커맨드를 호출합니다. 브라우저 DEV에서는 비활성 + "데스크톱 앱에서 사용할 수 있습니다".

@@ -187,3 +187,377 @@
     transform: translateY(12px);
   }
 }
+
+/* ==========================================================================
+   Posture preview — an illustrated scene per viewing mode.
+   Only transform and opacity animate; the onboarding itself never rescales.
+   ========================================================================== */
+
+.nvo__preview {
+  position: absolute;
+  right: var(--nv-gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(460px, 36vw);
+}
+
+@media (max-width: 1100px) {
+  .nvo__preview {
+    display: none;
+  }
+}
+
+.pp {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: #0e0f12;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pp__scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity var(--nv-dur-fold) var(--nv-ease-out),
+    transform var(--nv-dur-fold) var(--nv-ease-out);
+}
+
+.pp[data-mode="tv"] .pp__scene--tv,
+.pp[data-mode="tablet"] .pp__scene--tablet {
+  opacity: 1;
+  transform: none;
+}
+
+/* Shared mini UI: white chrome on a dark screen, one live dot. */
+.pp__screen {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 3px;
+  background: linear-gradient(170deg, #4b3f6e 0%, #c27467 55%, #1b1c33 56%, #0e1022 100%);
+}
+
+.pp__ui-title,
+.pp__ui-line {
+  position: absolute;
+  left: 8%;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.pp__ui-line {
+  opacity: 0.6;
+}
+
+.pp__ui-plates {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  display: flex;
+  gap: 4%;
+}
+
+.pp__ui-plates i {
+  flex: 1;
+  aspect-ratio: 16 / 9;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.pp__ui-plates i:first-child {
+  background: #e50914;
+}
+
+/* ---------- TV scene ---------- */
+.pp__floor {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 16%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.pp__viewer {
+  position: absolute;
+  left: 9%;
+  bottom: 16%;
+  width: 18%;
+  height: 34%;
+}
+
+.pp__head,
+.pp__body,
+.pp__sofa {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.pp__head {
+  left: 34%;
+  top: 0;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.pp__body {
+  left: 26%;
+  top: 30%;
+  width: 46%;
+  height: 50%;
+  border-radius: 40% 40% 6px 6px;
+}
+
+.pp__sofa {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  border-radius: 6px 6px 2px 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pp__distance {
+  position: absolute;
+  left: 30%;
+  width: 22%;
+  bottom: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pp__distance-line {
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #ffffff 0 6px, transparent 6px 11px);
+  transform-origin: left center;
+  animation: pp-draw 2.8s var(--nv-ease-out) infinite;
+}
+
+.pp__distance-label {
+  font-family: var(--nv-font-display);
+  font-size: 13px;
+  font-weight: var(--nv-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.pp__tv {
+  position: absolute;
+  right: 8%;
+  bottom: 16%;
+  width: 40%;
+  aspect-ratio: 16 / 12;
+}
+
+.pp__screen--tv {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 76%;
+  border: 3px solid #000;
+}
+
+.pp__stand {
+  position: absolute;
+  left: 44%;
+  bottom: 0;
+  width: 12%;
+  height: 24%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Large type and plates: the TV mode scales the UI up for distance. */
+.pp__ui-title--tv {
+  top: 34%;
+  width: 46%;
+  height: 12%;
+}
+
+.pp__ui-line--tv {
+  top: 51%;
+  width: 30%;
+  height: 5%;
+}
+
+.pp__ui-plates--tv {
+  bottom: 9%;
+}
+
+/* Arrow-key focus moving across the plates. */
+.pp__focus {
+  position: absolute;
+  left: 8%;
+  bottom: 9%;
+  /* One plate: (84% row − two 4% gaps of the row) / 3. */
+  width: 25.76%;
+  aspect-ratio: 16 / 9;
+  border: 2px solid #ffffff;
+  border-radius: 3px;
+  animation: pp-focus 3.6s steps(1, end) infinite;
+}
+
+/* ---------- Tablet scene ---------- */
+.pp__tablet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 66%;
+  aspect-ratio: 16 / 10.5;
+  transform: translate(-50%, -48%) rotate(-5deg);
+  border-radius: 10px;
+  background: #000;
+  animation: pp-hold 4s var(--nv-ease-in-out) infinite;
+}
+
+.pp__screen--tablet {
+  inset: 5%;
+}
+
+/* Denser UI: smaller type, more plates per row. */
+.pp__ui-title--tablet {
+  top: 44%;
+  width: 30%;
+  height: 8%;
+}
+
+.pp__ui-line--tablet {
+  top: 56%;
+  width: 22%;
+  height: 4%;
+}
+
+.pp__ui-plates--tablet {
+  bottom: 8%;
+  right: 22%;
+  gap: 3%;
+}
+
+/* Rail sits low on the right, where the thumb rests. */
+.pp__rail {
+  position: absolute;
+  right: 5%;
+  bottom: 8%;
+  display: flex;
+  flex-direction: column;
+  gap: 6%;
+  width: 7%;
+  height: 46%;
+}
+
+.pp__rail i {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.pp__ripple {
+  position: absolute;
+  left: 13%;
+  bottom: 13%;
+  width: 10%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  opacity: 0;
+  animation: pp-tap 2.4s var(--nv-ease-out) infinite;
+}
+
+.pp__thumb {
+  position: absolute;
+  bottom: -6%;
+  width: 14%;
+  aspect-ratio: 1 / 1.5;
+  border-radius: 50% 50% 40% 40%;
+  background: #c9a68c;
+}
+
+.pp__thumb--left {
+  left: -5%;
+  transform: rotate(18deg);
+}
+
+.pp__thumb--right {
+  right: -5%;
+  transform: rotate(-18deg);
+}
+
+.pp__distance-label--near {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+}
+
+@keyframes pp-draw {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  35%,
+  80% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes pp-focus {
+  0% {
+    transform: translateX(0);
+  }
+  33.333% {
+    transform: translateX(113%);
+  }
+  66.666% {
+    transform: translateX(226%);
+  }
+}
+
+@keyframes pp-tap {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes pp-hold {
+  0%,
+  100% {
+    transform: translate(-50%, -48%) rotate(-5deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp__distance-line,
+  .pp__focus,
+  .pp__ripple,
+  .pp__tablet {
+    animation: none;
+  }
+}

@@ -6,6 +6,8 @@ import { useSpatialNavigation } from "../../hooks/useSpatialNavigation";
 export interface NvRootProps {
   children: React.ReactNode;
   className?: string;
+  /** Pins the posture for this subtree (onboarding previews postures without rescaling itself). */
+  postureOverride?: "tablet" | "tv";
   /** Turn arrow-key navigation off for surfaces that own their keys (e.g. video). */
   spatialNavigation?: boolean;
 }
@@ -18,6 +20,7 @@ export interface NvRootProps {
 export const NvRoot: React.FC<NvRootProps> = ({
   children,
   className = "",
+  postureOverride,
   spatialNavigation = true,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -31,7 +34,7 @@ export const NvRoot: React.FC<NvRootProps> = ({
       ref={ref}
       className={`nv-root ${className}`}
       data-theme={theme === "system" ? undefined : theme}
-      data-posture={posture}
+      data-posture={postureOverride ?? posture}
       data-nv-portal
       lang={locale}
     >
