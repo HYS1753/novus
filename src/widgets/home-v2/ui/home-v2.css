@@ -828,6 +828,30 @@
   flex: 1;
 }
 
+/* Explorer entries are quiet text actions divided by hairlines, not boxes. */
+.nvt__links {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--nv-space-3);
+}
+
+.nvt__links > .nv-button {
+  position: relative;
+  padding-inline: var(--nv-space-3);
+}
+
+.nvt__links > .nv-button + .nv-button::before {
+  content: "";
+  position: absolute;
+  top: 32%;
+  bottom: 32%;
+  left: calc(var(--nv-space-3) / -2 - 0.5px);
+  width: 1px;
+  background: var(--nv-rule-strong);
+  pointer-events: none;
+}
+
 /* ---------- Band: the way back up mirrors the frame-one hint ---------- */
 .nvh__band > .nvh__hint--up {
   position: absolute;

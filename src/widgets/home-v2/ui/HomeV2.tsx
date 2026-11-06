@@ -653,32 +653,37 @@ export const HomeV2: React.FC<HomeV2Props> = ({
             {/* Row 3: the explorer row */}
             <nav className="nvt__files" aria-label={t("home.explorer")}>
               <span className="nvt__files-title">{t("home.explorer")}</span>
-              <NvButton icon={<ImageIcon />} onClick={onOpenGallery}>
-                {t("nav.gallery")}
-              </NvButton>
-              {locations.map((location) => (
-                <NvButton
-                  key={location.path}
-                  icon={<FolderIcon />}
-                  onClick={() => onOpenFinder(location.path)}
-                >
-                  {location.label}
+              <span className="nvt__links">
+                <NvButton variant="quiet" icon={<ImageIcon />} onClick={onOpenGallery}>
+                  {t("nav.gallery")}
                 </NvButton>
-              ))}
-              <NvButton icon={<FolderIcon />} onClick={() => onOpenFinder()}>
-                {t("nav.files")}
-              </NvButton>
-              <NvButton icon={<VolumeIcon />} onClick={onOpenRadio}>
-                {t("home.radio")}
-              </NvButton>
+                {locations.map((location) => (
+                  <NvButton
+                    key={location.path}
+                    variant="quiet"
+                    icon={<FolderIcon />}
+                    onClick={() => onOpenFinder(location.path)}
+                  >
+                    {location.label}
+                  </NvButton>
+                ))}
+                <NvButton variant="quiet" icon={<FolderIcon />} onClick={() => onOpenFinder()}>
+                  {t("nav.files")}
+                </NvButton>
+                <NvButton variant="quiet" icon={<VolumeIcon />} onClick={onOpenRadio}>
+                  {t("home.radio")}
+                </NvButton>
+              </span>
               <span className="nvh__spacer" />
-              <NvButton variant="quiet" icon={<MoonIcon />} onClick={onEnterAmbient}>
-                {t("home.ambient")}
-              </NvButton>
-              <NvButton variant="quiet" icon={<RemoteIcon />} onClick={onOpenRemote}>
-                {t("home.mobileRemote")}
-                <span className="nvh__soon">{t("home.soon")}</span>
-              </NvButton>
+              <span className="nvt__links">
+                <NvButton variant="quiet" icon={<MoonIcon />} onClick={onEnterAmbient}>
+                  {t("home.ambient")}
+                </NvButton>
+                <NvButton variant="quiet" icon={<RemoteIcon />} onClick={onOpenRemote}>
+                  {t("home.mobileRemote")}
+                  <span className="nvh__soon">{t("home.soon")}</span>
+                </NvButton>
+              </span>
             </nav>
           </div>
         </section>
