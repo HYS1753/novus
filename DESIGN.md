@@ -326,6 +326,15 @@ The dock beside streaming, gallery, and finder (`shared/ui/nav/SubpageDock.tsx`,
 - End: back (platter circle) and home (the one filled white circle), after a rule, within thumb reach in tablet posture.
 - Width: the glyph target + 2 × 14px × scale + 12px; on a bottom dock the same groups run left to right as a taskbar.
 
+### Posture preview (onboarding)
+
+The viewing-mode step plays a miniature of the real Novus screens, not an illustration of people (`widgets/onboarding/ui/PosturePreview.tsx`, `posture-preview.css`). Device screens are CSS size containers and the miniature UI is authored in `cqw`, so it scales exactly with its frame; tiles are the real `NvBrandArt` plates, so logos sit as on the home.
+
+- **TV (8 beats × 1.1s):** a wall-mounted screen showing the photo frame. Focus steps right across the service row (lift 1.1 with the ink ring, the same grammar as the home), the caption title follows the focused service, OK presses the plate, the miniature launch screen opens with its bloom, and home returns. The room's light takes the focused service's accent colour; a slim remote in the foreground lights the right key, OK, and back as they are used. Chip: "1–2 m".
+- **Tablet (6 beats × 1.1s):** a 3:2 device held at a slight tilt, gently floating, showing today's page at tablet density (band, date | time, eight tiles with one reserved slot). A fingertip (white core, dark halo, legible on light and dark plates) travels to a tile, presses it with a ripple, the launch screen opens, and the page returns. Chip: "30–50 cm".
+- Focus and touch are children of their tile, so they cannot drift off target. Only the visible scene runs its timer (onboarding only); reduced motion shows a still first frame. The scenes crossfade (520ms) when the mode changes.
+- **Illustration palette:** the room, console, bezels, and remote use their own literal object colours (#24212c wall, #050506 and #0b0b0c bezels, the aluminium remote gradient) and small physical radii. They are objects, not UI, so this one stylesheet is exempt from the detector's palette and radius checks (`.impeccable/config.json`).
+
 ### Launch screen
 
 While a service connects (`widgets/in-app-player/ui/InAppLoader.tsx`): centred on ground, the service's plate at 240px × scale over a bloom of its own art (blurred once; only opacity 0.35–0.75 and scale 1.04–1.22 animate, 2.4s alternate; 0.15–0.35 on light ground so a dark plate does not read as a shadow), a soft light band sweeping across the plate every 2.2s as the progress, the name at title size, one status line, and "독립 플레이어로 열기". After the slow-load delay the DRM hint, retry, and home follow. Reduced motion holds everything still. The sheen is the one gradient outside the photo scrim, and it only exists while loading.

@@ -1,7 +1,14 @@
 {
   "detector": {
     "ignoreRules": [],
-    "ignoreFiles": ["src-tauri/**", "dist/**", "public/**", "scripts/**", ".claude/**"],
+    "ignoreFiles": [
+      "src-tauri/**",
+      "dist/**",
+      "public/**",
+      "scripts/**",
+      ".claude/**",
+      "src/widgets/onboarding/ui/posture-preview.css"
+    ],
     "ignoreValues": []
   }
 }
