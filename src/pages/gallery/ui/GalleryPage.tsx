@@ -1,114 +1,95 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { FileItem } from "@/entities";
-import { useFileBrowser } from "@/features";
-import { GalleryGrid, FullscreenImageViewer, InAppVideoModal } from "@/widgets";
+import { PAGE_SIZE, useGallery, type MediaCollection } from "@/features";
+import { FullscreenImageViewer, GalleryV2, InAppVideoModal } from "@/widgets";
 import { SubpageDock, useDockPosition, useI18n } from "@/shared";
 
 interface GalleryPageProps {
   onBackToDashboard: () => void;
 }
 
+type ViewerSource = { which: "library" | "folder"; path: string };
+
 export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) => {
   const { t } = useI18n();
   const { dockPosition } = useDockPosition();
-  const {
-    locations,
-    currentPath,
-    parentPath,
-    breadcrumbs,
-    canGoBack,
-    items,
-    totalCount,
-    imageCount,
-    videoCount,
-    hasMore,
-    isLoadingMore,
-    loadMoreError,
-    loadMore,
-    isLoading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    sortField,
-    setSortField,
-    sortOrder,
-    setSortOrder,
-    navigateTo,
-    navigateUp,
-    navigateBack,
-    refresh,
-  } = useFileBrowser({ filterMode: "media" });
-
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const gallery = useGallery();
+  const [viewer, setViewer] = useState<ViewerSource | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<FileItem | null>(null);
 
-  const imageItems = items.filter((item) => item.media_type === "image");
+  const source: MediaCollection | null = viewer
+    ? viewer.which === "library"
+      ? gallery.library
+      : gallery.folderView
+    : null;
+
+  // The viewer pages through the images loaded so far, in snapshot order.
+  const viewerImages = useMemo(
+    () =>
+      source ? source.items.filter((item): item is FileItem => item?.media_type === "image") : [],
+    // `revision` stands for pages landing in the shared items array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [source, source?.revision],
+  );
+  const viewerIndex = viewer
+    ? Math.max(
+        0,
+        viewerImages.findIndex((item) => item.path === viewer.path),
+      )
+    : 0;
+  let lastLoaded = -1;
+  if (source) {
+    for (let index = source.items.length - 1; index >= 0; index--) {
+      if (source.items[index]) {
+        lastLoaded = index;
+        break;
+      }
+    }
+  }
+
+  const openImage = (collection: MediaCollection, index: number) => {
+    const item = collection.items[index];
+    if (!item) return;
+    setViewer({
+      which: collection === gallery.library ? "library" : "folder",
+      path: item.path,
+    });
+  };
 
   return (
     <div
-      className={`in-app-player in-app-player--dock-${dockPosition} w-full h-full flex overflow-hidden text-white`}
-      style={{ backgroundColor: "var(--color-background, #080a0f)" }}
+      className={`in-app-player in-app-player--dock-${dockPosition} w-full h-full flex overflow-hidden`}
     >
-      {/* Main Viewport Container */}
       <div className="in-app-player__viewport flex-1 flex flex-col h-full overflow-hidden">
-        <GalleryGrid
-          key={currentPath}
-          items={items}
-          totalCount={totalCount}
-          imageCount={imageCount}
-          videoCount={videoCount}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-          loadMoreError={loadMoreError}
-          onLoadMore={loadMore}
-          locations={locations}
-          breadcrumbs={breadcrumbs}
-          parentPath={parentPath}
-          isLoading={isLoading}
-          error={error}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          sortField={sortField}
-          onSortFieldChange={setSortField}
-          sortOrder={sortOrder}
-          onToggleSortOrder={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          onNavigateTo={navigateTo}
-          onNavigateUp={navigateUp}
-          onSelectImage={(index) => setSelectedImageIndex(index)}
-          onSelectVideo={(video) => setSelectedVideo(video)}
-        />
+        <GalleryV2 state={gallery} onOpenImage={openImage} onOpenVideo={setSelectedVideo} />
       </div>
 
-      {/* Standard Subpage Tablet System Dock */}
       <SubpageDock
-        title={t("gallery.title")}
+        title={t("nav.gallery")}
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
         onBack={() => {
-          if (selectedImageIndex !== null) setSelectedImageIndex(null);
+          if (viewer) setViewer(null);
           else if (selectedVideo) setSelectedVideo(null);
-          else if (canGoBack) navigateBack();
-          else onBackToDashboard();
+          else if (!gallery.folderBack()) onBackToDashboard();
         }}
-        backLabel={canGoBack ? t("dock.backFolder") : t("dock.home")}
-        onReload={refresh}
+        backLabel={gallery.canFolderBack ? t("dock.backFolder") : t("dock.home")}
+        onReload={gallery.reload}
       />
 
-      {/* Lightbox / Fullscreen Image Viewer Modal */}
-      {selectedImageIndex !== null && (
+      {viewer && source && viewerImages.length > 0 && (
         <FullscreenImageViewer
-          images={imageItems}
-          initialIndex={selectedImageIndex}
-          totalImageCount={imageCount}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-          loadMoreError={loadMoreError}
-          onNeedMore={loadMore}
-          onClose={() => setSelectedImageIndex(null)}
+          images={viewerImages}
+          initialIndex={viewerIndex}
+          totalImageCount={source.imageCount}
+          hasMore={viewerImages.length < source.imageCount}
+          isLoadingMore={false}
+          loadMoreError={null}
+          onNeedMore={() => source.ensureRange(lastLoaded + 1, lastLoaded + 1 + PAGE_SIZE)}
+          onClose={() => setViewer(null)}
         />
       )}
 
-      {/* In-App Video Player Modal */}
       {selectedVideo && (
         <InAppVideoModal
           key={selectedVideo.path}

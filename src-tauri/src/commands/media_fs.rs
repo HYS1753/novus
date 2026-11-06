@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use std::time::UNIX_EPOCH;
+use std::time::{Instant, UNIX_EPOCH};
 use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -86,9 +87,35 @@ const SKIPPED_DIRS: &[&str] = &[
     "library",
 ];
 
+/// A recursive walk kept briefly so switching the gallery's tabs (photos ↔
+/// videos) or its sort re-filters in memory instead of walking the disk again.
+struct WalkCache {
+    root: String,
+    at: Instant,
+    items: Vec<FileItem>,
+    truncated: bool,
+}
+
+const WALK_CACHE_TTL_SECS: u64 = 120;
+
+#[derive(Default)]
+struct MediaState {
+    next_id: u64,
+    /// Latest request per slot; an older in-flight scan for the slot is discarded.
+    latest: HashMap<String, u64>,
+    /// One live snapshot per slot ("library" for the timeline, "folder" for the
+    /// folder view), so the gallery's tabs do not invalidate each other.
+    snapshots: HashMap<String, MediaSnapshot>,
+    walk: Option<WalkCache>,
+}
+
 #[derive(Default)]
 pub struct MediaPageState {
-    inner: Mutex<(u64, Option<MediaSnapshot>)>,
+    inner: Mutex<MediaState>,
+}
+
+fn find_snapshot(state: &MediaState, id: u64) -> Option<&MediaSnapshot> {
+    state.snapshots.values().find(|snapshot| snapshot.id == id)
 }
 
 fn media_page(snapshot: &MediaSnapshot, offset: usize, page_size: usize) -> MediaPageResult {
@@ -162,10 +189,7 @@ pub fn get_media_timeline(
 ) -> Result<Vec<TimelineBucket>, String> {
     let state = app.state::<MediaPageState>();
     let guard = state.inner.lock().map_err(|e| e.to_string())?;
-    let snapshot = guard.1.as_ref().ok_or("Media snapshot expired")?;
-    if snapshot.id != snapshot_id {
-        return Err("Media snapshot expired".to_string());
-    }
+    let snapshot = find_snapshot(&guard, snapshot_id).ok_or("Media snapshot expired")?;
     Ok(timeline_buckets(&snapshot.items, utc_offset_minutes))
 }
 
@@ -296,6 +320,8 @@ pub async fn get_media_page(
     page_size: usize,
     kind: Option<String>,
     recursive: Option<bool>,
+    slot: Option<String>,
+    rescan: Option<bool>,
 ) -> Result<MediaPageResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<MediaPageState>();
@@ -308,6 +334,8 @@ pub async fn get_media_page(
                 sort_order,
                 kind: kind.unwrap_or_else(|| "all".to_string()),
                 recursive: recursive.unwrap_or(false),
+                slot: slot.unwrap_or_else(|| "default".to_string()),
+                rescan: rescan.unwrap_or(false),
             },
             snapshot_id,
             offset,
@@ -329,6 +357,10 @@ struct MediaQuery {
     kind: String,
     /// Include every subfolder (the timeline); folders themselves are omitted.
     recursive: bool,
+    /// Which live snapshot this request replaces.
+    slot: String,
+    /// Walk the disk again even if a recent walk of the same root is cached.
+    rescan: bool,
 }
 
 fn get_media_page_blocking(
@@ -341,8 +373,8 @@ fn get_media_page_blocking(
     if let Some(id) = snapshot_id {
         let mut page = {
             let guard = state.inner.lock().map_err(|e| e.to_string())?;
-            let snapshot = guard.1.as_ref().ok_or("Media snapshot expired")?;
-            if snapshot.id != id || snapshot.current_path != query.path {
+            let snapshot = find_snapshot(&guard, id).ok_or("Media snapshot expired")?;
+            if snapshot.current_path != query.path {
                 return Err("Media snapshot expired".to_string());
             }
             media_page(snapshot, offset, page_size)
@@ -353,16 +385,44 @@ fn get_media_page_blocking(
 
     let request_id = {
         let mut guard = state.inner.lock().map_err(|e| e.to_string())?;
-        guard.0 = guard.0.wrapping_add(1);
-        guard.0
+        guard.next_id = guard.next_id.wrapping_add(1);
+        let id = guard.next_id;
+        guard.latest.insert(query.slot.clone(), id);
+        id
     };
     let target = Path::new(&query.path);
     let (current_path, parent_path, scanned, truncated) = if query.recursive {
         if !target.is_dir() {
             return Err(format!("Path is not a directory: {}", query.path));
         }
-        let mut items = Vec::new();
-        let truncated = collect_media_recursive(target, &mut items);
+        let root = target.to_string_lossy().to_string();
+        let cached = if query.rescan {
+            None
+        } else {
+            let guard = state.inner.lock().map_err(|e| e.to_string())?;
+            guard
+                .walk
+                .as_ref()
+                .filter(|walk| {
+                    walk.root == root && walk.at.elapsed().as_secs() < WALK_CACHE_TTL_SECS
+                })
+                .map(|walk| (walk.items.clone(), walk.truncated))
+        };
+        let (items, truncated) = match cached {
+            Some(hit) => hit,
+            None => {
+                let mut items = Vec::new();
+                let truncated = collect_media_recursive(target, &mut items);
+                let mut guard = state.inner.lock().map_err(|e| e.to_string())?;
+                guard.walk = Some(WalkCache {
+                    root: root.clone(),
+                    at: Instant::now(),
+                    items: items.clone(),
+                    truncated,
+                });
+                (items, truncated)
+            }
+        };
         (
             target.to_string_lossy().to_string(),
             target.parent().map(|p| p.to_string_lossy().to_string()),
@@ -413,7 +473,7 @@ fn get_media_page_blocking(
 
     let mut page = {
         let mut guard = state.inner.lock().map_err(|e| e.to_string())?;
-        if guard.0 != request_id {
+        if guard.latest.get(&query.slot) != Some(&request_id) {
             return Err("Media snapshot superseded".to_string());
         }
         let snapshot = MediaSnapshot {
@@ -426,7 +486,7 @@ fn get_media_page_blocking(
             truncated,
         };
         let page = media_page(&snapshot, 0, page_size);
-        guard.1 = Some(snapshot);
+        guard.snapshots.insert(query.slot.clone(), snapshot);
         page
     };
     fill_dimensions(&mut page.items);
@@ -648,6 +708,8 @@ mod tests {
             sort_order: order,
             kind: "all".into(),
             recursive: false,
+            slot: "default".into(),
+            rescan: false,
         }
     }
 
@@ -693,6 +755,34 @@ mod tests {
         let page = get_media_page_blocking(&state, videos, None, 0, 10).unwrap();
         assert_eq!(page.total_count, 1);
         assert_eq!(page.video_count, 1);
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn slots_keep_separate_snapshots() {
+        let directory = temp_dir("slots");
+        fs::create_dir_all(directory.join("sub")).unwrap();
+        fs::write(directory.join("a.jpg"), "a").unwrap();
+        fs::write(directory.join("sub/b.mp4"), "b").unwrap();
+        let path = directory.to_string_lossy().to_string();
+        let state = MediaPageState::default();
+
+        let mut library = query(path.clone(), "".into(), "name".into(), "asc".into());
+        library.kind = "media".into();
+        library.recursive = true;
+        library.slot = "library".into();
+        let photos = get_media_page_blocking(&state, library, None, 0, 1).unwrap();
+
+        let mut folder = query(path.clone(), "".into(), "name".into(), "asc".into());
+        folder.slot = "folder".into();
+        let folders = get_media_page_blocking(&state, folder, None, 0, 10).unwrap();
+        assert_eq!(folders.items[0].name, "sub");
+
+        // The library snapshot survives the folder request and still pages.
+        let mut again = query(path, "".into(), "name".into(), "asc".into());
+        again.slot = "library".into();
+        let next = get_media_page_blocking(&state, again, Some(photos.snapshot_id), 1, 1).unwrap();
+        assert_eq!(next.items[0].name, "b.mp4");
         fs::remove_dir_all(directory).unwrap();
     }
 

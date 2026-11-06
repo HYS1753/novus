@@ -1,0 +1,519 @@
+/* ==========================================================================
+   Gallery v2 (tablet posture). Benchmarked on Google Photos / Apple Photos:
+   one calm bar (location as title, three views, search, sort), then the
+   library edge to edge in justified rows. Sizes scale with --nv-scale.
+   ========================================================================== */
+
+.gv {
+  --gv-row: calc(176px * var(--nv-scale));
+  --gv-gap: max(2px, calc(4px * var(--nv-scale)));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+}
+
+/* Read by the grid for its row height and gap (CSS owns the numbers). */
+.gv__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--gv-gap);
+  height: var(--gv-row);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ---------- Bar ---------- */
+.gv-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--nv-space-4);
+  padding: var(--nv-space-5) var(--nv-gutter) var(--nv-space-4);
+  border-bottom: 1px solid var(--nv-rule);
+}
+
+.gv-head__title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* Pulled left so the text, not the hover plate, lines up with the gutter. */
+.gv-head__title > .gv-menu {
+  max-width: calc(100% + var(--nv-space-2));
+  margin-left: calc(-1 * var(--nv-space-2));
+}
+
+.gv-head__location {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  max-width: 100%;
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text);
+  cursor: pointer;
+}
+
+.gv-head__location:hover {
+  background: var(--nv-surface);
+}
+
+.gv-head__location:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-head__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+/* The same chevron as the home's hints, pointing down: "this opens". */
+.gv-head__chev {
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  margin-top: -0.2em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  color: var(--nv-text-3);
+}
+
+.gv-head__counts {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+  white-space: nowrap;
+}
+
+.gv-head__tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--nv-space-2);
+}
+
+.gv-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  min-width: var(--nv-target);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gv-tool--labelled {
+  padding: 0 var(--nv-space-3);
+}
+
+.gv-tool:hover,
+.gv-tool[aria-expanded="true"] {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.gv-tool:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-search {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  width: min(calc(320px * var(--nv-scale)), 28vw);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-1) 0 var(--nv-space-3);
+  border: 2px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface);
+  color: var(--nv-text-3);
+}
+
+.gv-search:focus-within {
+  border-color: var(--nv-text);
+}
+
+.gv-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+}
+
+.gv-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.gv-search__clear {
+  display: grid;
+  place-items: center;
+  width: calc(var(--nv-target) - 12px);
+  height: calc(var(--nv-target) - 12px);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  cursor: pointer;
+}
+
+.gv-search__clear:hover,
+.gv-search__clear:focus-visible {
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+  outline: none;
+}
+
+/* ---------- Menus ---------- */
+.gv-menu {
+  position: relative;
+}
+
+.gv-menu__panel {
+  position: absolute;
+  top: calc(100% + var(--nv-space-2));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: calc(240px * var(--nv-scale));
+  max-width: min(calc(420px * var(--nv-scale)), 80vw);
+  padding: var(--nv-space-2);
+  border: 1px solid var(--nv-rule);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface-raised);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+  animation: gv-menu-in var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.gv-menu__panel--start {
+  left: 0;
+}
+
+.gv-menu__panel--end {
+  right: 0;
+}
+
+@keyframes gv-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.gv-menu__label {
+  padding: var(--nv-space-2) var(--nv-space-3) var(--nv-space-1);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.gv-menu__rule {
+  height: 1px;
+  margin: var(--nv-space-2) var(--nv-space-3);
+  background: var(--nv-rule);
+}
+
+.gv-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-height: var(--nv-target);
+  padding: var(--nv-space-2) var(--nv-space-3);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gv-menu__item:hover,
+.gv-menu__item:focus-visible {
+  background: var(--nv-surface);
+  outline: none;
+}
+
+.gv-menu__item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--nv-focus);
+}
+
+/* The chosen entry carries a check at the end. */
+.gv-menu__item[aria-checked="true"]::after {
+  content: "";
+  flex: none;
+  width: 0.35em;
+  height: 0.7em;
+  margin: -0.2em 0.2em 0 auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.gv-menu__icon {
+  display: grid;
+  place-items: center;
+  color: var(--nv-text-2);
+}
+
+.gv-menu__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gv-menu__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+}
+
+/* ---------- Body ---------- */
+.gv__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
+}
+
+.gv-section {
+  margin: var(--nv-space-6) 0 var(--nv-space-3);
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
+}
+
+/* ---------- Justified grid ---------- */
+.gv-grid {
+  position: relative;
+  width: 100%;
+}
+
+.gv-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gv-tile:disabled {
+  cursor: default;
+}
+
+.gv-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+  pointer-events: none;
+}
+
+.gv-tile:hover::after {
+  opacity: 0.06;
+}
+
+.gv-tile:active::after {
+  opacity: 0.12;
+}
+
+/* Gaps are tight, so the ring sits inside the tile. */
+.gv-tile:focus-visible {
+  z-index: 1;
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
+}
+
+.gv-thumb {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.gv-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.gv-thumb__img[data-loaded] {
+  opacity: 1;
+}
+
+.gv-thumb--video {
+  display: grid;
+  place-items: center;
+  background: var(--nv-surface-raised);
+}
+
+.gv-thumb__play {
+  display: grid;
+  place-items: center;
+  width: calc(44px * var(--nv-scale));
+  height: calc(44px * var(--nv-scale));
+  padding-left: 3px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+}
+
+.gv-thumb__ext {
+  position: absolute;
+  left: var(--nv-space-2);
+  bottom: var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+}
+
+/* ---------- Loading ---------- */
+.gv-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gv-gap);
+}
+
+.gv-skeleton span {
+  flex-basis: calc(var(--gv-row) * 1.1);
+  height: var(--gv-row);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  animation: gv-pulse 1.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+@keyframes gv-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- Folder view ---------- */
+.gv-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nv-space-1);
+  margin-bottom: var(--nv-space-4);
+}
+
+.gv-crumbs__item {
+  min-height: calc(var(--nv-target) - 8px);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+.gv-crumbs__item:hover,
+.gv-crumbs__item:focus-visible {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  outline: none;
+}
+
+.gv-crumbs__item[aria-current="page"] {
+  color: var(--nv-text);
+}
+
+.gv-crumbs__sep {
+  display: grid;
+  color: var(--nv-text-disabled);
+}
+
+.gv-folders {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(220px * var(--nv-scale)), 1fr));
+  gap: var(--nv-space-3);
+}
+
+.gv-folder {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-height: calc(var(--nv-target) + 12px);
+  padding: var(--nv-space-3) var(--nv-space-4);
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gv-folder:hover {
+  background: var(--nv-surface-raised);
+}
+
+.gv-folder:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-folder__icon {
+  display: grid;
+  color: var(--nv-text-2);
+}
+
+.gv-folder__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-skeleton span,
+  .gv-menu__panel {
+    animation: none;
+  }
+}

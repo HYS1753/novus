@@ -7,3 +7,4 @@ export * from "./preferences";
 export * from "./sessionActivity";
 export * from "./spatialNavigation";
 export * from "./i18n";
+export * from "./justifiedLayout";
