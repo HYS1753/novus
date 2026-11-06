@@ -2,8 +2,8 @@ import React from "react";
 import novusLogoUrl from "@/assets/novus-logo.png";
 
 export interface NovusLogoProps extends React.HTMLAttributes<HTMLSpanElement> {
-  /** Rendered height in px; width follows the artwork's 779×260 ratio. */
-  height?: number;
+  /** Rendered height (px number or any CSS length); width follows the 779×260 ratio. */
+  height?: number | string;
   className?: string;
 }
 
@@ -27,8 +27,8 @@ export const NovusLogo: React.FC<NovusLogoProps> = ({
     style={{
       display: "inline-block",
       flex: "none",
-      width: Math.round(height * RATIO),
       height,
+      aspectRatio: String(RATIO),
       backgroundColor: "var(--nv-logo-color, var(--nv-text, var(--color-text-primary)))",
       WebkitMaskImage: `url(${novusLogoUrl})`,
       maskImage: `url(${novusLogoUrl})`,

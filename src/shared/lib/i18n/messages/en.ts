@@ -317,4 +317,5 @@ export const en: Messages = {
   "home.allApps": "All apps",
   "onboarding.previewTv": "From the sofa, 1–2 m away · Move with the remote or arrow keys",
   "onboarding.previewTablet": "In your hands, 30–50 cm · Touch to control",
+  "home.drives": "Drives",
 };

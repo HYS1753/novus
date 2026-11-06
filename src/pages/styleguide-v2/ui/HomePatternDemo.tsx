@@ -48,6 +48,8 @@ export const HomePatternDemo: React.FC = () => {
           height: FRAME_H,
           transform: `scale(${scale})`,
           transformOrigin: "0 0",
+          // The demo is drawn at the reference frame; ignore the page's viewport scale.
+          ["--nv-vscale" as string]: 1,
         }}
       >
         <HomeV2
@@ -58,9 +60,9 @@ export const HomePatternDemo: React.FC = () => {
           weather={{ city: "Seoul", condition: "clear", temperature: 12 }}
           services={services}
           locations={[
-            { label: "Downloads", path: "C:\\Users\\novus\\Downloads" },
-            { label: "C:\\", path: "C:\\" },
-            { label: "D:\\", path: "D:\\" },
+            { label: "Downloads", path: "C:\\Users\\novus\\Downloads", kind: "downloads" },
+            { label: "C:\\", path: "C:\\", kind: "drive" },
+            { label: "D:\\", path: "D:\\", kind: "drive" },
           ]}
           ambient={ambient}
           onOpenService={noop}

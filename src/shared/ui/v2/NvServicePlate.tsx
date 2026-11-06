@@ -9,13 +9,17 @@ export type NvSessionState = "idle" | "live" | "ended";
  * transparent background are contained on the brand's own ground; full
  * key art covers the plate.
  */
-const PLATE_GROUND: Record<string, { ground: string; fit: "cover" | "contain" }> = {
+/**
+ * `inset` optically normalizes the wordmarks: each brand's artwork has its own
+ * margins, so one shared padding makes some logos look twice the size of others.
+ */
+const PLATE_GROUND: Record<string, { ground: string; fit: "cover" | "contain"; inset?: string }> = {
   netflix: { ground: "#000000", fit: "cover" },
-  youtube: { ground: "#ffffff", fit: "contain" },
+  youtube: { ground: "#ffffff", fit: "contain", inset: "20% 16%" },
   disney: { ground: "#0b1d4d", fit: "cover" },
-  tving: { ground: "#000000", fit: "contain" },
+  tving: { ground: "#000000", fit: "contain", inset: "26% 18%" },
   wavve: { ground: "#1a3cff", fit: "cover" },
-  watcha: { ground: "#0d0d0f", fit: "contain" },
+  watcha: { ground: "#0d0d0f", fit: "contain", inset: "24% 16%" },
   coupang: { ground: "#000000", fit: "cover" },
 };
 
@@ -59,6 +63,7 @@ export const NvServicePlate: React.FC<NvServicePlateProps> = ({
       {asset ? (
         <img
           className={`nv-plate__art nv-plate__art--${plate.fit}`}
+          style={plate.inset ? { padding: plate.inset } : undefined}
           src={asset}
           alt=""
           draggable={false}

@@ -73,12 +73,17 @@
     "Segoe UI Variable Display", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Yu Gothic UI",
     "Hiragino Sans", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
 
-  /* ---------- Posture scale ----------
-     Every size is authored for tablet posture and multiplied by --nv-scale.
-     Touch targets are set per posture, not scaled, so they stay exact. */
-  --nv-scale: 1;
-  --nv-target: 48px;
-  --nv-target-glyph: 56px;
+  /* ---------- Scale ----------
+     Every size is authored for tablet posture on the 1368×912 reference
+     frame (Surface Pro 4) and multiplied by --nv-scale:
+       --nv-posture-scale  1 tablet · 1.25 TV
+       --nv-vscale         window height / 912, clamped (set by NvRoot)
+     Like a TV platform's density-independent units, the composition keeps its
+     proportions on any window; targets grow with it and never drop below 48px. */
+  --nv-posture-scale: 1;
+  --nv-scale: calc(var(--nv-posture-scale) * var(--nv-vscale, 1));
+  --nv-target: max(48px, calc(48px * var(--nv-vscale, 1)));
+  --nv-target-glyph: max(56px, calc(56px * var(--nv-vscale, 1)));
 
   --nv-size-numeral: calc(192px * var(--nv-scale)); /* today's date */
   --nv-size-clock: calc(36px * var(--nv-scale));
@@ -107,7 +112,7 @@
   --nv-space-6: calc(32px * var(--nv-scale));
   --nv-space-7: calc(48px * var(--nv-scale));
   --nv-space-8: calc(64px * var(--nv-scale));
-  --nv-gutter: calc(40px * var(--nv-scale)); /* screen edge */
+  --nv-gutter: calc(40px * var(--nv-vscale, 1)); /* screen edge */
 
   /* ---------- Shape ----------
      Circle = a global action reachable from anywhere (the glyph rail).
@@ -176,9 +181,9 @@
 
 /* ---------- TV posture: lean-back, legible from 2 m ---------- */
 .nv-root[data-posture="tv"] {
-  --nv-scale: 1.25;
-  --nv-target: 64px;
-  --nv-target-glyph: 72px;
+  --nv-posture-scale: 1.25;
+  --nv-target: max(64px, calc(64px * var(--nv-vscale, 1)));
+  --nv-target-glyph: max(72px, calc(72px * var(--nv-vscale, 1)));
 }
 
 /* ---------- Locale-first CJK faces ---------- */

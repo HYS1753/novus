@@ -164,181 +164,6 @@
   transform: rotate(45deg);
 }
 
-/* ---------- Frame 2 ---------- */
-.nvh__frame--today {
-  display: flex;
-  flex-direction: column;
-}
-
-.nvh__band {
-  flex: none;
-  height: var(--nvh-band, 176px);
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: var(--nv-space-3);
-  padding: var(--nv-space-4) var(--nv-space-7);
-}
-
-.nvh__sheet {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: var(--nv-space-4) var(--nv-space-7);
-  padding: var(--nv-space-3) var(--nv-space-7) var(--nv-space-4);
-  background: var(--nv-ground);
-  color: var(--nv-text);
-  position: relative;
-}
-
-.nvh__sheet::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  /* The band fades into the page ground in both themes. */
-  height: calc(var(--nvh-band, 176px) * 0.6);
-  background: linear-gradient(to bottom, transparent, var(--nv-ground));
-}
-
-.nvh__day {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.nvh__month {
-  font-size: var(--nv-size-heading);
-  font-weight: var(--nv-weight-semibold);
-  color: var(--nv-text-2);
-}
-
-.nvh__numeral {
-  font-size: var(--nv-size-numeral);
-  font-weight: var(--nv-weight-bold);
-  line-height: 0.86;
-  margin-top: var(--nv-space-2);
-}
-
-.nvh__weekday {
-  margin-top: var(--nv-space-3);
-  font-size: var(--nv-size-title);
-  font-weight: var(--nv-weight-bold);
-}
-
-.nvh__meta {
-  display: flex;
-  align-items: baseline;
-  gap: var(--nv-space-4);
-  margin-top: var(--nv-space-5);
-  color: var(--nv-text-2);
-  font-size: var(--nv-size-label);
-}
-
-.nvh__daytime {
-  font-size: var(--nv-size-clock);
-  font-weight: var(--nv-weight-semibold);
-  color: var(--nv-text);
-}
-
-.nvh__cal {
-  min-height: 0;
-}
-
-.nvh__cal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: var(--nv-size-heading);
-  font-weight: var(--nv-weight-semibold);
-}
-
-.nvh__cal .nv-calendar td {
-  height: calc(46px * var(--nv-scale));
-}
-
-.nvh__services {
-  grid-column: 1 / -1;
-}
-
-.nvh__label {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--nv-space-2);
-}
-
-.nvh__label h3 {
-  font-size: var(--nv-size-heading);
-  font-weight: var(--nv-weight-semibold);
-}
-
-.nvh__label span {
-  font-size: var(--nv-size-label);
-  color: var(--nv-text-3);
-}
-
-.nvh__services {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-/* Services sit right under the calendar as two rows of four (the eighth is All apps). */
-.nvh__plates {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: var(--nv-space-3);
-}
-
-.nvh__plates .nv-plate--row .nv-plate__field {
-  max-width: 52%;
-}
-
-.nvh__all-apps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nv-space-2);
-  padding: 0;
-  border: 1px dashed var(--nv-rule-strong);
-  border-radius: var(--nv-radius-content);
-  background: transparent;
-  color: var(--nv-text-2);
-  font-family: var(--nv-font);
-  font-size: var(--nv-size-label);
-  font-weight: var(--nv-weight-bold);
-  cursor: pointer;
-}
-
-.nvh__all-apps:hover {
-  background: var(--nv-surface);
-  color: var(--nv-text);
-}
-
-.nvh__files {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: var(--nv-space-2);
-  min-width: 0;
-}
-
-.nvh__files-title {
-  flex: none;
-  white-space: nowrap;
-  margin-right: var(--nv-space-2);
-  font-size: var(--nv-size-label);
-  font-weight: var(--nv-weight-bold);
-  color: var(--nv-text-3);
-}
-
 .nvh__spacer {
   flex: 1;
 }
@@ -360,12 +185,6 @@
   min-width: calc(120px * var(--nv-scale));
 }
 
-/* Today's page is exactly one frame: the services rows take what is left. */
-.nvh__frame--today {
-  height: 100%;
-  overflow: hidden;
-}
-
 .nvh__error {
   margin-top: var(--nv-space-2);
 }
@@ -377,15 +196,6 @@
   border-left: 2px solid currentColor;
   border-top: 2px solid currentColor;
   transform: rotate(45deg);
-}
-
-.nvh__band .nvh__spacer {
-  flex: 1;
-}
-
-.nvh__files {
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 /* ---------- Ambient: only the photo, the clock, and the date remain ---------- */
@@ -470,37 +280,9 @@
   font-size: min(calc(var(--nv-size-numeral) * 1.15), calc(var(--nvh-h, 912px) * 0.2));
 }
 
-.nvh__dayline {
-  margin-top: var(--nv-space-1);
-  font-size: var(--nv-size-label);
-  color: var(--nv-text-3);
-}
-
-.nvh__cal .nv-calendar td {
-  height: min(calc(46px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.052));
-  padding-top: min(var(--nv-space-2), calc(var(--nvh-h, 912px) * 0.008));
-}
-
-.nvh__sheet {
-  row-gap: min(var(--nv-space-4), calc(var(--nvh-h, 912px) * 0.016));
-}
-
 /* The calendar link keeps its full touch target but does not add row height. */
 .nvh__cal-head {
   height: var(--nv-space-6);
-}
-
-.nvh__cal-head .nv-button {
-  margin-block: calc((var(--nv-space-6) - var(--nv-target)) / 2);
-}
-
-.nvh__cal .nv-calendar td span {
-  min-width: 1.75em;
-  height: 1.75em;
-}
-
-.nvh__meta {
-  margin-top: min(var(--nv-space-5), calc(var(--nvh-h, 912px) * 0.02));
 }
 
 /* A faint top scrim keeps the clock legible over bright user photos. */
@@ -622,7 +404,426 @@
   outline-offset: -4px;
 }
 
+/* ==========================================================================
+   Today's page — a two-column dashboard under the folded photo band.
+   Left: today at a glance and shortcuts. Right: this month and services.
+   Every size comes from the scale tokens, so the composition keeps its
+   proportions on any window.
+   ========================================================================== */
+
+.nvh__frame--today {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.nvh__band {
+  position: relative;
+  flex: none;
+  height: var(--nvh-band, 146px);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nv-space-3);
+  padding: var(--nv-space-4) var(--nv-gutter);
+  color: var(--nv-on-media);
+}
+
+/* Legibility for the logo and glyphs over any photo, and a fade into the page. */
+.nvh__band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 55%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0) 55%, var(--nv-ground));
+  pointer-events: none;
+}
+
+.nvh__band > * {
+  position: relative;
+}
+
 .nvh__band-logo {
   align-self: center;
+  margin-top: calc(var(--nv-space-1) * -1);
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.35));
+}
+
+.nvh__band .nvh__spacer {
+  flex: 1;
+}
+
+.nvh__handle {
+  align-self: center;
+  margin-top: calc(var(--nv-space-1) * -1);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  min-height: var(--nv-target-glyph);
+  padding: 0 var(--nv-space-4);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--nv-radius-action);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--nv-on-media);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  cursor: pointer;
+}
+
+.nvt {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  grid-template-rows: auto auto;
+  /* Row 1: glance | month. Row 2: shortcuts | services, so peer headings share a
+     baseline and both bottoms align. Spare height is shared above and below;
+     "safe" keeps the top visible if the content ever outgrows the frame. */
+  align-content: safe center;
+  column-gap: calc(56px * var(--nv-vscale, 1));
+  row-gap: var(--nv-space-6);
+  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-5);
+  background: var(--nv-ground);
+  color: var(--nv-text);
+}
+
+/* ---------- Today at a glance ---------- */
+.nvt__date {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--nv-space-5);
+}
+
+.nvt__numeral {
+  font-size: min(calc(150px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.19));
+  font-weight: var(--nv-weight-bold);
+  line-height: 0.8;
+}
+
+.nvt__date-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-1);
+  padding-bottom: var(--nv-space-1);
+}
+
+.nvt__weekday {
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.1;
+}
+
+.nvt__month {
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
+}
+
+.nvt__dayline {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+}
+
+.nvt__now {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nv-space-4);
+  margin-top: var(--nv-space-5);
+}
+
+.nvt__time {
+  font-size: var(--nv-size-clock);
+  font-weight: var(--nv-weight-semibold);
+  line-height: 1;
+}
+
+.nvt__weather {
+  font-size: var(--nv-size-body);
+  color: var(--nv-text-2);
+}
+
+.nvt__heading {
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.nvt__row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nv-space-4);
+  margin-bottom: var(--nv-space-3);
+}
+
+.nvt__hint {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+}
+
+.nvt__link {
+  min-height: var(--nv-target);
+  margin-block: calc((var(--nv-size-heading) * 1.5 - var(--nv-target)) / 2);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: none;
+  color: var(--nv-text-2);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  cursor: pointer;
+}
+
+.nvt__link:hover {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+/* ---------- Shortcuts: a two-column grid of compact rows ---------- */
+.nvt__glance {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.nvt__shortcuts {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Six shortcuts, two columns, three rows that stretch to the tiles' height. */
+.nvt__shortcut-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(var(--nv-target), 1fr));
+  gap: var(--nv-space-2);
+}
+
+.nvt__shortcut {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-width: 0;
+  padding: 0 var(--nv-space-4);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+.nvt__shortcut:hover {
+  background: var(--nv-surface-raised);
+}
+
+.nvt__shortcut:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.nvt__shortcut svg {
+  flex: none;
+  width: calc(20px * var(--nv-scale));
+  height: calc(20px * var(--nv-scale));
+  color: var(--nv-text-2);
+}
+
+.nvt__shortcut > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nvt__shortcut small {
   margin-left: var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-medium);
+  color: var(--nv-text-3);
+}
+
+.nvt__shortcut--muted svg {
+  opacity: 0.55;
+}
+
+/* ---------- This month ---------- */
+.nvt__calendar {
+  flex: none;
+}
+
+.nvt__calendar .nv-calendar th {
+  text-align: center;
+  padding-left: 0;
+}
+
+.nvt__calendar .nv-calendar td {
+  height: min(calc(40px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.046));
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  font-size: var(--nv-size-label);
+}
+
+.nvt__calendar .nv-calendar td span {
+  margin: 0;
+  min-width: 1.9em;
+  height: 1.9em;
+}
+
+/* ---------- Services: uniform 16:9 tiles, four across, two rows ---------- */
+.nvt__services {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Uniform tiles: the art is always 16:9 and the tile height follows its width,
+   like an Apple TV / Google TV app row. Wide wordmarks sit contained on their
+   brand ground; key art covers. Nothing stretches with the window's height. */
+.nvt__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  gap: var(--nv-space-3);
+}
+
+.nvt__all-apps {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  color: var(--nv-text-2);
+  font-family: var(--nv-font);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.nvt__all-apps-field {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+}
+
+.nvt__all-apps-field svg {
+  width: calc(28px * var(--nv-scale));
+  height: calc(28px * var(--nv-scale));
+}
+
+.nvt__all-apps-bar {
+  display: flex;
+  align-items: center;
+  min-height: calc(36px * var(--nv-scale));
+  padding: 0 var(--nv-space-3);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text);
+}
+
+/* Shortcut icons follow the chrome colour (some shared icons carry a hue). */
+.nvt__shortcut svg[stroke]:not([stroke="none"]),
+.nvt__shortcut svg [stroke]:not([stroke="none"]) {
+  stroke: currentColor;
+}
+
+.nvt__shortcut svg [fill]:not([fill="none"]) {
+  fill: currentColor;
+}
+
+/* ---------- Tiles: bare art, label beneath; numbers and lift on focus ---------- */
+.nvt__tiles .nv-plate {
+  overflow: visible;
+  background: none;
+}
+
+.nvt__tiles .nv-plate__field {
+  border-radius: var(--nv-radius-content);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nvt__tiles .nv-plate__bar {
+  min-height: 0;
+  padding: var(--nv-space-2) var(--nv-space-1) 0;
+  background: none;
+}
+
+.nvt__tiles .nv-plate__name {
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
+}
+
+.nvt__tiles .nv-plate__key {
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nvt__tiles .nv-plate__main:focus-visible {
+  outline: none;
+}
+
+.nvt__tiles .nv-plate__main:focus-visible .nv-plate__field,
+.nvt__tiles .nv-plate__main:hover .nv-plate__field {
+  transform: scale(1.06);
+}
+
+.nvt__tiles .nv-plate__main:focus-visible .nv-plate__field {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nvt__tiles .nv-plate__main:focus-visible .nv-plate__name {
+  color: var(--nv-text);
+}
+
+.nvt__tiles .nv-plate__main:focus-visible .nv-plate__key {
+  opacity: 1;
+}
+
+.nvt__tiles .nv-plate__close {
+  top: calc(var(--nv-space-2) * -1);
+  right: calc(var(--nv-space-2) * -1);
+  z-index: 1;
+}
+
+.nvt__all-apps {
+  background: none;
+}
+
+.nvt__all-apps-field {
+  border: 1px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nvt__all-apps:hover .nvt__all-apps-field,
+.nvt__all-apps:focus-visible .nvt__all-apps-field {
+  transform: scale(1.06);
+}
+
+.nvt__all-apps:focus-visible {
+  outline: none;
+}
+
+.nvt__all-apps:focus-visible .nvt__all-apps-field {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nvt__all-apps-bar {
+  min-height: 0;
+  padding: var(--nv-space-2) var(--nv-space-1) 0;
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
 }

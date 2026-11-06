@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import {
   CloseIcon,
   FolderIcon,
+  GridIcon,
   getBundledBrandAssetUrl,
   ImageIcon,
   MoonIcon,
@@ -26,7 +27,7 @@ import {
 import "./home-v2.css";
 
 /** Share of the viewport the folded photo keeps as the band on today's page. */
-const BAND_RATIO = 0.193;
+const BAND_RATIO = 0.16;
 /** Default wait on today's page before the home returns to the photo frame. */
 const AUTO_RETURN_MS = 60_000;
 const ACTIVITY_EVENTS = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
@@ -41,6 +42,7 @@ export interface HomeService {
 export interface HomeLocation {
   label: string;
   path: string;
+  kind: "downloads" | "drive";
 }
 
 export interface HomeV2Props {
@@ -296,6 +298,28 @@ export const HomeV2: React.FC<HomeV2Props> = ({
     : null;
   const liveCount = live.length;
 
+  // ---------- Shortcuts: always six, so the grid is two full columns ----------
+  const downloads = locations.find((location) => location.kind === "downloads");
+  const drive = locations.find((location) => location.kind === "drive");
+  const shortcuts = [
+    { key: "gallery", icon: <ImageIcon />, label: t("nav.gallery"), onPress: onOpenGallery },
+    { key: "files", icon: <FolderIcon />, label: t("nav.files"), onPress: () => onOpenFinder() },
+    {
+      key: "downloads",
+      icon: <FolderIcon />,
+      label: t("home.downloads"),
+      onPress: () => onOpenFinder(downloads?.path),
+    },
+    {
+      key: "drive",
+      icon: <FolderIcon />,
+      label: drive?.label ?? t("home.drives"),
+      onPress: () => onOpenFinder(drive?.path),
+    },
+    { key: "radio", icon: <VolumeIcon />, label: t("home.radio"), onPress: onOpenRadio },
+    { key: "ambient", icon: <MoonIcon />, label: t("home.ambient"), onPress: onEnterAmbient },
+  ];
+
   // ---------- Caption content per state ----------
   let caption: React.ReactNode;
   if (featured && featuredIsLive) {
@@ -383,7 +407,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           <div className="nvh__scrim" aria-hidden="true" />
           <header className="nvh__bar">
             <span className="nvh__fade">
-              <NovusLogo height={28} />
+              <NovusLogo height="calc(30px * var(--nv-scale))" />
             </span>
             <span className="nvh__clock">
               <span className="nv-numeral nvh__time">{time(now)}</span>
@@ -471,18 +495,15 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           </button>
         </section>
 
-        {/* ---------- Frame 2 ---------- */}
+        {/* ---------- Frame 2: today's page ---------- */}
         <section className="nvh__frame nvh__frame--today" aria-label={t("home.today")}>
           <div className="nvh__band nv-on-media">
-            <NvGlyphButton
-              onMedia
-              showLabel={false}
-              icon={<span className="nvh__up" aria-hidden="true" />}
-              label={t("home.backToTop")}
-              onClick={goTop}
-            />
-            <NovusLogo height={24} className="nvh__band-logo" />
+            <NovusLogo height="calc(30px * var(--nv-scale))" className="nvh__band-logo" />
             <span className="nvh__spacer" />
+            <button type="button" className="nvh__handle" onClick={goTop}>
+              <span aria-hidden="true" className="nvh__up" />
+              {t("home.backToTop")}
+            </button>
             <NvGlyphButton
               onMedia
               showLabel={false}
@@ -506,44 +527,68 @@ export const HomeV2: React.FC<HomeV2Props> = ({
             />
           </div>
 
-          <div className="nvh__sheet">
-            <div className="nvh__day">
-              <span className="nvh__month">{monthLabel}</span>
-              <span className="nv-numeral nvh__numeral">{now.getDate()}</span>
-              <span className="nvh__weekday">{weekday}</span>
-              <span className="nvh__dayline">
-                {t("home.dayOfYear", { day: dayOfYear(now), week: isoWeek(now) })}
-              </span>
-              <span className="nvh__meta">
-                <span className="nv-numeral nvh__daytime">{time(now)}</span>
-                {weatherLine && <span>{weatherLine}</span>}
-              </span>
+          <div className="nvt">
+            {/* Row 1: today at a glance | this month */}
+            <div className="nvt__glance">
+              <div className="nvt__date">
+                <span className="nv-numeral nvt__numeral">{now.getDate()}</span>
+                <span className="nvt__date-side">
+                  <span className="nvt__weekday">{weekday}</span>
+                  <span className="nvt__month">{monthLabel}</span>
+                  <span className="nvt__dayline">
+                    {t("home.dayOfYear", { day: dayOfYear(now), week: isoWeek(now) })}
+                  </span>
+                </span>
+              </div>
+              <div className="nvt__now">
+                <span className="nv-numeral nvt__time">{time(now)}</span>
+                {weatherLine && <span className="nvt__weather">{weatherLine}</span>}
+              </div>
             </div>
 
-            <div className="nvh__cal">
-              <div className="nvh__cal-head">
-                <span>{t("home.thisMonth")}</span>
-                <NvButton variant="quiet" onClick={onOpenCalendar}>
+            <div className="nvt__calendar">
+              <div className="nvt__row-head">
+                <h3 className="nvt__heading">{t("home.thisMonth")}</h3>
+                <button type="button" className="nvt__link" onClick={onOpenCalendar}>
                   {t("home.openCalendar")}
-                </NvButton>
+                </button>
               </div>
               <NvMonthCalendar date={now} locale={locale} />
             </div>
 
-            <div className="nvh__services">
-              <div className="nvh__label">
-                <h3>{t("home.services")}</h3>
-                <span>
+            {/* Row 2: shortcuts | services, headings on one baseline, bottoms aligned */}
+            <nav className="nvt__shortcuts" aria-label={t("home.explorer")}>
+              <div className="nvt__row-head">
+                <h3 className="nvt__heading">{t("home.explorer")}</h3>
+              </div>
+              <div className="nvt__shortcut-grid">
+                {shortcuts.map((shortcut) => (
+                  <button
+                    key={shortcut.key}
+                    type="button"
+                    className="nvt__shortcut"
+                    onClick={shortcut.onPress}
+                  >
+                    {shortcut.icon}
+                    <span>{shortcut.label}</span>
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            <div className="nvt__services">
+              <div className="nvt__row-head">
+                <h3 className="nvt__heading">{t("home.services")}</h3>
+                <span className="nvt__hint">
                   {liveCount > 0
                     ? t("home.servicesHint", { count: liveCount, max: services.length })
                     : t("home.servicesHintIdle", { max: services.length })}
                 </span>
               </div>
-              <div className="nvh__plates">
+              <div className="nvt__tiles">
                 {services.map((service, index) => (
                   <NvServicePlate
                     key={service.id}
-                    layout="row"
                     id={service.id}
                     name={service.name}
                     shortcut={index + 1}
@@ -555,9 +600,11 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                     closeLabel={t("running.close", { name: service.name })}
                   />
                 ))}
-                <button type="button" className="nvh__all-apps" onClick={onOpenSearch}>
-                  <SearchIcon size={22} />
-                  <span>{t("home.allApps")}</span>
+                <button type="button" className="nvt__all-apps" onClick={onOpenSearch}>
+                  <span className="nvt__all-apps-field">
+                    <GridIcon />
+                  </span>
+                  <span className="nvt__all-apps-bar">{t("home.allApps")}</span>
                 </button>
               </div>
               {error && (
@@ -566,33 +613,6 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                 </p>
               )}
             </div>
-
-            <nav className="nvh__files" aria-label={t("home.explorer")}>
-              <span className="nvh__files-title">{t("home.explorer")}</span>
-              <NvButton icon={<ImageIcon />} onClick={onOpenGallery}>
-                {t("nav.gallery")}
-              </NvButton>
-              {locations.map((location) => (
-                <NvButton
-                  key={location.path}
-                  icon={<FolderIcon />}
-                  onClick={() => onOpenFinder(location.path)}
-                >
-                  {location.label}
-                </NvButton>
-              ))}
-              <NvButton icon={<VolumeIcon />} onClick={onOpenRadio}>
-                {t("home.radio")}
-              </NvButton>
-              <span className="nvh__spacer" />
-              <NvButton variant="quiet" icon={<MoonIcon />} onClick={onEnterAmbient}>
-                {t("home.ambient")}
-              </NvButton>
-              <NvButton variant="quiet" icon={<RemoteIcon />} onClick={onOpenRemote}>
-                {t("home.mobileRemote")}
-                <span className="nvh__soon">{t("home.soon")}</span>
-              </NvButton>
-            </nav>
           </div>
         </section>
       </div>

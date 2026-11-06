@@ -171,11 +171,11 @@ components:
 
 **Creative North Star: "The Night Frame, the Day Page" (밤의 액자, 낮의 한 장)**
 
-Novus v2 is a photo frame that happens to run a media console. The home opens as one full-bleed photograph with a single caption on it: whatever is still running, at display size, with one press to resume. One snap down folds that same photo up into a band, and under it sits today's page: the date as a huge numeral, the month calendar, the seven service plates, and a row of file shortcuts. Left alone for the ambient delay (10 minutes by default), the frame drops its chrome and keeps only the photo, the clock, and the date.
+Novus v2 is a photo frame that happens to run a media console. The home opens as one full-bleed photograph with a single caption on it: whatever is still running, at display size, with one press to resume. One snap down folds that same photo up into a band, and under it sits today's page: a two-column dashboard: today (date, time, weather, shortcuts) on the left, the month calendar and the service tiles on the right. Left alone for the ambient delay (10 minutes by default), the frame drops its chrome and keeps only the photo, the clock, and the date.
 
 Everything Novus draws itself is neutral, opaque, and still. The ground is a near-black ramp at night and a warm off-white by day; type is ink on ground or white over the photo. Colour arrives only from the photograph and from the official brand plates of the streaming services. Four semantic hues exist, and each has exactly one job. Depth comes from the photo and its scrim, not from glass or shadows; the only animated properties are transform and opacity, so the Surface Pro 4's HD 515 never has to repaint a blurred layer.
 
-The system runs on two axes set on the `NvRoot` element: theme (`system`, `light`, `dark`) and posture (`tablet` for the hand at 30–50 cm, `tv` for the sofa at 1–2 m). Posture multiplies every type size and space by a scale and swaps touch targets to fixed larger values. Every v2 surface lives under `.nv-root`; the v1 screens that still exist (gallery, finder, viewer, video, streaming dock) are pulled into the same world by the bridge.
+The system runs on two axes set on the `NvRoot` element: theme (`system`, `light`, `dark`) and posture (`tablet` for the hand at 30–50 cm, `tv` for the sofa at 1–2 m). Every type size and space is authored on the 1368×912 reference frame and multiplied by `--nv-scale` = posture factor × viewport factor (window height ÷ 912, clamped 0.82–1.6), like a TV platform's density-independent units; touch targets grow with the viewport and never drop below their posture floor. Every v2 surface lives under `.nv-root`; the v1 screens that still exist (gallery, finder, viewer, video, streaming dock) are pulled into the same world by the bridge.
 
 **Key Characteristics:**
 
@@ -184,7 +184,7 @@ The system runs on two axes set on the `NvRoot` element: theme (`system`, `light
 - Circle is a global action; rectangle is content and the actions that belong to it.
 - Opaque everywhere. The photo scrim is the only translucency, and it never becomes blur.
 - System faces only (Segoe UI Variable first, then locale CJK faces); no web fonts.
-- Two postures, one layout: sizes scale by 1 (tablet) or 1.25 (TV); targets are set per posture.
+- Two postures, one layout: sizes scale by 1 (tablet) or 1.25 (TV), times the viewport factor; targets have per-posture floors.
 
 ## Colors
 
@@ -236,9 +236,9 @@ The ramp, light then dark: n0 #ffffff / #000000, n1 #f3f3f1 / #0a0a0c, n2 #e9e9e
 
 ### Hierarchy
 
-Sizes are tablet posture; TV posture multiplies by 1.25 (value in parens).
+Sizes are tablet posture on the 1368×912 reference frame; TV posture multiplies by 1.25 (value in parens), and every value also scales with window height ÷ 912.
 
-- **Numeral** (700, 192px (240px), line-height 0.86, -0.04em, tabular figures): today's date on today's page. On short frames it is capped at 23.5% of the frame height.
+- **Numeral** (700, 150px (188px), line-height 0.8, -0.04em, tabular figures): today's date on today's page, beside the weekday, month, and day-of-year stack. Capped at 19% of the frame height.
 - **Display** (800, 64px (80px), line-height 1.02, -0.035em): the caption title over the photo, the onboarding title, the streaming loader title, the ambient clock.
 - **Clock** (600, 36px (45px), line-height 1): the frame clock and the time on today's page.
 - **Title** (700, 28px (35px), -0.02em on sheets): sheet and dialog titles, the weekday.
@@ -258,11 +258,11 @@ Sizes are tablet posture; TV posture multiplies by 1.25 (value in parens).
 The home is a vertical scroller with mandatory snap and two frames, each 100% of the viewport.
 
 - **Frame one (the photo frame):** full-bleed photo, wordmark top-left and clock plus date top-right (inset 32px top, 48px sides), the caption lower-left (48px from the left, 76px from the bottom, max 720px wide), the vertical glyph rail on the right edge (32px in, vertically centred in TV posture; in tablet posture it drops to the bottom right, 76px up, within thumb reach), and a "오늘 · 서비스" hint bottom centre.
-- **Frame two (today's page):** the photo band (19.3% of the frame height) holding a short glyph row, then the page on ground in a two-column grid (0.9fr day, 1.1fr month calendar), then a full-width row of seven service plates and a full-width files row. Gaps are 16px by 48px; row gaps compress to 1.6% of frame height on short screens so the page always fits one screen.
+- **Frame two (today's page):** the photo band (16% of the frame height) with the logo left, search/theme/settings glyphs right, and a centred "위로" handle; under it a two-column dashboard on ground (0.82fr / 1.18fr, 56px gap). Left: Row 1: the date block (numeral beside weekday, month, day-of-year) with time and weather | the month calendar (centred cells, row height capped at 4.6% of the frame). Row 2: shortcuts, always six in a 2×3 grid (gallery, files, downloads, first drive, radio, ambient) | services as uniform tiles four across in two rows (seven services plus All apps). Peer headings share one baseline and both row-2 bottoms align; the grid is vertically centred with `safe` alignment.
 - **Ambient:** frame one only; caption, rail, and hint fade out; the clock moves to the bottom right at display size with the date at heading size.
 - **Sheets** sit on the right, 480px wide (×scale), full height. **Dialogs** are centred, 520px wide, inset by the 40px gutter.
 
-Spacing is an 8px rhythm scaled by posture: 4, 8, 12, 16, 24, 32, 48, 64 (TV: 5, 10, 15, 20, 30, 40, 60, 80), with a 40px screen gutter (TV 50px). Touch targets are not scaled: 48px for buttons and 56px for glyph circles in tablet posture, 64px and 72px in TV posture.
+Spacing is an 8px rhythm scaled by posture: 4, 8, 12, 16, 24, 32, 48, 64 (TV: 5, 10, 15, 20, 30, 40, 60, 80), times the viewport factor, with a 40px screen gutter (viewport-scaled). Touch targets have posture floors: 48px buttons and 56px glyph circles in tablet posture, 64px and 72px in TV posture; they grow with the viewport factor.
 
 **The Posture Rule.** One layout serves both postures. Posture changes the scale (1 or 1.25) and the targets (48/56 or 64/72), and moves the rail within thumb reach in tablet posture; it never forks the composition.
 
@@ -295,7 +295,7 @@ Two shapes carry meaning. Rectangles have gently squared corners (4px for conten
 
 Rectangles: buttons, service plates, fields, dialogs, segmented options (the segmented track is 7px, the option radius plus its 3px padding), toasts, the onboarding posture cards. Hairline rules (1px) separate list rows, calendar weeks, and sheet sections; controls use a 2px border.
 
-Small circles that are not pressable are markers, not actions: the status dot (0.62em) and today's date on the calendar. The toggle keeps the switch idiom (a 999px track with a circular thumb), and the slider thumb is a circle.
+Small circles that are not pressable are markers, not actions: the status dot (0.62em) and today's date on the calendar. The toggle is a rectangular switch (4px track, 2px thumb) under the rectangle rule; the slider thumb is a circle.
 
 **The Circle Means Global Rule.** A circle is an action reachable from anywhere (search, gallery, files, remote, settings, home). A rectangle is content, or an action that belongs to the content it sits on (이어서 보기, 세션 종료). If a control only acts on the thing beside it, it is a rectangle.
 
@@ -391,7 +391,7 @@ Gallery, Finder, the viewer, video, and the streaming dock still run on v1 compo
 - **Do** make a control a circle only when it is a global action reachable from anywhere; everything else is a 4px rectangle.
 - **Do** order every photo caption as title, then state line, then one context line, then actions.
 - **Do** give every photo a vertical focal point and keep the scrim and the folded band honest to it.
-- **Do** author sizes for tablet posture and multiply by `--nv-scale`; set touch targets per posture (48/56px tablet, 64/72px TV).
+- **Do** author sizes for tablet posture on the 1368×912 frame and multiply by `--nv-scale` (posture × viewport); touch targets use `--nv-target` / `--nv-target-glyph`.
 - **Do** animate only transform and opacity, with the press, move, and fold tokens, and honour reduced motion.
 - **Do** show the 4px ink focus ring (white on media), offset 3px, on every focusable element.
 - **Do** let service brands appear on their own ground with their official assets.
@@ -405,3 +405,7 @@ Gallery, Finder, the viewer, video, and the streaming dock still run on v1 compo
 - **Don't** give v2 components a box-shadow; depth comes from the photo and the plane order.
 - **Don't** make a content action round or a global action square.
 - **Don't** scrim over the photo's focal light; the sun keeps its value.
+
+## Service tiles
+
+Services are uniform tiles, benchmarked on Google TV / Apple TV app rows: bare 16:9 art on the brand's own ground (key art covers; wide wordmarks are contained with a per-brand optical inset so every logo reads at the same weight) and the name as plain text beneath. Focus lifts the art 6% with the ink ring and reveals the number-key shortcut; the live state is a red dot beside the name. The tile height follows its width; nothing stretches with the window height, so no logo is ever cropped by the layout. A live tile carries a close button (4px rectangle, top-right) that ends the session.

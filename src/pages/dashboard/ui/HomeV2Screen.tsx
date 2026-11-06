@@ -99,13 +99,18 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
   const homeLocations: HomeLocation[] = [
     ...locations
       .filter((location) => location.category === "downloads")
-      .map((location) => ({ label: t("home.downloads"), path: location.path })),
+      .map((location) => ({
+        label: t("home.downloads"),
+        path: location.path,
+        kind: "downloads" as const,
+      })),
     ...locations
       .filter((location) => location.category === "drive")
       .slice(0, MAX_DRIVES)
       .map((location) => ({
         label: /^[A-Z]:\\$/.test(location.path) ? location.path : location.name,
         path: location.path,
+        kind: "drive" as const,
       })),
   ];
 

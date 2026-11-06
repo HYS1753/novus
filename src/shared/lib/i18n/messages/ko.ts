@@ -316,6 +316,7 @@ export const ko = {
   "home.allApps": "모든 앱",
   "onboarding.previewTv": "소파에서 1–2m · 리모컨이나 방향키로 이동",
   "onboarding.previewTablet": "손에 들고 30–50cm · 터치로 바로 조작",
+  "home.drives": "드라이브",
 } as const;
 
 export type MessageKey = keyof typeof ko;

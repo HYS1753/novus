@@ -318,4 +318,5 @@ export const ja: Messages = {
   "home.allApps": "すべてのアプリ",
   "onboarding.previewTv": "ソファから 1–2 m · リモコンや方向キーで移動",
   "onboarding.previewTablet": "手に持って 30–50 cm · タッチで操作",
+  "home.drives": "ドライブ",
 };
