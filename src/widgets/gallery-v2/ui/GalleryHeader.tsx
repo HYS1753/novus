@@ -1,73 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { GallerySort, GalleryState, GalleryTab } from "@/features";
 import {
   CloseIcon,
   FolderIcon,
   ImageIcon,
+  NvMenu,
   NvSegmented,
   SearchIcon,
   SortDirectionIcon,
+  locationLabel,
   useI18n,
   type QuickLocation,
 } from "@/shared";
-
-/** A small anchored menu: closes on outside press or Escape, and returns focus. */
-const Menu: React.FC<{
-  label: string;
-  trigger: (props: { open: boolean; toggle: () => void }) => React.ReactNode;
-  children: (close: () => void) => React.ReactNode;
-  align?: "start" | "end";
-}> = ({ label, trigger, children, align = "start" }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  // Opening moves focus to the chosen entry (or the first); closing returns it.
-  useEffect(() => {
-    if (!open) return;
-    const panel = ref.current?.querySelector<HTMLElement>("[role=menu]");
-    (
-      panel?.querySelector<HTMLElement>("[aria-checked=true]") ??
-      panel?.querySelector<HTMLElement>("button")
-    )?.focus();
-  }, [open]);
-  // Found by state, not by ref: the open menu's trigger is the expanded one.
-  const close = useCallback(() => {
-    const trigger = document.querySelector<HTMLElement>(
-      ".gv-menu [data-menu-trigger][aria-expanded='true']",
-    );
-    setOpen(false);
-    trigger?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setOpen(false);
-        ref.current?.querySelector<HTMLElement>("[data-menu-trigger]")?.focus();
-      }
-    };
-    window.addEventListener("pointerdown", onPointer, true);
-    window.addEventListener("keydown", onKey, true);
-    return () => {
-      window.removeEventListener("pointerdown", onPointer, true);
-      window.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
-  return (
-    <div className="gv-menu" ref={ref}>
-      {trigger({ open, toggle: () => setOpen((value) => !value) })}
-      {open && (
-        <div className={`gv-menu__panel gv-menu__panel--${align}`} role="menu" aria-label={label}>
-          {children(close)}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const LOCATION_ICON: Partial<Record<QuickLocation["category"], React.ReactNode>> = {
   pictures: <ImageIcon size={18} />,
@@ -95,6 +39,8 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
   const [searching, setSearching] = useState(Boolean(state.search));
   const inputRef = useRef<HTMLInputElement>(null);
   const collection = state.tab === "folders" ? state.folderView : state.library;
+  const rootLocation = state.locations.find((location) => location.path === state.root);
+  const title = rootLocation ? locationLabel(t, rootLocation) : state.rootLabel || t("nav.gallery");
   const fmt = new Intl.NumberFormat(locale);
 
   useEffect(() => {
@@ -137,7 +83,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
   return (
     <header className="gv-head">
       <div className="gv-head__title">
-        <Menu
+        <NvMenu
           label={t("gallery.location")}
           trigger={({ open, toggle }) => (
             <button
@@ -149,7 +95,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
               onClick={toggle}
               title={t("gallery.location")}
             >
-              <span className="gv-head__name">{state.rootLabel || t("nav.gallery")}</span>
+              <span className="gv-head__name">{title}</span>
               <span className="gv-head__chev" aria-hidden="true" />
             </button>
           )}
@@ -161,23 +107,23 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
                 type="button"
                 role="menuitemradio"
                 aria-checked={location.path === state.root}
-                className="gv-menu__item"
+                className="nv-menu__item"
                 onClick={() => {
                   state.setRoot(location.path);
                   close();
                 }}
               >
-                <span className="gv-menu__icon" aria-hidden="true">
+                <span className="nv-menu__icon" aria-hidden="true">
                   {LOCATION_ICON[location.category] ?? <FolderIcon size={18} />}
                 </span>
-                <span className="gv-menu__text">
-                  <span>{location.name}</span>
-                  <span className="gv-menu__sub">{location.path}</span>
+                <span className="nv-menu__text">
+                  <span>{locationLabel(t, location)}</span>
+                  <span className="nv-menu__sub">{location.path}</span>
                 </span>
               </button>
             ))
           }
-        </Menu>
+        </NvMenu>
         <span className="gv-head__counts">{counts}</span>
       </div>
 
@@ -233,7 +179,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
           </button>
         )}
 
-        <Menu
+        <NvMenu
           label={t("files.sort")}
           align="end"
           trigger={({ open, toggle }) => (
@@ -253,14 +199,14 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
         >
           {(close) => (
             <>
-              <span className="gv-menu__label">{t("files.sort")}</span>
+              <span className="nv-menu__label">{t("files.sort")}</span>
               {fields.map((field) => (
                 <button
                   key={field.value}
                   type="button"
                   role="menuitemradio"
                   aria-checked={state.sort.field === field.value}
-                  className="gv-menu__item"
+                  className="nv-menu__item"
                   onClick={() =>
                     state.setSort({
                       field: field.value,
@@ -268,10 +214,10 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
                     })
                   }
                 >
-                  <span className="gv-menu__text">{field.label}</span>
+                  <span className="nv-menu__text">{field.label}</span>
                 </button>
               ))}
-              <span className="gv-menu__rule" />
+              <span className="nv-menu__rule" />
               {(state.sort.field === "name"
                 ? (["asc", "desc"] as const)
                 : (["desc", "asc"] as const)
@@ -281,18 +227,18 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
                   type="button"
                   role="menuitemradio"
                   aria-checked={state.sort.order === order}
-                  className="gv-menu__item"
+                  className="nv-menu__item"
                   onClick={() => {
                     state.setSort({ field: state.sort.field, order });
                     close();
                   }}
                 >
-                  <span className="gv-menu__text">{orderLabels(state.sort.field, t)[order]}</span>
+                  <span className="nv-menu__text">{orderLabels(state.sort.field, t)[order]}</span>
                 </button>
               ))}
             </>
           )}
-        </Menu>
+        </NvMenu>
       </div>
     </header>
   );

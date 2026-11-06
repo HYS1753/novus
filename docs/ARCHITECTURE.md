@@ -137,7 +137,7 @@ novus/
 │   ├── shared/           # 공통 기반 인프라 (UI Kit, Tauri IPC, Hooks)
 │   │   ├── ui/           # 공통 UI 컴포넌트 (모든 화면 UI는 이 계층에서 재활용)
 │   │   │   ├── v2/       # v2 컴포넌트 (NvRoot, NvButton, NvGlyphButton, NvServicePlate, NvSheet, …)
-│   │   │   ├── common/   # v1 코어 6종 (갤러리·파인더·뷰어가 브리지 안에서 사용)
+│   │   │   ├── common/   # v1 코어(남은 것: 동영상 플레이어·메뉴 등이 브리지 안에서 사용)
 │   │   │   ├── media/    # GlassMediaTile (1:1 풀커버 타일 + GPU 저비용 하단 틴트 오버레이)
 │   │   │   ├── nav/      # SubpageDock (내부 서브페이지 표준 시스템 독)
 │   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons 및 공통 MotionIcon 모션 프리셋
@@ -183,7 +183,7 @@ novus/
 - **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
 - **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
 - **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
-- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파인더·뷰어·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다. 독과 스트리밍 로딩 화면은 v1 스타일 없이 자체 v2 CSS를 씁니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 갤러리·스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 파인더는 켭니다.
+- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파일·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다(갤러리·파일·사진 뷰어·독은 v2 컴포넌트, 동영상 플레이어 내부만 v1). 독과 스트리밍 로딩 화면은 v1 스타일 없이 자체 v2 CSS를 씁니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 갤러리·파일은 켭니다(사진 뷰어·동영상은 캡처 단계에서 키를 먼저 받음). `data-nav-scope`는 시트·다이얼로그·사진 뷰어 같은 모달에만 쓰고, 독·사이드바·목록에는 쓰지 않습니다(포커스가 갇힘).
 - **기본 앰비언트 아트워크**: `src/assets/ambient/*.jpg`(1600×1000 절차 생성 래스터, 생성기 `scripts/design/generate-ambient-art.py`). 각 이미지에 초점 높이(`focusY`)가 있어, 사진이 접힐 때 띠가 그 높이(수평선 등)를 중심으로 보입니다. 사용자 사진은 0.5.
 - **v2 Style Guide**: DEV 브라우저에서 `/styleguide`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 
@@ -191,7 +191,7 @@ novus/
 
 ## 6. 로컬 미디어 및 파일 탐색 상태
 
-갤러리와 파인더는 `DashboardPage`가 전환하는 독립 화면입니다. 두 화면의 `useFileBrowser`는 `navigateTo`가 방문 경로를 최대 50개 쌓으며 `navigateBack`이 이를 역순으로 소비합니다. 각 화면의 현재 경로와 방문 기록은 `novus.browser.media` / `novus.browser.all` 키로 `localStorage`에 저장됩니다. 홈으로 이동하면 화면 컴포넌트와 파일 목록은 해제되고 재진입 시 저장된 경로를 다시 스캔합니다. 파인더는 `scan_directory`로 전체 목록을 읽습니다. 갤러리 v2는 `useFileBrowser`를 쓰지 않고 `features/browse-media`(`useGallery` + `useMediaCollection`)로 `get_media_page`의 슬롯별 스냅샷(`library`: 위치 전체 재귀, `folder`: 현재 폴더)에서 필요한 80개 페이지만 받습니다. 갤러리 검색은 입력 후 250ms 대기해 재스캔하고, 정렬·검색·새로고침은 새 스냅샷을 만듭니다. 검색과 정렬은 파일시스템을 변경하지 않습니다.
+갤러리와 파인더는 `DashboardPage`가 전환하는 독립 화면입니다. 두 화면의 `useFileBrowser`는 `navigateTo`가 방문 경로를 최대 50개 쌓으며 `navigateBack`이 이를 역순으로 소비합니다. 각 화면의 현재 경로와 방문 기록은 `novus.browser.media` / `novus.browser.all` 키로 `localStorage`에 저장됩니다. 홈으로 이동하면 화면 컴포넌트와 파일 목록은 해제되고 재진입 시 저장된 경로를 다시 스캔합니다. 파일 화면(`FilesV2`)은 `scan_directory`로 전체 목록을 읽고 보이는 줄만 그립니다. 갤러리 v2는 `useFileBrowser`를 쓰지 않고 `features/browse-media`(`useGallery` + `useMediaCollection`)로 `get_media_page`의 슬롯별 스냅샷(`library`: 위치 전체 재귀, `folder`: 현재 폴더)에서 필요한 80개 페이지만 받습니다. 갤러리 검색은 입력 후 250ms 대기해 재스캔하고, 정렬·검색·새로고침은 새 스냅샷을 만듭니다. 검색과 정렬은 파일시스템을 변경하지 않습니다.
 
 독의 뒤로가기는 갤러리의 열린 뷰어, 방문 기록, 홈 순서로 동작합니다. 상위 폴더와 브레드크럼 이동은 `PathNavigation`의 별도 동작입니다. 갤러리는 현재 스크롤 위치와 뷰포트 크기에서 보이는 격자 행 및 양쪽 여유 행만 마운트하고, 스크롤 끝에 가까워지면 다음 묶음을 요청합니다. 파인더는 40개 단위 페이지로 DOM 수를 제한합니다. 정확한 전체 정렬을 위해 갤러리의 첫 요청은 폴더 전체 메타데이터를 Rust에서 스캔·정렬하지만 프런트엔드로는 필요한 묶음만 전달합니다. 뷰어는 아직 받지 않은 다음 사진에 도달하면 후속 묶음을 요청합니다. 썸네일은 2개 동시 요청 큐와 Base64 문자열 길이 기준 12MiB 프런트엔드 URI 캐시를 거쳐 Rust 영속 디스크 캐시에 저장됩니다. 뷰어는 1600px 화면 이미지를 디코딩한 뒤 표시하고 확대 시 3200px를 요청하며, 10/15/30초 자동 재생을 지원합니다.
 

@@ -60,11 +60,7 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
   const { appFullscreen } = useDisplayMode();
 
   return (
-    <aside
-      className={`nvd nvd--${dockPosition}`}
-      aria-label={t("dock.label", { title })}
-      data-nav-scope
-    >
+    <aside className={`nvd nvd--${dockPosition}`} aria-label={t("dock.label", { title })}>
       <div className="nvd__now">
         <span className="nvd__time" aria-label={t("dock.time", { time })}>
           {time}

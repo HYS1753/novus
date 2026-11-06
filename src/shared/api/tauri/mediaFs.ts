@@ -151,6 +151,8 @@ export async function scanDirectory(
   path: string,
   filterMode: "media" | "all" = "all",
 ): Promise<DirectoryScanResult> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devScanDirectory(path);
   return await invoke<DirectoryScanResult>("scan_directory", {
     path,
     filterMode,

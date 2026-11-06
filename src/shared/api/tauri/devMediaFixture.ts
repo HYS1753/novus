@@ -8,6 +8,7 @@
  * contain it. Paths are bundled artwork URLs with a `#n` suffix.
  */
 import type {
+  DirectoryScanResult,
   FileItem,
   FolderSummary,
   MediaPageResult,
@@ -195,4 +196,40 @@ export async function devFolderSummaries(paths: string[]): Promise<FolderSummary
       .sort((a, b) => b.modified_ms - a.modified_ms)[0];
     return { path, media_count: inside.length, cover: cover ?? null, has_subfolders: false };
   });
+}
+
+/** Folder listing for the Files screen: folders, the library's media, and a few documents. */
+export async function devScanDirectory(path: string): Promise<DirectoryScanResult> {
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const all = buildLibrary();
+  const name = path.split("/").pop() ?? "";
+  const docs: FileItem[] = ["회의록.pdf", "예산.xlsx", "메모.txt", "backup.zip"].map(
+    (file, index) => ({
+      name: file,
+      path: `${path}/${file}`,
+      is_dir: false,
+      size: 24_000 * (index + 3),
+      modified_ms: Date.UTC(2026, 9, 20 - index),
+      extension: file.split(".").pop() ?? "",
+      media_type: file.endsWith(".zip") ? "archive" : "document",
+    }),
+  );
+  const folders: FileItem[] =
+    path === ROOT || path === "/dev/Downloads"
+      ? FOLDERS.map((folder) => ({
+          name: folder,
+          path: `${ROOT}/${folder}`,
+          is_dir: true,
+          size: 0,
+          modified_ms: Date.UTC(2026, 10, 1),
+          extension: "",
+          media_type: "directory" as const,
+        }))
+      : [];
+  const media = FOLDERS.includes(name) ? all.filter((item) => folderOf(item) === name) : [];
+  return {
+    current_path: path,
+    parent_path: path === ROOT ? "/dev" : ROOT,
+    items: [...folders, ...docs, ...media],
+  };
 }

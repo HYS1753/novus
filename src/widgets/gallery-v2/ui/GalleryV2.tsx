@@ -7,12 +7,13 @@ import {
   NvButton,
   NvEmptyState,
   VideoIcon,
+  locationLabel,
   useI18n,
   type FileItem,
+  NvMediaThumb,
 } from "@/shared";
 import { GalleryHeader } from "./GalleryHeader";
 import { GalleryShelves } from "./GalleryShelves";
-import { MediaThumb } from "./MediaThumb";
 import { DateScrubber } from "./DateScrubber";
 import { JustifiedGrid, type GridPlacement, type GridSection } from "./JustifiedGrid";
 import "./gallery-v2.css";
@@ -155,6 +156,7 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
   const density = usePinchDensity(scroller);
   const [placement, setPlacement] = useState<GridPlacement>({ sections: [], height: 0, offset: 0 });
   const collection = state.tab === "folders" ? state.folderView : state.library;
+  const rootLocation = state.locations.find((location) => location.path === state.root);
 
   const open = (target: MediaCollection) => (index: number) => {
     const item = target.items[index];
@@ -224,7 +226,7 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
         <span className="gv__probe-heading" />
       </span>
 
-      <div ref={setScroller} className="gv__body" data-nav-scope>
+      <div ref={setScroller} className="gv__body">
         {state.tab === "folders" && state.crumbs.length > 1 && (
           <nav className="gv-crumbs" aria-label={t("files.location")}>
             {state.crumbs.map((crumb, index) => (
@@ -240,7 +242,7 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
                   aria-current={index === state.crumbs.length - 1 ? "page" : undefined}
                   onClick={() => state.openFolder(crumb.path)}
                 >
-                  {crumb.label}
+                  {index === 0 && rootLocation ? locationLabel(t, rootLocation) : crumb.label}
                 </button>
               </React.Fragment>
             ))}
@@ -307,7 +309,7 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
                 >
                   <span className="gv-album__cover">
                     {summary?.cover ? (
-                      <MediaThumb item={summary.cover} size={metrics.row * 1.4} />
+                      <NvMediaThumb item={summary.cover} size={metrics.row * 1.4} />
                     ) : (
                       <span className="gv-album__glyph" aria-hidden="true">
                         <FolderIcon size={28} />

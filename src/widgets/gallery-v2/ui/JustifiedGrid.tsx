@@ -5,8 +5,8 @@ import {
   useI18n,
   type FileItem,
   type JustifiedRow,
+  NvMediaThumb,
 } from "@/shared";
-import { MediaThumb } from "./MediaThumb";
 
 /** A run of items shown under one heading (a month on the timeline). */
 export interface GridSection {
@@ -270,7 +270,7 @@ export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
               aria-label={label}
               onClick={() => onOpen(index)}
             >
-              <MediaThumb item={item} size={Math.max(tileWidth, row.height)} />
+              <NvMediaThumb item={item} size={Math.max(tileWidth, row.height)} />
             </button>
           );
         }),

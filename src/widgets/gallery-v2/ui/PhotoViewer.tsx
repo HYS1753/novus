@@ -14,8 +14,8 @@ import {
   getImageThumbnail,
   useI18n,
   type FileItem,
+  NvMediaThumb,
 } from "@/shared";
-import { MediaThumb } from "./MediaThumb";
 import "./photo-viewer.css";
 
 export interface PhotoViewerProps {
@@ -529,7 +529,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
                 aria-label={image.name}
                 onClick={() => goToIndex(index)}
               >
-                <MediaThumb item={image} size={64} />
+                <NvMediaThumb item={image} size={64} />
               </button>
             );
           })}

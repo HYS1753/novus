@@ -1,4 +1,3 @@
-export * from "./button";
 export * from "./common";
 export * from "./icons";
 export * from "./media";

@@ -5,8 +5,7 @@ import {
   type GalleryTab,
   type MediaCollection,
 } from "@/features";
-import { ChevronRightIcon, FolderIcon, useI18n, type FileItem } from "@/shared";
-import { MediaThumb } from "./MediaThumb";
+import { ChevronRightIcon, FolderIcon, NvMediaThumb, useI18n, type FileItem } from "@/shared";
 
 /** Tiles per shelf: a screen and a half of lean-back browsing. */
 const SHELF_LIMIT = 18;
@@ -117,7 +116,7 @@ export const GalleryShelves: React.FC<GalleryShelvesProps> = ({
               aria-label={item.name}
               onClick={() => onOpenImage(library, index)}
             >
-              <MediaThumb item={item} size={rowHeight * aspectOf(item)} />
+              <NvMediaThumb item={item} size={rowHeight * aspectOf(item)} />
             </button>
           ))}
         </Shelf>
@@ -138,7 +137,7 @@ export const GalleryShelves: React.FC<GalleryShelvesProps> = ({
               aria-label={`${t("gallery.tabVideos")} · ${item.name}`}
               onClick={() => onOpenVideo(item)}
             >
-              <MediaThumb item={item} size={rowHeight * 1.78} />
+              <NvMediaThumb item={item} size={rowHeight * 1.78} />
               <span className="gv-shelf__caption">{item.name}</span>
             </button>
           ))}
@@ -166,7 +165,7 @@ export const GalleryShelves: React.FC<GalleryShelvesProps> = ({
                 }}
               >
                 {summary?.cover ? (
-                  <MediaThumb item={summary.cover} size={rowHeight * 1.34} />
+                  <NvMediaThumb item={summary.cover} size={rowHeight * 1.34} />
                 ) : (
                   <span className="gv-album__glyph" aria-hidden="true">
                     <FolderIcon size={36} />

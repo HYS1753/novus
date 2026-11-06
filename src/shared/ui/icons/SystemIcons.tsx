@@ -432,7 +432,7 @@ export const ImageIcon: React.FC<IconProps> = ({ size = 20, className = "", ...p
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#3B82F6"
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -440,7 +440,7 @@ export const ImageIcon: React.FC<IconProps> = ({ size = 20, className = "", ...p
     {...props}
   >
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" fill="#3B82F6" />
+    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
     <polyline points="21 15 16 10 5 21" />
   </svg>
 );
@@ -452,14 +452,14 @@ export const VideoIcon: React.FC<IconProps> = ({ size = 20, className = "", ...p
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#EC4899"
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={`inline-block ${className}`}
     {...props}
   >
-    <polygon points="23 7 16 12 23 17 23 7" fill="#EC4899" fillOpacity="0.3" />
+    <polygon points="23 7 16 12 23 17 23 7" fill="currentColor" fillOpacity="0.3" />
     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
   </svg>
 );
@@ -471,7 +471,7 @@ export const DocumentIcon: React.FC<IconProps> = ({ size = 20, className = "", .
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#10B981"
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -493,7 +493,7 @@ export const ArchiveIcon: React.FC<IconProps> = ({ size = 20, className = "", ..
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#8B5CF6"
+    stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"

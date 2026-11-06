@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getImageThumbnail, PlayIcon, type FileItem } from "@/shared";
+import { getImageThumbnail } from "../../api/tauri/mediaFs";
+import type { FileItem } from "../../api/tauri/mediaFs";
+import { PlayIcon } from "../icons";
 
-export interface MediaThumbProps {
+export interface NvMediaThumbProps {
   item: FileItem | undefined;
   /** Rendered size in CSS px; the request is rounded to two cache sizes. */
   size: number;
@@ -18,7 +20,7 @@ function thumbDim(size: number): number {
  * resting surface, so nothing flashes or reflows. Videos have no frame
  * thumbnail on this platform, so they show a quiet play mark.
  */
-export const MediaThumb: React.FC<MediaThumbProps> = React.memo(({ item, size }) => {
+export const NvMediaThumb: React.FC<NvMediaThumbProps> = React.memo(({ item, size }) => {
   const [url, setUrl] = useState("");
   const [loaded, setLoaded] = useState(false);
   const dim = thumbDim(size);
@@ -43,20 +45,20 @@ export const MediaThumb: React.FC<MediaThumbProps> = React.memo(({ item, size })
 
   if (item?.media_type === "video") {
     return (
-      <span className="gv-thumb gv-thumb--video" aria-hidden="true">
-        <span className="gv-thumb__play">
+      <span className="nv-thumb nv-thumb--video" aria-hidden="true">
+        <span className="nv-thumb__play">
           <PlayIcon size={18} />
         </span>
-        <span className="gv-thumb__ext">{item.extension.toUpperCase()}</span>
+        <span className="nv-thumb__ext">{item.extension.toUpperCase()}</span>
       </span>
     );
   }
 
   return (
-    <span className="gv-thumb" aria-hidden="true">
+    <span className="nv-thumb" aria-hidden="true">
       {url && (
         <img
-          className="gv-thumb__img"
+          className="nv-thumb__img"
           src={url}
           alt=""
           draggable={false}
@@ -69,4 +71,4 @@ export const MediaThumb: React.FC<MediaThumbProps> = React.memo(({ item, size })
   );
 });
 
-MediaThumb.displayName = "MediaThumb";
+NvMediaThumb.displayName = "NvMediaThumb";

@@ -341,6 +341,10 @@ Benchmarked on Google Photos and Apple Photos (`widgets/gallery-v2`). One calm b
 
 In TV posture the gallery opens on 모아보기 (Apple TV / Google TV photos): rows to lean back on — 최근 사진, 동영상, 폴더 — each with its title (title size) and "모두 보기 ›" into the full view. Tiles are as tall as the timeline's rows and keep their aspect (0.75–1.8); focus lifts them 1.06 with the ink ring, as on the home, and the row scrolls to keep focus in view. Captions on videos and folders sit on a solid 60% black band (no gradient). Arrow keys move through it all; tablet posture never shows this view.
 
+### Files
+
+Benchmarked on iPadOS Files and the Windows 11 tablet Explorer (`widgets/files-v2`), in the gallery's grammar. A quiet sidebar (228px × scale, 1px rule): "즐겨찾기" and "드라이브" in caption text-3, rows at the touch target with a glyph and the name in the UI language; the current location sits on surface-raised in semibold. The bar: an up rectangle, the folder name at title size over "폴더 N개 · 파일 N개", then search, the shared sort menu, and the 목록 | 아이콘 segmented; crumbs follow. The list is a details view (icon square 40px × scale with a photo's own thumbnail, name in semibold, type · size · date in label text-3, a chevron on folders) with 1px rules, columns folding to name and size under 1100px; the icon view is 4:3 faces on surface (photo thumbnails, else the type glyph with its extension) over the name and size. Both are virtualized. Photos open in the photo viewer, videos in the player, other files in the OS app with a plain-words notice.
+
 ### Photo viewer
 
 Benchmarked on Apple Photos and Google Photos (`PhotoViewer`). The photo alone on black, whatever the theme; v2 role tokens are pinned dark inside it.
@@ -431,7 +435,7 @@ After the ambient delay (default 10 minutes, one timeout reset on input, no poll
 
 ### The bridge
 
-Finder and the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The gallery, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
+Only the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The gallery, Files, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
 
 ## Do's and Don'ts
 
