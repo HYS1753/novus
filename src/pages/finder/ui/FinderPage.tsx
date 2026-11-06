@@ -52,10 +52,8 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard, initi
   };
 
   return (
-    <div
-      className={`in-app-player in-app-player--dock-${dockPosition} w-full h-full flex overflow-hidden`}
-    >
-      <div className="in-app-player__viewport flex-1 flex flex-col h-full overflow-hidden">
+    <div className={`in-app-player in-app-player--dock-${dockPosition}`}>
+      <div className="in-app-player__viewport">
         <FilesV2
           key={browser.currentPath}
           locations={browser.locations}

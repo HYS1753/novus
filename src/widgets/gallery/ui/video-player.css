@@ -1,0 +1,248 @@
+/* ==========================================================================
+   Video player (v2). The same grammar as the photo viewer: the picture on
+   black, chrome over top and bottom scrims (the one gradient family),
+   circles for global actions, ink (white) for state. Always dark.
+
+   Native playback (mpv) draws under or beside the webview, so two hosts
+   must stay transparent:
+   - Windows: an owned overlay window draws only the controls
+     (html.video-overlay-window, .vp--overlay);
+   - the in-window native surface (.vp--native-host) hides the web top bar.
+   ========================================================================== */
+
+.vp {
+  --nv-ground: #0a0a0c;
+  --nv-surface: #151518;
+  --nv-surface-raised: #222227;
+  --nv-text: #ffffff;
+  --nv-text-2: #bcbcc5;
+  --nv-text-3: #8e8e99;
+  --nv-focus: #ffffff;
+  --vp-glass: rgba(0, 0, 0, 0.42);
+  --vp-edge: rgba(255, 255, 255, 0.24);
+
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  background: #000000;
+  color: #ffffff;
+  color-scheme: dark;
+  font-family: var(--nv-font);
+}
+
+/* One owned transparent controls window floats above the fixed GPU surface. */
+html.video-overlay-window,
+html.video-overlay-window body,
+html.video-overlay-window .nv-root,
+.vp--overlay {
+  background: transparent !important;
+  transition: none;
+}
+
+/* ---------- Stage ---------- */
+.vp__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* The native surface leaves room for the web chrome above and below it. */
+.vp__stage--native {
+  padding: 82px 24px 108px;
+}
+
+.vp--native-host .vp__stage {
+  padding: 0;
+}
+
+.vp--native-host > .vp__top {
+  visibility: hidden;
+}
+
+.vp__video,
+.vp__surface {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+}
+
+.vp__video {
+  object-fit: contain;
+  outline: none;
+}
+
+.vp__status {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-2);
+}
+
+/* ---------- Chrome ---------- */
+.vp__top,
+.vp__bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  transition: opacity 140ms var(--nv-ease-out);
+}
+
+.vp:not([data-chrome]) .vp__top,
+.vp:not([data-chrome]) .vp__bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vp__top {
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+}
+
+.vp__bottom {
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--nv-space-7) var(--nv-gutter) var(--nv-space-5);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.vp__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin-left: var(--nv-space-2);
+}
+
+.vp__title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.vp__title span,
+.vp__engine {
+  font-size: var(--nv-size-caption);
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vp__circle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--nv-target-glyph);
+  height: var(--nv-target-glyph);
+  padding: 0;
+  border: 1px solid var(--vp-edge);
+  border-radius: 50%;
+  background: var(--vp-glass);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+.vp__quit {
+  flex: none;
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-4);
+  border: 1px solid var(--vp-edge);
+  border-radius: var(--nv-radius-action);
+  background: var(--vp-glass);
+  color: #ffffff;
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.vp__circle:hover,
+.vp__quit:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.vp__circle:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.vp__circle:focus-visible,
+.vp__quit:focus-visible {
+  outline: var(--nv-focus-width) solid #ffffff;
+  outline-offset: var(--nv-focus-offset);
+}
+
+/* ---------- Errors and notices ---------- */
+.vp__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-3);
+  max-width: min(30em, calc(100vw - 48px));
+  text-align: center;
+}
+
+.vp__error-icon {
+  display: grid;
+  place-items: center;
+  width: calc(64px * var(--nv-scale));
+  height: calc(64px * var(--nv-scale));
+  padding-left: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.vp__error h2 {
+  margin: var(--nv-space-2) 0 0;
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-bold);
+}
+
+.vp__error p {
+  margin: 0 0 var(--nv-space-3);
+  font-size: var(--nv-size-body);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.vp__notice {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 11;
+  padding: var(--nv-space-3) var(--nv-space-4);
+  border-radius: var(--nv-radius-content);
+  background: #151518;
+  font-size: var(--nv-size-label);
+  transform: translateX(-50%);
+}
+
+.vp__notice--raised {
+  bottom: 78px;
+}
+
+@media (max-width: 700px) {
+  .vp__engine {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp__top,
+  .vp__bottom {
+    transition: none;
+  }
+}

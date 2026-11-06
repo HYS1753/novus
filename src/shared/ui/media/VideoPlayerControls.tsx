@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState } from "react";
 import {
   PlayIcon,
   PauseIcon,
@@ -8,8 +8,9 @@ import {
   VolumeMuteIcon,
   FullscreenIcon,
 } from "@/shared/ui/icons/SystemIcons";
-import { MotionIcon } from "@/shared/ui/icons/MotionIcon";
+import { NvIconMotion } from "@/shared/ui/v2/NvIconMotion";
 import { useI18n } from "@/shared/hooks/useI18n";
+import "./video-controls.css";
 
 export interface VideoPlayerControlsProps {
   currentTime: number;
@@ -33,13 +34,15 @@ function formatTime(seconds: number): string {
   const hrs = Math.floor(total / 3600);
   const mins = Math.floor((total % 3600) / 60);
   const secs = total % 60;
-
-  if (hrs > 0) {
-    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  }
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const pad = (value: number) => value.toString().padStart(2, "0");
+  return hrs > 0 ? `${pad(hrs)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
 }
 
+/**
+ * The player's controls (v2): a white timeline, play as the one filled
+ * circle, ±10s, the time, volume, and fullscreen. Rendered over the bottom
+ * scrim of the video stage (see `video-player.css`).
+ */
 export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
   currentTime,
   duration,
@@ -56,199 +59,129 @@ export const VideoPlayerControls: React.FC<VideoPlayerControlsProps> = ({
   className = "",
 }) => {
   const { t } = useI18n();
-  const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState<number | null>(null);
-  const [isVolumeHovered, setIsVolumeHovered] = useState(false);
-  const volumeLeaveTimeoutRef = useRef<number | null>(null);
 
-  useEffect(
-    () => () => {
-      if (volumeLeaveTimeoutRef.current !== null)
-        window.clearTimeout(volumeLeaveTimeoutRef.current);
-    },
-    [],
-  );
-
-  const displayTime = isScrubbing && scrubValue !== null ? scrubValue : currentTime;
-  const progressPercent =
-    duration > 0 ? Math.min(100, Math.max(0, (displayTime / duration) * 100)) : 0;
+  const displayTime = scrubValue ?? currentTime;
+  // 0..1, for transforms (no percentage arithmetic in CSS).
+  const progress = duration > 0 ? Math.min(1, Math.max(0, displayTime / duration)) : 0;
   const effectiveVolume = isMuted ? 0 : volume;
 
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    setScrubValue(val);
-    if (!isScrubbing) {
-      setIsScrubbing(true);
-    }
-  };
-
-  const handleSeekCommit = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    const val = Number((e.target as HTMLInputElement).value);
-    setIsScrubbing(false);
+  const commitSeek = (event: React.SyntheticEvent<HTMLInputElement>) => {
+    const value = Number(event.currentTarget.value);
     setScrubValue(null);
-    onSeek(val);
+    onSeek(value);
   };
-
-  const handleVolumeMouseEnter = useCallback(() => {
-    if (volumeLeaveTimeoutRef.current) {
-      window.clearTimeout(volumeLeaveTimeoutRef.current);
-      volumeLeaveTimeoutRef.current = null;
-    }
-    setIsVolumeHovered(true);
-  }, []);
-
-  const handleVolumeMouseLeave = useCallback(() => {
-    volumeLeaveTimeoutRef.current = window.setTimeout(() => {
-      setIsVolumeHovered(false);
-    }, 400);
-  }, []);
 
   return (
     <div
-      className={`video-player-controls ${className}`}
+      className={`vpc ${className}`}
       role="region"
       aria-label={t("video.controls")}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
     >
-      {/* 1. Timeline Seek Bar */}
-      <div className="video-player-controls__timeline-wrap">
-        <div className="video-player-controls__timeline">
-          <div
-            className="video-player-controls__timeline-fill"
-            style={{ width: `${progressPercent}%` }}
-          />
-          <div
-            className="video-player-controls__timeline-thumb"
-            style={{ left: `${progressPercent}%` }}
-          />
-          <input
-            type="range"
-            min={0}
-            max={duration > 0 ? duration : 100}
-            step={0.1}
-            value={displayTime}
-            onChange={handleSeekChange}
-            onMouseUp={handleSeekCommit}
-            onTouchEnd={handleSeekCommit}
-            onKeyUp={handleSeekCommit}
-            className="video-player-controls__timeline-input"
-            aria-label={t("video.seek")}
-            aria-valuemin={0}
-            aria-valuemax={duration}
-            aria-valuenow={displayTime}
-            aria-valuetext={`${formatTime(displayTime)} / ${formatTime(duration)}`}
-          />
-        </div>
+      <div className="vpc__timeline" style={{ ["--vpc-progress" as string]: progress }}>
+        <input
+          type="range"
+          min={0}
+          max={duration > 0 ? duration : 100}
+          step={0.1}
+          value={displayTime}
+          onChange={(event) => setScrubValue(Number(event.target.value))}
+          onPointerUp={commitSeek}
+          onKeyUp={commitSeek}
+          className="vpc__range"
+          aria-label={t("video.seek")}
+          aria-valuetext={`${formatTime(displayTime)} / ${formatTime(duration)}`}
+        />
+        <span className="vpc__track" aria-hidden="true">
+          <span className="vpc__fill" />
+        </span>
+        <span className="vpc__thumb" aria-hidden="true" />
       </div>
 
-      {/* 2. Control Toolbar */}
-      <div className="video-player-controls__toolbar">
-        {/* Left Section: Play/Pause, Skips, and Time */}
-        <div className="video-player-controls__group video-player-controls__group--left">
-          {/* Play/Pause Button */}
+      <div className="vpc__bar">
+        <div className="vpc__group">
           <button
             type="button"
-            className="video-player-controls__btn video-player-controls__btn--play"
+            className="vpc__btn vpc__btn--play"
             onClick={onTogglePlay}
             title={isPaused ? t("video.playHint") : t("video.pauseHint")}
             aria-label={isPaused ? t("video.play") : t("video.pause")}
           >
-            <MotionIcon motion="pop" active={!isPaused}>
+            <NvIconMotion>
               {isPaused ? <PlayIcon size={24} /> : <PauseIcon size={24} />}
-            </MotionIcon>
+            </NvIconMotion>
           </button>
-
-          {/* 10s Replay Button */}
           <button
             type="button"
-            className="video-player-controls__btn"
+            className="vpc__btn"
             onClick={() => onSeekRelative(-10)}
             title={t("video.back10Hint")}
             aria-label={t("video.back10")}
           >
-            <MotionIcon motion="nudge-left">
+            <NvIconMotion>
               <Replay10Icon size={22} />
-            </MotionIcon>
+            </NvIconMotion>
           </button>
-
-          {/* 10s Forward Button */}
           <button
             type="button"
-            className="video-player-controls__btn"
+            className="vpc__btn"
             onClick={() => onSeekRelative(10)}
             title={t("video.fwd10Hint")}
             aria-label={t("video.fwd10")}
           >
-            <MotionIcon motion="nudge-right">
+            <NvIconMotion>
               <Forward10Icon size={22} />
-            </MotionIcon>
+            </NvIconMotion>
           </button>
-
-          {/* Time Display */}
-          <div className="video-player-controls__time" aria-live="off">
-            <span className="video-player-controls__time-current">{formatTime(displayTime)}</span>
-            <span className="video-player-controls__time-sep">/</span>
-            <span className="video-player-controls__time-duration">{formatTime(duration)}</span>
-          </div>
+          <span className="vpc__time" aria-live="off">
+            {formatTime(displayTime)}
+            <span className="vpc__time-sep">/</span>
+            {formatTime(duration)}
+          </span>
         </div>
 
-        {/* Right Section: Volume and Fullscreen */}
-        <div className="video-player-controls__group video-player-controls__group--right">
-          {/* Volume Group */}
-          <div
-            className={`video-player-controls__volume-group ${isVolumeHovered ? "is-expanded" : ""}`}
-            onMouseEnter={handleVolumeMouseEnter}
-            onMouseLeave={handleVolumeMouseLeave}
-            onTouchStart={() => setIsVolumeHovered((prev) => !prev)}
+        <div className="vpc__group">
+          <button
+            type="button"
+            className="vpc__btn"
+            onClick={onToggleMute}
+            title={isMuted ? t("video.unmuteHint") : t("video.muteHint")}
+            aria-label={isMuted ? t("video.unmute") : t("video.mute")}
           >
-            <button
-              type="button"
-              className="video-player-controls__btn"
-              onClick={onToggleMute}
-              title={isMuted ? t("video.unmuteHint") : t("video.muteHint")}
-              aria-label={isMuted ? t("video.unmute") : t("video.mute")}
-            >
-              <MotionIcon motion="pop">
-                {isMuted || effectiveVolume === 0 ? (
-                  <VolumeMuteIcon size={22} />
-                ) : (
-                  <VolumeIcon size={22} />
-                )}
-              </MotionIcon>
-            </button>
-
-            <div className="video-player-controls__volume-slider-wrap">
-              <div className="video-player-controls__volume-track">
-                <div
-                  className="video-player-controls__volume-fill"
-                  style={{ width: `${effectiveVolume}%` }}
-                />
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={effectiveVolume}
-                onChange={(e) => onVolumeChange(Number(e.target.value))}
-                className="video-player-controls__volume-input"
-                aria-label={t("video.volume")}
-              />
-            </div>
-          </div>
-
-          {/* Fullscreen Button */}
+            <NvIconMotion>
+              {effectiveVolume === 0 ? <VolumeMuteIcon size={22} /> : <VolumeIcon size={22} />}
+            </NvIconMotion>
+          </button>
+          <span
+            className="vpc__volume"
+            style={{ ["--vpc-volume" as string]: effectiveVolume / 100 }}
+          >
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={effectiveVolume}
+              onChange={(event) => onVolumeChange(Number(event.target.value))}
+              className="vpc__range"
+              aria-label={t("video.volume")}
+            />
+            <span className="vpc__track" aria-hidden="true">
+              <span className="vpc__fill" />
+            </span>
+          </span>
           {onToggleFullscreen && (
             <button
               type="button"
-              className="video-player-controls__btn"
+              className="vpc__btn"
               onClick={onToggleFullscreen}
               title={isFullscreen ? t("video.exitFullscreenHint") : t("video.fullscreenHint")}
               aria-label={isFullscreen ? t("video.exitFullscreen") : t("video.fullscreen")}
             >
-              <MotionIcon motion="pop">
+              <NvIconMotion>
                 <FullscreenIcon size={20} isFullscreen={isFullscreen} />
-              </MotionIcon>
+              </NvIconMotion>
             </button>
           )}
         </div>

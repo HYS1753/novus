@@ -137,10 +137,9 @@ novus/
 │   ├── shared/           # 공통 기반 인프라 (UI Kit, Tauri IPC, Hooks)
 │   │   ├── ui/           # 공통 UI 컴포넌트 (모든 화면 UI는 이 계층에서 재활용)
 │   │   │   ├── v2/       # v2 컴포넌트 (NvRoot, NvButton, NvGlyphButton, NvServicePlate, NvSheet, …)
-│   │   │   ├── common/   # v1 코어(남은 것: 동영상 플레이어·메뉴 등이 브리지 안에서 사용)
 │   │   │   ├── media/    # GlassMediaTile (1:1 풀커버 타일 + GPU 저비용 하단 틴트 오버레이)
 │   │   │   ├── nav/      # SubpageDock (내부 서브페이지 표준 시스템 독)
-│   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons 및 공통 MotionIcon 모션 프리셋
+│   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons
 │   │   │   └── button/   # TouchButton
 │   │   ├── api/          # Tauri IPC 래퍼 (mediaFs, mediaPlayer, window)
 │   │   ├── hooks/        # 저사양 최적화 훅 (useCurrentTime, useDockPosition, etc.)
@@ -156,7 +155,7 @@ novus/
 ### 아이콘 및 모션 경계
 
 - SVG 아이콘은 `src/shared/ui/icons/`에서만 정의하며 화면·위젯 내부에 개별 SVG나 문자형 닫기/정렬 아이콘을 만들지 않습니다.
-- 아이콘 애니메이션은 `MotionIcon`의 `pop`, `rotate`, `tilt`, `nudge-left`, `nudge-right`, `nudge-up`, `spin`, `pulse`, `breathe` 프리셋만 사용합니다.
+- 아이콘 애니메이션은 `shared/ui/v2/iconMotion.ts`가 아이콘 종류로 정하고(`NvIconMotion`, 글리프·버튼·독·뷰어·동영상 조작부), 버튼에 마우스를 올리거나 포커스·누를 때 한 번 transform으로 움직입니다. 동작 줄이기에서는 멈춥니다.
 - 상호작용 프리셋은 상위 버튼의 hover/focus에 반응합니다. 반복 프리셋은 실제 진행·연결 상태에서만 `active`로 실행하고 `prefers-reduced-motion`에서는 정지합니다.
 - 스트리밍 `InAppDock`은 별도 내비게이션 DOM을 만들지 않고 `SubpageDock`에 스트리밍 전용 액션 슬롯만 조합합니다.
 - 파일 탐색 화면은 `SubpageDock`의 방문 기록 뒤로가기와 `PathNavigation`의 상위 폴더·브레드크럼을 명확히 분리합니다.
@@ -183,7 +182,7 @@ novus/
 - **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
 - **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
 - **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
-- **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파일·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다(갤러리·파일·사진 뷰어·독은 v2 컴포넌트, 동영상 플레이어 내부만 v1). 독과 스트리밍 로딩 화면은 v1 스타일 없이 자체 v2 CSS를 씁니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 갤러리·파일은 켭니다(사진 뷰어·동영상은 캡처 단계에서 키를 먼저 받음). `data-nav-scope`는 시트·다이얼로그·사진 뷰어 같은 모달에만 쓰고, 독·사이드바·목록에는 쓰지 않습니다(포커스가 갇힘).
+- **v1 제거 완료**: 모든 화면(홈·설정·온보딩·갤러리·파일·사진 뷰어·동영상 플레이어·독·스트리밍 로딩)이 v2 컴포넌트입니다. v1 토큰 브리지(`bridge.css`)·`global.css`·`variables.css`·`Glass*`·`MotionIcon`은 삭제했습니다. 앱 바깥 공통 규칙(리셋, 앱 셸, 서브페이지 틀과 독 위치, 스트리밍 로딩 표시/숨김, 창 모드 오류)은 `src/app/styles/v2/app.css` 한 곳에 있습니다. 서브페이지는 `NvRoot` 안에서 렌더링되고, 스트리밍만 자체 방향키를 쓰므로 공간 탐색을 끕니다. Windows 동영상 오버레이 창도 `NvRoot`로 감싸 v2 토큰을 받고 배경은 투명하게 둡니다.
 - **기본 앰비언트 아트워크**: `src/assets/ambient/*.jpg`(1600×1000 절차 생성 래스터, 생성기 `scripts/design/generate-ambient-art.py`). 각 이미지에 초점 높이(`focusY`)가 있어, 사진이 접힐 때 띠가 그 높이(수평선 등)를 중심으로 보입니다. 사용자 사진은 0.5.
 - **v2 Style Guide**: DEV 브라우저에서 `/styleguide`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 

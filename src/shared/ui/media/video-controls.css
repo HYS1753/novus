@@ -1,0 +1,170 @@
+/* ==========================================================================
+   Video controls (v2). White on the video's bottom scrim: a 4px timeline
+   with a round thumb, play as the one filled circle, quiet glyph buttons.
+   Fill and thumb move by transform (a custom property), never by width.
+   ========================================================================== */
+
+.vpc {
+  width: min(960px, 100%);
+  color: #ffffff;
+  font-family: var(--nv-font);
+}
+
+/* ---------- Timeline ---------- */
+.vpc__timeline,
+.vpc__volume {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.vpc__timeline {
+  height: calc(var(--nv-target) * 0.5);
+  margin-bottom: var(--nv-space-1);
+}
+
+.vpc__track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--nv-radius-pill);
+  background: rgba(255, 255, 255, 0.28);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.vpc__fill {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  transform-origin: left center;
+  transform: scaleX(var(--vpc-progress, 0));
+}
+
+.vpc__volume .vpc__fill {
+  transform: scaleX(var(--vpc-volume, 0));
+}
+
+.vpc__thumb {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--vpc-progress, 0) * 100%);
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.vpc__timeline:hover .vpc__track,
+.vpc__range:focus-visible ~ .vpc__track {
+  transform: scaleY(1.5);
+}
+
+.vpc__timeline:hover .vpc__thumb,
+.vpc__range:focus-visible ~ .vpc__thumb {
+  transform: scale(1.25);
+}
+
+/* The real input sits on top, invisible, so touch, mouse and keys all seek. */
+.vpc__range {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* The input comes first so its focus can ring the visible track. */
+.vpc__range:focus-visible ~ .vpc__track {
+  outline: 2px solid #ffffff;
+  outline-offset: 6px;
+}
+
+/* ---------- Bar ---------- */
+.vpc__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nv-space-4);
+}
+
+.vpc__group {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-1);
+}
+
+.vpc__btn {
+  display: grid;
+  place-items: center;
+  min-width: var(--nv-target);
+  min-height: var(--nv-target);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+.vpc__btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.vpc__btn:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.vpc__btn:focus-visible {
+  outline: var(--nv-focus-width) solid #ffffff;
+  outline-offset: var(--nv-focus-offset);
+}
+
+/* Play is the one filled circle, as home is on the rail. */
+.vpc__btn--play {
+  min-width: var(--nv-target-glyph);
+  min-height: var(--nv-target-glyph);
+  margin-right: var(--nv-space-2);
+  background: #ffffff;
+  color: #000000;
+}
+
+.vpc__btn--play:hover {
+  background: #bcbcc5;
+}
+
+.vpc__time {
+  margin-left: var(--nv-space-3);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vpc__time-sep {
+  margin: 0 0.4em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.vpc__volume {
+  width: calc(96px * var(--nv-scale));
+  height: var(--nv-target);
+  margin-right: var(--nv-space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vpc__track,
+  .vpc__thumb {
+    transition: none;
+  }
+}

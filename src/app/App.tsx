@@ -13,10 +13,9 @@ import {
   usePreference,
   NvRoot,
 } from "@/shared";
-import "./styles/global.css";
+import "./styles/v2/app.css";
 import "./styles/v2/tokens.css";
 import "./styles/v2/base.css";
-import "./styles/v2/bridge.css";
 import { InAppVideoModal, Onboarding } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
@@ -62,12 +61,16 @@ export const App: React.FC = () => {
         </div>
       )}
       {overlay ? (
-        <InAppVideoModal
-          video={overlay.video}
-          overlaySessionId={overlay.sessionId}
-          onClose={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "close")}
-          onExit={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "exit")}
-        />
+        // The overlay window draws only the controls over mpv; NvRoot gives them
+        // the v2 tokens and stays transparent (video-player.css).
+        <NvRoot spatialNavigation={false}>
+          <InAppVideoModal
+            video={overlay.video}
+            overlaySessionId={overlay.sessionId}
+            onClose={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "close")}
+            onExit={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "exit")}
+          />
+        </NvRoot>
       ) : (
         <DashboardApp />
       )}
@@ -110,7 +113,6 @@ const DashboardApp: React.FC = () => {
 
   return (
     <>
-      <div className="app-ambient" aria-hidden="true" />
       <div className="app-shell">
         {showOnboarding ? (
           <NvRoot postureOverride="tablet">

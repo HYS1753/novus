@@ -355,7 +355,7 @@ Benchmarked on Apple Photos and Google Photos (`PhotoViewer`). The photo alone o
 - **Info** panel (n2 surface, 4px, top right): date and time, dimensions, file size, format, folder.
 - A tap in the middle hides or shows the chrome (200ms fade); taps on the outer quarters step. During the slideshow the chrome steps aside after 3s.
 - Photos crossfade (220ms): the previous one holds until the next is decoded, so nothing flashes.
-- The video player shares the grammar: black stage, top and bottom scrims, a circle back button, the play button as the one filled white circle, a white timeline.
+- The video player (`InAppVideoModal`, `VideoPlayerControls`) shares the grammar: black stage, top and bottom scrims, a circle back button, a 4px quit rectangle, the play button as the one filled white circle, a 4px white timeline with a 14px round thumb (fill and thumb move by transform), ±10s, tabular time, an always-visible volume slider, and fullscreen. Native hosts keep their transparent backgrounds.
 
 ### Posture preview (onboarding)
 
@@ -438,9 +438,9 @@ On snap from frame one to today's page, the same photo element translates up (`t
 
 After the ambient delay (default 10 minutes, one timeout reset on input, no polling), frame one shows alone: caption, rail, hint, and scrims fade over 420ms, the clock becomes the caption at the bottom right, and a corner scrim keeps it legible. Any press or key wakes it; a hint ("화면을 누르거나 아무 키나 눌러 돌아가기") shows once and fades after 6s. Photos come from the user's Pictures folder and rotate no faster than once a minute; with none, Novus shows its bundled artwork (three procedurally generated 1600×1000 JPEGs from `scripts/design/generate-ambient-art.py`), picked stably per day.
 
-### The bridge
+### No v1 layer
 
-Only the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, there are no blur tokens any more and `backdrop-filter` is forced off. The gallery, Files, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
+Every surface is a v2 component; the v1 token bridge, its stylesheets, and the `Glass*` components are gone. App-level rules that belong to no single screen (the reset, the shell, the subpage frame and dock positions, the streaming loader's visibility, the window-mode notice) live in `src/app/styles/v2/app.css`.
 
 ## Do's and Don'ts
 

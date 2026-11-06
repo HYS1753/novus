@@ -130,12 +130,10 @@ export const DashboardPage: React.FC = () => {
         ? t("home.closeFailed")
         : "";
 
-  // Gallery, Finder, and streaming run v1 components inside a bridged v2 root.
+  // Gallery, Files, and streaming render inside their own v2 root.
   // Streaming keeps its own arrow keys, so spatial navigation is off there.
-  const bridged = (content: React.ReactNode, spatialNavigation = true) => (
-    <NvRoot className="nv-bridge" spatialNavigation={spatialNavigation}>
-      {content}
-    </NvRoot>
+  const subpage = (content: React.ReactNode, spatialNavigation = true) => (
+    <NvRoot spatialNavigation={spatialNavigation}>{content}</NvRoot>
   );
 
   const runningApps = useMemo(
@@ -175,7 +173,7 @@ export const DashboardPage: React.FC = () => {
 
   if (activeApp) {
     return withRunningApps(
-      bridged(
+      subpage(
         <div className="dashboard-page dashboard-page--in-app-mode">
           <InAppPlayer
             key={activeApp.id}
@@ -194,13 +192,13 @@ export const DashboardPage: React.FC = () => {
   if (activeView === "gallery") {
     return withRunningApps(
       // The viewer and video player claim their keys first, so arrows can move focus here.
-      bridged(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />),
+      subpage(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />),
     );
   }
 
   if (activeView === "finder") {
     return withRunningApps(
-      bridged(
+      subpage(
         <FinderPage
           key={finderPath ?? "default"}
           initialPath={finderPath}

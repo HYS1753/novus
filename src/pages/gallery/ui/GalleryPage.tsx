@@ -66,10 +66,8 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
   };
 
   return (
-    <div
-      className={`in-app-player in-app-player--dock-${dockPosition} w-full h-full flex overflow-hidden`}
-    >
-      <div className="in-app-player__viewport flex-1 flex flex-col h-full overflow-hidden">
+    <div className={`in-app-player in-app-player--dock-${dockPosition}`}>
+      <div className="in-app-player__viewport">
         <GalleryV2 state={gallery} onOpenImage={openImage} onOpenVideo={setSelectedVideo} />
       </div>
 

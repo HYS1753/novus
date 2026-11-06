@@ -29,7 +29,7 @@ export const NovusLogo: React.FC<NovusLogoProps> = ({
       flex: "none",
       height,
       aspectRatio: String(RATIO),
-      backgroundColor: "var(--nv-logo-color, var(--nv-text, var(--color-text-primary)))",
+      backgroundColor: "var(--nv-logo-color, var(--nv-text, #ffffff))",
       WebkitMaskImage: `url(${novusLogoUrl})`,
       maskImage: `url(${novusLogoUrl})`,
       WebkitMaskSize: "contain",

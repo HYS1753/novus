@@ -7,6 +7,7 @@ import {
   CloseIcon,
   ExternalLinkIcon,
   FolderIcon,
+  Forward10Icon,
   FullscreenIcon,
   HomeIcon,
   ImageIcon,
@@ -16,10 +17,13 @@ import {
   PlayIcon,
   RefreshIcon,
   RemoteIcon,
+  Replay10Icon,
   SearchIcon,
   SettingsIcon,
   ThemeIcon,
   VideoIcon,
+  VolumeIcon,
+  VolumeMuteIcon,
 } from "../icons";
 
 /**
@@ -65,6 +69,10 @@ const BY_ICON = new Map<unknown, IconMotion>([
   [RemoteIcon, "wiggle"],
   [FullscreenIcon, "expand"],
   [ExternalLinkIcon, "out"],
+  [Replay10Icon, "back"],
+  [Forward10Icon, "forward"],
+  [VolumeIcon, "pop"],
+  [VolumeMuteIcon, "pop"],
 ]);
 
 /** The motion that fits an icon element, if any. */

@@ -3,8 +3,9 @@ import type { FileItem } from "@/entities";
 import { useNativeVideoPlayer } from "@/features";
 import {
   ArrowLeftIcon,
-  GlassButton,
-  MotionIcon,
+  ExternalLinkIcon,
+  NvButton,
+  NvIconMotion,
   PlayIcon,
   closeWindow,
   VideoPlayerControls,
@@ -26,7 +27,7 @@ import {
   reportWindowModeError,
   useI18n,
 } from "@/shared";
-import "./video-v2.css";
+import "./video-player.css";
 
 interface InAppVideoModalProps {
   video: FileItem;
@@ -365,7 +366,8 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
   return (
     <div
       ref={modalRef}
-      className={`video-modal ${usesNativeOverlay && !videoError ? "video-modal--native-host" : ""} ${overlaySessionId ? "video-modal--overlay-window" : ""}`}
+      className={`vp${usesNativeOverlay && !videoError ? " vp--native-host" : ""}${overlaySessionId ? " vp--overlay" : ""}`}
+      data-chrome={isControlsVisible || undefined}
       role="dialog"
       aria-modal="true"
       aria-label={t("video.playing", { name: video.name })}
@@ -374,60 +376,64 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       }}
       onFocusCapture={notifyActivity}
     >
-      {/* Header */}
-      <header
-        className={`video-modal__header ${!isControlsVisible ? "video-modal__chrome--hidden" : ""}`}
-        inert={!isControlsVisible}
-      >
-        <button type="button" className="image-viewer__back" onClick={onClose}>
-          <MotionIcon motion="nudge-left">
-            <ArrowLeftIcon size={20} />
-          </MotionIcon>
-          <span>{t("nav.gallery")}</span>
+      {/* Top bar over the video's top scrim */}
+      <header className="vp__top" inert={!isControlsVisible}>
+        <button
+          type="button"
+          className="vp__circle"
+          onClick={onClose}
+          aria-label={t("nav.gallery")}
+          title={t("nav.gallery")}
+        >
+          <NvIconMotion>
+            <ArrowLeftIcon size={22} />
+          </NvIconMotion>
         </button>
-        <div className="video-modal__title">
+        <div className="vp__title">
           <strong title={video.name}>{video.name}</strong>
           <span>
-            {video.extension.toUpperCase()} ∙ {(video.size / 1024 ** 2).toFixed(1)} MB
+            {video.extension.toUpperCase()} · {(video.size / 1024 ** 2).toFixed(1)} MB
           </span>
         </div>
-        <div className="video-modal__actions">
-          <span className="video-modal__engine">
-            {engine === "checking"
-              ? t("video.engineCheckingShort")
-              : engine === "native"
-                ? "NOVUS · MPV"
-                : "NOVUS · WEBVIEW"}
-          </span>
-          <button
-            type="button"
-            className="image-viewer__back"
-            onClick={() => (onExit ? onExit() : void closeWindow())}
-            aria-label={t("video.quit")}
-            title={t("video.quit")}
-          >
-            {t("video.quitShort")}
-          </button>
-        </div>
+        <span className="vp__engine">
+          {engine === "checking"
+            ? t("video.engineCheckingShort")
+            : engine === "native"
+              ? "NOVUS · MPV"
+              : "NOVUS · WEBVIEW"}
+        </span>
+        <button
+          type="button"
+          className="vp__quit"
+          onClick={() => (onExit ? onExit() : void closeWindow())}
+          aria-label={t("video.quit")}
+          title={t("video.quit")}
+        >
+          {t("video.quitShort")}
+        </button>
       </header>
 
       {/* Main Video Canvas */}
       <main
-        className={`video-modal__canvas${engine === "native" ? " video-modal__canvas--native" : ""}`}
+        className={`vp__stage${engine === "native" ? " vp__stage--native" : ""}`}
         onClick={toggleControls}
       >
         {videoError ? (
-          <div className="video-modal__error" onClick={(e) => e.stopPropagation()}>
-            <span className="video-modal__error-icon">
-              <MotionIcon motion="pulse" active>
-                <PlayIcon size={34} />
-              </MotionIcon>
+          <div className="vp__error" onClick={(e) => e.stopPropagation()}>
+            <span className="vp__error-icon" aria-hidden="true">
+              <PlayIcon size={30} />
             </span>
             <h2>{t("video.cantPlay")}</h2>
             <p>{t("video.cantPlayHint")}</p>
-            <GlassButton variant="primary" onClick={handleExternalFallback} isLoading={isPlaying}>
+            <NvButton
+              variant="primary"
+              icon={<ExternalLinkIcon size={18} />}
+              onClick={handleExternalFallback}
+              disabled={isPlaying}
+              aria-busy={isPlaying || undefined}
+            >
               {t("video.openSystem")}
-            </GlassButton>
+            </NvButton>
           </div>
         ) : overlaySessionId ? null : engine === "native" ? (
           <NativeVideoSurface
@@ -438,12 +444,12 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
             onClosed={clearNativeSession}
           />
         ) : engine === "checking" ? (
-          <div className="video-modal__loading">{t("video.engineChecking")}</div>
+          <span className="vp__status">{t("video.engineChecking")}</span>
         ) : (
           <video
             ref={playerRef}
             src={convertFileSrc(video.path)}
-            className="video-modal__player"
+            className="vp__video"
             autoPlay
             playsInline
             preload="metadata"
@@ -473,7 +479,7 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       {/* Modern Floating Video Player Controls */}
       {!videoError && engine !== "checking" && !usesNativeOverlay && (
         <div
-          className={`video-modal__controls ${!isControlsVisible ? "video-modal__chrome--hidden" : ""}`}
+          className="vp__bottom"
           inert={!isControlsVisible}
           onPointerDown={() => {
             setIsInteracting(true);
@@ -498,12 +504,16 @@ export const InAppVideoModal: React.FC<InAppVideoModalProps> = ({
       )}
 
       {nativeControlError && (
-        <div className="video-modal__feedback video-modal__feedback--native">
+        <div className="vp__notice vp__notice--raised" role="status">
           {t("video.controlFailed")}
         </div>
       )}
 
-      {feedback && <div className="video-modal__feedback">{feedback.message}</div>}
+      {feedback && (
+        <div className="vp__notice" role="status">
+          {feedback.message}
+        </div>
+      )}
     </div>
   );
 };
@@ -573,7 +583,5 @@ const NativeVideoSurface: React.FC<{
     };
   }, [video, onError, onReady, overlayReady, onClosed]);
 
-  return (
-    <div ref={surfaceRef} className="video-modal__native-surface" aria-label={t("video.surface")} />
-  );
+  return <div ref={surfaceRef} className="vp__surface" aria-label={t("video.surface")} />;
 };
