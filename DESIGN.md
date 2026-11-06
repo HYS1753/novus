@@ -326,6 +326,32 @@ The dock beside streaming, gallery, and finder (`shared/ui/nav/SubpageDock.tsx`,
 - End: back (platter circle) and home (the one filled white circle), after a rule, within thumb reach in tablet posture.
 - Width: the glyph target + 2 × 14px × scale + 12px; on a bottom dock the same groups run left to right as a taskbar.
 
+### Gallery (tablet: timeline)
+
+Benchmarked on Google Photos and Apple Photos (`widgets/gallery-v2`). One calm bar on ground: the location's name as the title (title size, bold, a down chevron: press to switch location), a caption count line ("폴더 N · 사진 N · 동영상 N", plus "처음 N개만 표시" when the 20,000-file walk stopped), the three views centred as a segmented control (사진 | 폴더 | 동영상), then search (a rectangle that expands into a 2px field) and sort (a menu: date / name / size, then the order in words that fit the field — 최신순/오래된순, 가나다순/역순, 큰/작은 파일부터). Sort is remembered per view.
+
+- **Photos** walks every subfolder of the location (images and videos); **Videos** the same, videos only. Sorted by date, the library groups under month headings ("2026년 11월", display font, heading size, with the count in caption text-3). Other sorts read as one run.
+- **Justified rows.** Every photo keeps its aspect; rows fill the width at about `--gv-row` (176px × scale × density) with a 4px × scale gap; the last row is left aligned at the target height. Tiles are 4px rectangles on surface; the picture fades in once decoded. Hover adds a 6% white wash; focus is the ink ring drawn inside the tile (gaps are too tight for an outside ring). Videos show a centred play disc and the extension.
+- **Density.** Pinch or ctrl+wheel steps three densities (0.66 / 1 / 1.5), remembered.
+- **Date scrubber.** A 6px × 44px handle at the right edge, in the gutter, visible while scrolling and for 1.4s after; it widens on hover and drags or jumps to any point. While active it shows the years along the track and a bubble (ink on ground) naming the month at the reading line (25% down the viewport). Hidden when the library is shorter than three screens.
+- **Stability.** Rows whose sizes are not loaded yet are estimated; when real sizes or a new density arrive, the first visible photo stays where it was.
+- **Folders** reads like albums: a crumb trail (location › folder › …), then cards on a fluid grid (min 190px × scale): a 4:3 cover (the folder's newest photo, or a folder glyph on surface), the name in body semibold, and "N개 · 하위 폴더 있음" in caption. The folder's own photos follow under "사진과 동영상".
+
+### Gallery (TV: shelves)
+
+In TV posture the gallery opens on 모아보기 (Apple TV / Google TV photos): rows to lean back on — 최근 사진, 동영상, 폴더 — each with its title (title size) and "모두 보기 ›" into the full view. Tiles are as tall as the timeline's rows and keep their aspect (0.75–1.8); focus lifts them 1.06 with the ink ring, as on the home, and the row scrolls to keep focus in view. Captions on videos and folders sit on a solid 60% black band (no gradient). Arrow keys move through it all; tablet posture never shows this view.
+
+### Photo viewer
+
+Benchmarked on Apple Photos and Google Photos (`PhotoViewer`). The photo alone on black, whatever the theme; v2 role tokens are pinned dark inside it.
+
+- **Top** over the photo's top scrim: back (circle), the file name (body semibold) over "date · time · N / total" (caption, 72% white), info (circle; pressed = white fill), close (circle).
+- **Bottom** over the bottom scrim: the filmstrip (52px × scale squares, 55% until current; current at full strength, 1.12×, a 2px white ring), then the controls: previous/next (circles), zoom out · percent · zoom in, fit/fill, a rule, autoplay (rectangle with icon and word; pressed = white fill) and the interval segmented (10/15/30초).
+- **Info** panel (n2 surface, 4px, top right): date and time, dimensions, file size, format, folder.
+- A tap in the middle hides or shows the chrome (200ms fade); taps on the outer quarters step. During the slideshow the chrome steps aside after 3s.
+- Photos crossfade (220ms): the previous one holds until the next is decoded, so nothing flashes.
+- The video player shares the grammar: black stage, top and bottom scrims, a circle back button, the play button as the one filled white circle, a white timeline.
+
 ### Posture preview (onboarding)
 
 The viewing-mode step plays a miniature of the real Novus screens, not an illustration of people (`widgets/onboarding/ui/PosturePreview.tsx`, `posture-preview.css`). Device screens are CSS size containers and the miniature UI is authored in `cqw`, so it scales exactly with its frame; tiles are the real `NvBrandArt` plates, so logos sit as on the home.
@@ -405,7 +431,7 @@ After the ambient delay (default 10 minutes, one timeout reset on input, no poll
 
 ### The bridge
 
-Gallery, Finder, the viewer, video, and the streaming dock still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The dock (theater rail) and the streaming launch screen are v2 components of their own; see their sections.
+Finder and the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The gallery, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
 
 ## Do's and Don'ts
 

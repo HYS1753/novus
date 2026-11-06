@@ -78,20 +78,24 @@ export function useImageViewer({
 
   // Keyboard navigation
   useEffect(() => {
-    // Capture phase + preventDefault: the viewer owns these keys, so arrow-key
-    // spatial navigation never moves focus in the grid behind it.
+    // Capture phase: the viewer answers before arrow-key spatial navigation.
+    // On the photo itself, left/right step and Escape closes. Inside the
+    // viewer's own controls the arrows move focus between them (spatial
+    // navigation, scoped to the viewer) and only Escape is taken here.
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
-      } else if (e.key === "ArrowLeft") {
+        return;
+      }
+      const active = document.activeElement;
+      if (active instanceof Element && active.closest("[data-viewer-control]")) return;
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
         goToPrev();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         goToNext();
-      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-        e.preventDefault();
       }
     };
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { GridPlacement, PlacedSection } from "./JustifiedGrid";
 
 export interface DateScrubberProps {
@@ -10,6 +10,7 @@ export interface DateScrubberProps {
 const IDLE_MS = 1400;
 /** Year marks closer than this (px) to the previous one are skipped. */
 const MIN_MARK_GAP = 22;
+const THUMB_HEIGHT = 44;
 
 function sectionAt(sections: PlacedSection[], y: number): PlacedSection | undefined {
   let found: PlacedSection | undefined;
@@ -20,19 +21,39 @@ function sectionAt(sections: PlacedSection[], y: number): PlacedSection | undefi
   return found ?? sections[0];
 }
 
+interface ScrubState {
+  active: boolean;
+  dragging: boolean;
+  /** Track height in px. */
+  height: number;
+  /** Long enough to be worth scrubbing (three screens or more). */
+  scrollable: boolean;
+  /** Key of the section under the reading line (25% down the viewport). */
+  sectionKey: string;
+}
+
 /**
  * The timeline's fast lane (Google Photos style): a thin handle on the
- * right edge that appears while scrolling. Dragging it — or pressing
- * anywhere on the track — moves through the library, with a bubble naming
+ * right edge that appears while scrolling. Dragging it, or pressing
+ * anywhere on the track, moves through the library, with a bubble naming
  * the month under it and the years marked along the track.
+ *
+ * Scrolling moves the handle through a ref (transform only); React state
+ * changes only when the month under the reading line changes.
  */
 export const DateScrubber: React.FC<DateScrubberProps> = ({ scroller, placement }) => {
-  const gridOffset = placement.offset;
   const trackRef = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState({ ratio: 0, active: false, dragging: false, height: 0 });
+  const thumbRef = useRef<HTMLSpanElement>(null);
+  const [state, setState] = useState<ScrubState>({
+    active: false,
+    dragging: false,
+    height: 0,
+    scrollable: false,
+    sectionKey: "",
+  });
   const idleRef = useRef(0);
   const draggingRef = useRef(false);
-  // Scroll writes go through a ref: the element itself is a prop.
+  const placementRef = useRef(placement);
   const scrollerRef = useRef(scroller);
   useEffect(() => {
     scrollerRef.current = scroller;
@@ -46,52 +67,68 @@ export const DateScrubber: React.FC<DateScrubberProps> = ({ scroller, placement 
     }, IDLE_MS);
   }, []);
 
-  useEffect(() => {
+  const readRef = useRef<() => void>(() => undefined);
+  useLayoutEffect(() => {
     if (!scroller) return;
     let frame = 0;
     const read = () => {
       frame = 0;
-      const max = scroller.scrollHeight - scroller.clientHeight;
-      setState((current) => ({
-        ...current,
-        ratio: max > 0 ? scroller.scrollTop / max : 0,
-        height: trackRef.current?.clientHeight ?? current.height,
-      }));
+      const { sections, offset } = placementRef.current;
+      const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+      const height = trackRef.current?.clientHeight ?? 0;
+      const ratio = Math.min(1, scroller.scrollTop / max);
+      if (thumbRef.current) {
+        thumbRef.current.style.transform = `translateY(${ratio * Math.max(0, height - THUMB_HEIGHT)}px)`;
+      }
+      const viewY = scroller.scrollTop + scroller.clientHeight * 0.25 - offset;
+      const sectionKey = sectionAt(sections, viewY)?.key ?? "";
+      const scrollable = scroller.scrollHeight >= scroller.clientHeight * 3;
+      setState((current) =>
+        current.sectionKey === sectionKey &&
+        current.height === height &&
+        current.scrollable === scrollable
+          ? current
+          : { ...current, sectionKey, height, scrollable },
+      );
     };
-    const onScroll = () => {
+    const schedule = () => {
       if (!frame) frame = requestAnimationFrame(read);
+    };
+    readRef.current = schedule;
+    const onScroll = () => {
+      schedule();
       wake();
     };
-    frame = requestAnimationFrame(read);
+    schedule();
     scroller.addEventListener("scroll", onScroll, { passive: true });
+    const observer = new ResizeObserver(schedule);
+    observer.observe(scroller);
     return () => {
       scroller.removeEventListener("scroll", onScroll);
+      observer.disconnect();
       cancelAnimationFrame(frame);
       window.clearTimeout(idleRef.current);
     };
   }, [scroller, wake]);
 
-  if (!scroller) return null;
-  const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
-  // Nothing to scrub through on a short library.
-  if (scroller.scrollHeight < scroller.clientHeight * 3) return null;
+  useLayoutEffect(() => {
+    placementRef.current = placement;
+    readRef.current();
+  }, [placement]);
 
-  const contentHeight = Math.max(1, gridOffset + placement.height);
-  const toTrack = (contentY: number) => (contentY / contentHeight) * state.height;
+  // The track must exist for its height to be read, so it renders (empty)
+  // while short; only its contents wait for a long library.
   const scrollFromPointer = (clientY: number) => {
     const track = trackRef.current;
-    if (!track) return;
+    const target = scrollerRef.current;
+    if (!track || !target) return;
     const box = track.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientY - box.top) / box.height));
-    const target = scrollerRef.current;
-    if (target) target.scrollTop = ratio * max;
+    target.scrollTop = ratio * (target.scrollHeight - target.clientHeight);
   };
 
-  // Read the live position: the state only wakes this render.
-  const ratio = Math.min(1, scroller.scrollTop / max);
-  const viewY = scroller.scrollTop + scroller.clientHeight * 0.25 - gridOffset;
-  const current = sectionAt(placement.sections, viewY);
-  const thumbTop = ratio * Math.max(0, state.height - 44);
+  const contentHeight = Math.max(1, placement.offset + placement.height);
+  const current = placement.sections.find((section) => section.key === state.sectionKey);
 
   let lastMark = -Infinity;
   let lastYear: number | undefined;
@@ -99,17 +136,20 @@ export const DateScrubber: React.FC<DateScrubberProps> = ({ scroller, placement 
   for (const section of placement.sections) {
     if (section.year === undefined || section.year === lastYear) continue;
     lastYear = section.year;
-    const top = toTrack(gridOffset + section.top);
+    const top = ((placement.offset + section.top) / contentHeight) * state.height;
     if (top - lastMark < MIN_MARK_GAP) continue;
     lastMark = top;
     marks.push({ key: section.key, top, year: section.year });
   }
 
+  const shown = state.active || state.dragging;
+
   return (
     <div
       ref={trackRef}
       className="gv-scrub"
-      data-active={state.active || state.dragging || undefined}
+      hidden={!scroller || !state.scrollable}
+      data-active={shown || undefined}
       aria-hidden="true"
       onPointerDown={(event) => {
         event.preventDefault();
@@ -137,10 +177,9 @@ export const DateScrubber: React.FC<DateScrubberProps> = ({ scroller, placement 
           {mark.year}
         </span>
       ))}
-      <span className="gv-scrub__thumb" style={{ transform: `translateY(${thumbTop}px)` }}>
-        {current?.label && (state.dragging || state.active) && (
-          <span className="gv-scrub__bubble">{current.label}</span>
-        )}
+      <span ref={thumbRef} className="gv-scrub__thumb">
+        <span className="gv-scrub__bar" />
+        {current?.label && shown && <span className="gv-scrub__bubble">{current.label}</span>}
       </span>
     </div>
   );

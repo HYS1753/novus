@@ -32,6 +32,11 @@
   user-select: none;
 }
 
+/* The stage holds focus when no control does; it has no ring of its own. */
+.pv:focus {
+  outline: none;
+}
+
 /* ---------- Stage ---------- */
 .pv__stage {
   position: absolute;
@@ -235,6 +240,7 @@
 }
 
 .pv__circle[aria-pressed="true"],
+.pv__square[aria-pressed="true"],
 .pv__play[aria-pressed="true"] {
   border-color: #ffffff;
   background: #ffffff;
@@ -367,7 +373,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pv__photo,
+  /* Near-instant rather than none: the swap still ends with animationend,
+     which is what clears the outgoing photo underneath. */
+  .pv__photo {
+    animation-duration: 0.01ms;
+  }
+
   .pv__info {
     animation: none;
   }

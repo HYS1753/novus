@@ -202,7 +202,11 @@
 .gv-search__clear:focus-visible {
   background: var(--nv-surface-raised);
   color: var(--nv-text);
-  outline: none;
+}
+
+.gv-search__clear:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
 }
 
 /* ---------- Menus ---------- */
@@ -222,7 +226,6 @@
   border: 1px solid var(--nv-rule);
   border-radius: var(--nv-radius-content);
   background: var(--nv-surface-raised);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
   animation: gv-menu-in var(--nv-dur-move) var(--nv-ease-out);
 }
 
@@ -277,7 +280,8 @@
 }
 
 .gv-menu__item:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--nv-focus);
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
 }
 
 /* The chosen entry carries a check at the end. */
@@ -320,6 +324,8 @@
   overscroll-behavior: contain;
   /* The grid anchors its own scroll position when rows re-layout. */
   overflow-anchor: none;
+  /* Vertical panning stays native; two-finger pinch is the gallery's density gesture. */
+  touch-action: pan-y;
   padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
 }
 
@@ -459,28 +465,36 @@
   cursor: ns-resize;
 }
 
+/* Moved by transform from script; the visible bar grows with scaleX only. */
 .gv-scrub__thumb {
   position: absolute;
   top: 0;
   right: 6px;
-  width: 6px;
+  width: 10px;
   height: 44px;
+  will-change: transform;
+}
+
+.gv-scrub__bar {
+  position: absolute;
+  inset: 0;
   border-radius: var(--nv-radius-content);
   background: var(--nv-text-3);
   opacity: 0;
+  transform: scaleX(0.6);
+  transform-origin: right center;
   transition:
     opacity var(--nv-dur-move) var(--nv-ease-out),
-    width var(--nv-dur-move) var(--nv-ease-out),
-    background-color var(--nv-dur-move) var(--nv-ease-out);
+    transform var(--nv-dur-move) var(--nv-ease-out);
 }
 
-.gv-scrub[data-active] .gv-scrub__thumb {
+.gv-scrub[data-active] .gv-scrub__bar {
   opacity: 1;
 }
 
-.gv-scrub:hover .gv-scrub__thumb,
-.gv-scrub:active .gv-scrub__thumb {
-  width: 10px;
+.gv-scrub:hover .gv-scrub__bar,
+.gv-scrub:active .gv-scrub__bar {
+  transform: none;
   background: var(--nv-text);
 }
 
@@ -496,7 +510,6 @@
   font-weight: var(--nv-weight-bold);
   white-space: nowrap;
   transform: translateY(-50%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .gv-scrub__year {
@@ -563,7 +576,11 @@
 .gv-crumbs__item:focus-visible {
   background: var(--nv-surface);
   color: var(--nv-text);
-  outline: none;
+}
+
+.gv-crumbs__item:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
 }
 
 .gv-crumbs__item[aria-current="page"] {
@@ -696,7 +713,8 @@
 }
 
 .gv-shelf__all:focus-visible {
-  box-shadow: 0 0 0 var(--nv-focus-width) var(--nv-focus);
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
 }
 
 /* Room above and below for the focus lift; the row scrolls as focus moves. */

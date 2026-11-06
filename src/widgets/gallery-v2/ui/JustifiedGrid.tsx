@@ -52,8 +52,8 @@ export interface JustifiedGridProps {
   onPlacement?: (placement: GridPlacement) => void;
 }
 
-/** Rows rendered beyond the viewport, above and below. */
-const OVERSCAN_PX = 600;
+/** Rows rendered beyond the viewport, above and below, as a share of its height. */
+const OVERSCAN = 0.5;
 /** Items prefetched past the last visible one. */
 const PREFETCH_ITEMS = 120;
 
@@ -100,7 +100,9 @@ export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
   const { t } = useI18n();
   const [grid, setGrid] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  const [view, setView] = useState({ top: 0, height: 0 });
+  // The mounted window as row indices: it changes only when a row enters or
+  // leaves it, not on every scrolled pixel.
+  const [range, setRange] = useState({ first: 0, last: 0 });
   const anchorRef = useRef<{ index: number; top: number } | null>(null);
   // Scroll writes go through a ref: the element itself is a prop.
   const scrollerRef = useRef(scroller);
@@ -146,34 +148,54 @@ export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
   }, [items, revision, sections, width, rowHeight, gap, headerHeight]);
 
   // Track the viewport and remember the first visible photo as the anchor.
+  // The grid's offset in the scroller is read on resize and re-layout only.
   const rowsRef = useRef(layout.rows);
-  useEffect(() => {
-    rowsRef.current = layout.rows;
-  }, [layout.rows]);
+  const offsetRef = useRef(0);
+  const readRef = useRef<(remeasure: boolean) => void>(() => undefined);
   useLayoutEffect(() => {
     if (!scroller || !grid) return;
     let frame = 0;
+    let remeasure = true;
     const read = () => {
       frame = 0;
-      const top = scroller.scrollTop - offsetIn(scroller, grid);
+      if (remeasure) {
+        offsetRef.current = offsetIn(scroller, grid);
+        remeasure = false;
+      }
+      const top = scroller.scrollTop - offsetRef.current;
+      const height = scroller.clientHeight;
       const rows = rowsRef.current;
-      const row = rows[firstRowBelow(rows, top)];
-      anchorRef.current = row ? { index: row.start, top: row.top } : null;
-      setView({ top, height: scroller.clientHeight });
+      const anchor = rows[firstRowBelow(rows, top)];
+      anchorRef.current = anchor ? { index: anchor.start, top: anchor.top } : null;
+      const over = height * OVERSCAN;
+      const first = firstRowBelow(rows, top - over);
+      let last = first;
+      while (last < rows.length && rows[last].top < top + height + over) last++;
+      setRange((current) =>
+        current.first === first && current.last === last ? current : { first, last },
+      );
     };
-    const schedule = () => {
+    const schedule = (measure: boolean) => {
+      remeasure ||= measure;
       if (!frame) frame = requestAnimationFrame(read);
     };
-    schedule();
-    scroller.addEventListener("scroll", schedule, { passive: true });
-    const observer = new ResizeObserver(schedule);
+    readRef.current = schedule;
+    const onScroll = () => schedule(false);
+    const onResize = () => schedule(true);
+    schedule(true);
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    const observer = new ResizeObserver(onResize);
     observer.observe(scroller);
     return () => {
-      scroller.removeEventListener("scroll", schedule);
+      scroller.removeEventListener("scroll", onScroll);
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
   }, [grid, scroller]);
+  useLayoutEffect(() => {
+    rowsRef.current = layout.rows;
+    readRef.current(true);
+  }, [layout.rows]);
 
   // Re-layout: keep the anchor photo where the reader left it.
   useLayoutEffect(() => {
@@ -197,17 +219,16 @@ export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
     });
   }, [grid, layout.placed, layout.height, onPlacement, scroller]);
 
-  const first = firstRowBelow(layout.rows, view.top - OVERSCAN_PX);
-  let last = first;
-  while (last < layout.rows.length && layout.rows[last].top < view.top + view.height + OVERSCAN_PX)
-    last++;
-  const visible = layout.rows.slice(first, last);
+  const visible = layout.rows.slice(range.first, range.last);
   const visibleStart = visible[0]?.start ?? 0;
   const visibleEnd = visible.at(-1)?.end ?? 0;
+  // A heading shows with the rows around it (it sits just above its first row).
+  const spanTop = (visible[0]?.top ?? 0) - headerHeight - gap * 6;
+  const spanBottom = visible.length
+    ? visible[visible.length - 1].top + visible[visible.length - 1].height
+    : 0;
   const headings = layout.headings.filter(
-    (heading) =>
-      heading.top + headerHeight > view.top - OVERSCAN_PX &&
-      heading.top < view.top + view.height + OVERSCAN_PX,
+    (heading) => heading.top >= spanTop && heading.top <= spanBottom,
   );
 
   useEffect(() => {

@@ -133,8 +133,9 @@ export function useGallery() {
             kind: libraryTab === "videos" ? "video" : "media",
             recursive: true,
             slot: "library",
-            sortField: sort[libraryTab].field,
-            sortOrder: sort[libraryTab].order,
+            // The TV home's "recent photos" shelf is recent whatever the photos tab is sorted by.
+            sortField: tab === "home" ? "modified" : sort[libraryTab].field,
+            sortOrder: tab === "home" ? "desc" : sort[libraryTab].order,
             search: tab === "folders" || tab === "home" ? "" : debounced,
             withTimeline: true,
           }

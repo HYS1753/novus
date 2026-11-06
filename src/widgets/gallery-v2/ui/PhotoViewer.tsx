@@ -225,12 +225,57 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
     intervalSeconds,
   ]);
 
-  // While the slideshow plays, the chrome steps aside after a few quiet seconds.
+  // Focus: the viewer takes it on open (so the remote and Tab stay inside)
+  // and hands it back to whatever opened it.
+  const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!playing || !chrome) return;
-    const timer = window.setTimeout(() => setChrome(false), CHROME_IDLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [chrome, playing, currentIndex]);
+    const opener = document.activeElement as HTMLElement | null;
+    rootRef.current?.focus({ preventScroll: true });
+    return () => opener?.focus?.({ preventScroll: true });
+  }, []);
+
+  // While the slideshow plays, the chrome steps aside after a few quiet
+  // seconds; any key or mouse movement brings it back and restarts the wait.
+  const idleRef = useRef(0);
+  const playingRef = useRef(playing);
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
+  const hideChrome = () => {
+    const root = rootRef.current;
+    // Hidden chrome is inert; keep focus on the stage rather than losing it.
+    if (root && document.activeElement?.closest("[data-viewer-control]")) {
+      root.focus({ preventScroll: true });
+    }
+    setChrome(false);
+  };
+  const wake = () => {
+    setChrome(true);
+    window.clearTimeout(idleRef.current);
+    if (playingRef.current) idleRef.current = window.setTimeout(hideChrome, CHROME_IDLE_MS);
+  };
+  useEffect(() => {
+    window.clearTimeout(idleRef.current);
+    if (playing) idleRef.current = window.setTimeout(hideChrome, CHROME_IDLE_MS);
+    return () => window.clearTimeout(idleRef.current);
+  }, [playing]);
+
+  // Pan and pinch write the transform straight to the image each frame and
+  // commit to state on release, so the chrome does not re-render per move.
+  const live = useRef({ zoom: 1, x: 0, y: 0 });
+  const frame = useRef(0);
+  const paint = () => {
+    frame.current = 0;
+    const image = imageRef.current;
+    if (image) {
+      const { x, y, zoom: scale } = live.current;
+      image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+    }
+  };
+  const schedulePaint = () => {
+    if (!frame.current) frame.current = requestAnimationFrame(paint);
+  };
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
   if (!currentImage) return null;
 
@@ -253,10 +298,16 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
     setPan((previous) => boundedPan(previous.x, previous.y, clamped));
   };
 
+  const commitLive = () => {
+    setZoom(live.current.zoom);
+    setPan({ x: live.current.x, y: live.current.y });
+  };
+
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if ((event.target as Element).closest("[data-viewer-control]")) return;
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     event.currentTarget.setPointerCapture(event.pointerId);
+    live.current = { zoom, x: pan.x, y: pan.y };
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
       pinchStart.current = { distance: Math.hypot(a.x - b.x, a.y - b.y), zoom };
@@ -270,24 +321,31 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && !pointers.current.has(event.pointerId)) {
+      wake();
+      return;
+    }
     if (!pointers.current.has(event.pointerId)) return;
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
       if (pinchStart.current.distance > 0) {
-        changeZoom(
+        const next = clampZoom(
           (pinchStart.current.zoom * Math.hypot(a.x - b.x, a.y - b.y)) /
             pinchStart.current.distance,
         );
+        const bounded = boundedPan(live.current.x, live.current.y, next);
+        live.current = { zoom: next, ...bounded };
+        schedulePaint();
       }
-    } else if (zoom > 1) {
-      setPan(
-        boundedPan(
-          panStart.current.panX + event.clientX - panStart.current.x,
-          panStart.current.panY + event.clientY - panStart.current.y,
-          zoom,
-        ),
+    } else if (live.current.zoom > 1) {
+      const bounded = boundedPan(
+        panStart.current.panX + event.clientX - panStart.current.x,
+        panStart.current.panY + event.clientY - panStart.current.y,
+        live.current.zoom,
       );
+      live.current = { ...live.current, ...bounded };
+      schedulePaint();
     } else {
       handlePointerMove(event);
     }
@@ -296,8 +354,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
   const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(event.pointerId)) return;
     pointers.current.delete(event.pointerId);
-    if (pinched.current || zoom > 1) {
+    if (pinched.current || live.current.zoom > 1) {
       handlePointerCancel();
+      commitLive();
       if (pointers.current.size === 0) pinched.current = false;
       return;
     }
@@ -309,7 +368,26 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
     const ratio = event.clientX / event.currentTarget.clientWidth;
     if (ratio < 0.25) goToPrev();
     else if (ratio > 0.75) goToNext();
-    else setChrome((visible) => !visible);
+    else if (chrome) hideChrome();
+    else wake();
+  };
+
+  /** Tab stays inside the viewer (it is modal). */
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") wake();
+    if (event.key !== "Tab") return;
+    const root = rootRef.current;
+    if (!root) return;
+    const focusable = [
+      ...root.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex='0']"),
+    ].filter((element) => !element.closest("[inert]"));
+    if (focusable.length === 0) return;
+    const index = focusable.indexOf(document.activeElement as HTMLElement);
+    const next = event.shiftKey
+      ? focusable[(index <= 0 ? focusable.length : index) - 1]
+      : focusable[(index + 1) % focusable.length];
+    event.preventDefault();
+    next.focus();
   };
 
   const source =
@@ -340,14 +418,19 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
 
   return (
     <div
+      ref={rootRef}
       className="pv"
+      tabIndex={-1}
+      data-nav-scope
       data-chrome={chrome || undefined}
+      onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={(event) => {
         pointers.current.delete(event.pointerId);
         handlePointerCancel();
+        if (live.current.zoom !== zoom) commitLive();
         if (pointers.current.size === 0) pinched.current = false;
       }}
       onWheel={(event) => {
@@ -414,7 +497,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
         </div>
         <button
           type="button"
-          className="pv__circle"
+          className="pv__square"
           aria-pressed={info}
           aria-label={t("viewer.info")}
           title={t("viewer.info")}
@@ -455,7 +538,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
         <div className="pv__controls">
           <button
             type="button"
-            className="pv__circle"
+            className="pv__square"
             onClick={goToPrev}
             disabled={!hasPrev}
             aria-label={t("viewer.prev")}
@@ -464,7 +547,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           </button>
           <button
             type="button"
-            className="pv__circle"
+            className="pv__square"
             onClick={goToNext}
             disabled={!hasNext}
             aria-label={t("viewer.next")}
@@ -507,7 +590,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             type="button"
             className="pv__square pv__square--wide"
             onClick={() => setFill((value) => !value)}
-            aria-label={t("viewer.fitToggle")}
+            title={t("viewer.fitToggle")}
           >
             {fill ? t("viewer.fit") : t("viewer.fill")}
           </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { GallerySort, GalleryState, GalleryTab } from "@/features";
 import {
   CloseIcon,
@@ -20,6 +20,24 @@ const Menu: React.FC<{
 }> = ({ label, trigger, children, align = "start" }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Opening moves focus to the chosen entry (or the first); closing returns it.
+  useEffect(() => {
+    if (!open) return;
+    const panel = ref.current?.querySelector<HTMLElement>("[role=menu]");
+    (
+      panel?.querySelector<HTMLElement>("[aria-checked=true]") ??
+      panel?.querySelector<HTMLElement>("button")
+    )?.focus();
+  }, [open]);
+  // Found by state, not by ref: the open menu's trigger is the expanded one.
+  const close = useCallback(() => {
+    const trigger = document.querySelector<HTMLElement>(
+      ".gv-menu [data-menu-trigger][aria-expanded='true']",
+    );
+    setOpen(false);
+    trigger?.focus();
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onPointer = (event: PointerEvent) => {
@@ -44,7 +62,7 @@ const Menu: React.FC<{
       {trigger({ open, toggle: () => setOpen((value) => !value) })}
       {open && (
         <div className={`gv-menu__panel gv-menu__panel--${align}`} role="menu" aria-label={label}>
-          {children(() => setOpen(false))}
+          {children(close)}
         </div>
       )}
     </div>
@@ -73,11 +91,11 @@ export interface GalleryHeaderProps {
  * views, then search and sort. Everything else lives where it is used.
  */
 export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searching, setSearching] = useState(Boolean(state.search));
   const inputRef = useRef<HTMLInputElement>(null);
   const collection = state.tab === "folders" ? state.folderView : state.library;
-  const fmt = new Intl.NumberFormat();
+  const fmt = new Intl.NumberFormat(locale);
 
   useEffect(() => {
     if (searching) inputRef.current?.focus();

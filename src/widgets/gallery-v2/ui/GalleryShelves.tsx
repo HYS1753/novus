@@ -84,8 +84,8 @@ export const GalleryShelves: React.FC<GalleryShelvesProps> = ({
   );
   const summaries = useFolderSummaries(folders.map(({ item }) => item.path));
 
-  // The first shelf takes focus, so the remote starts somewhere useful.
-  const ready = photos.length > 0;
+  // The first shelf present takes focus, so the remote starts somewhere useful.
+  const ready = photos.length + videos.length + folders.length > 0;
   useEffect(() => {
     if (!ready) return;
     const active = document.activeElement;
@@ -108,14 +108,13 @@ export const GalleryShelves: React.FC<GalleryShelvesProps> = ({
           seeAllLabel={t("gallery.seeAll")}
           onSeeAll={seeAll("photos")}
         >
-          {photos.map(({ item, index }, position) => (
+          {photos.map(({ item, index }) => (
             <button
               key={item.path}
               type="button"
               className="gv-shelf__tile"
               style={tileStyle(item)}
               aria-label={item.name}
-              data-nav-default={position === 0 || undefined}
               onClick={() => onOpenImage(library, index)}
             >
               <MediaThumb item={item} size={rowHeight * aspectOf(item)} />

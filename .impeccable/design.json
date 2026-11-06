@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-06T03:00:10+00:00",
+  "generatedAt": "2026-11-06T00:00:00",
   "title": "Design System: Novus",
   "source": {
     "tokens": "src/app/styles/v2/tokens.css",
@@ -887,6 +887,22 @@
       "description": "Settings row: title, description, value, chevron; 1px rule beneath.",
       "html": "<button class=\"ds-row\"><span class=\"ds-row__text\"><span class=\"ds-row__title\">보기 모드</span><span class=\"ds-row__desc\">거치해 두고 1–2m 거리에서 보기</span></span><span class=\"ds-row__value\">TV형</span><span class=\"ds-row__chev\">›</span></button>",
       "css": ".ds-row{display:flex;align-items:center;gap:16px;width:100%;min-height:64px;padding:12px 8px;border:0;border-bottom:1px solid #222227;border-radius:4px;background:none;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;text-align:left;cursor:pointer;} .ds-row:hover{background:#151518;} .ds-row:focus-visible{outline:4px solid #ffffff;outline-offset:3px;} .ds-row__text{display:flex;flex:1;flex-direction:column;gap:2px;} .ds-row__title{font-size:16px;font-weight:600;} .ds-row__desc{font-size:14px;color:#8e8e99;} .ds-row__value{font-size:14px;color:#bcbcc5;} .ds-row__chev{color:#8e8e99;font-size:20px;}"
+    },
+    {
+      "name": "Album Card",
+      "kind": "card",
+      "refersTo": "gallery-album",
+      "description": "Rectangle = content. A folder as an album: 4:3 cover (newest photo), name, count. Focus rings the cover.",
+      "html": "<button class=\"ds-album\"><span class=\"ds-album__cover\"></span><span class=\"ds-album__name\">여행</span><span class=\"ds-album__meta\">213개 · 하위 폴더 있음</span></button>",
+      "css": ".ds-album{display:flex;flex-direction:column;gap:4px;width:200px;padding:0;border:0;background:transparent;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;text-align:left;cursor:pointer;} .ds-album__cover{display:block;aspect-ratio:4/3;margin-bottom:8px;border-radius:4px;background:linear-gradient(180deg,#5b4a7a,#e9906a 70%,#2b2333);transition:transform 200ms cubic-bezier(0.16,1,0.3,1);} .ds-album:hover .ds-album__cover{transform:scale(1.02);} .ds-album:focus-visible{outline:none;} .ds-album:focus-visible .ds-album__cover{outline:4px solid #ffffff;outline-offset:3px;} .ds-album__name{font-size:16px;font-weight:600;} .ds-album__meta{font-size:12px;color:#8e8e99;}"
+    },
+    {
+      "name": "Justified Tile",
+      "kind": "card",
+      "refersTo": "gallery-tile",
+      "description": "A photo at its own aspect in a justified row; 4px, surface until the picture decodes; the focus ring sits inside (tight gaps).",
+      "html": "<div class=\"ds-row\"><button class=\"ds-tile\" style=\"flex:1.5\"></button><button class=\"ds-tile\" style=\"flex:0.67\"></button><button class=\"ds-tile\" style=\"flex:1.78\"></button></div>",
+      "css": ".ds-row{display:flex;gap:4px;width:420px;height:120px;} .ds-tile{padding:0;border:0;border-radius:4px;background:linear-gradient(180deg,#3d4f5c,#7f9a96);cursor:pointer;} .ds-tile:focus-visible{outline:4px solid #ffffff;outline-offset:-4px;}"
     }
   ],
   "narrative": {

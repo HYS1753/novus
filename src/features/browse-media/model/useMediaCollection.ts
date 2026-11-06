@@ -14,6 +14,9 @@ export type MediaSortOrder = "asc" | "desc";
 export const PAGE_SIZE = 80;
 /** Pages in flight at once, so a fast scrub cannot flood the backend. */
 const MAX_IN_FLIGHT = 2;
+/** A failed page is retried after 1s, 2s, 4s, then left until it is wanted again. */
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 1000;
 
 export interface MediaCollectionQuery {
   path: string;
@@ -75,6 +78,7 @@ export function useMediaCollection(query: MediaCollectionQuery | null): MediaCol
   const loadedPages = useRef(new Set<number>());
   const inFlight = useRef(new Set<number>());
   const wanted = useRef<number[]>([]);
+  const attempts = useRef(new Map<number, number>());
   const queryRef = useRef(query);
 
   const key = query
@@ -121,7 +125,19 @@ export function useMediaCollection(query: MediaCollectionQuery | null): MediaCol
           setRevision((value) => value + 1);
         })
         .catch(() => {
-          // Leave the page missing; the next ensureRange for it retries.
+          // Retry a failed page a few times with growing waits, so its tiles
+          // never stay "loading" just because the reader stopped scrolling.
+          const attempt = (attempts.current.get(page) ?? 0) + 1;
+          attempts.current.set(page, attempt);
+          if (attempt > MAX_RETRIES) return;
+          window.setTimeout(
+            () => {
+              if (generation !== generationRef.current) return;
+              if (!wanted.current.includes(page)) wanted.current.push(page);
+              pumpRef.current();
+            },
+            RETRY_BASE_MS * 2 ** (attempt - 1),
+          );
         })
         .finally(() => {
           inFlight.current.delete(page);
@@ -158,6 +174,7 @@ export function useMediaCollection(query: MediaCollectionQuery | null): MediaCol
     loadedPages.current = new Set();
     inFlight.current = new Set();
     wanted.current = [];
+    attempts.current = new Map();
     snapshotRef.current = null;
     let cancelled = false;
     // Status changes are part of starting the load this effect owns.
