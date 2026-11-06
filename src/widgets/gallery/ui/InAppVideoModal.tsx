@@ -26,6 +26,7 @@ import {
   reportWindowModeError,
   useI18n,
 } from "@/shared";
+import "./video-v2.css";
 
 interface InAppVideoModalProps {
   video: FileItem;

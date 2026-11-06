@@ -595,3 +595,52 @@ export const SortDirectionIcon: React.FC<IconProps & { direction?: "asc" | "desc
     <path d="M15 17h3" />
   </svg>
 );
+
+const StrokeSvg: React.FC<IconProps & { children: React.ReactNode }> = ({
+  size = 20,
+  className = "",
+  children,
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`inline-block ${className}`}
+    {...props}
+  >
+    {children}
+  </svg>
+);
+
+/** Info: a circled i (photo details). */
+export const InfoIcon: React.FC<IconProps> = (props) => (
+  <StrokeSvg {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5" />
+    <path d="M12 8h.01" />
+  </StrokeSvg>
+);
+
+export const PlusIcon: React.FC<IconProps> = (props) => (
+  <StrokeSvg {...props}>
+    <path d="M12 5v14M5 12h14" />
+  </StrokeSvg>
+);
+
+export const MinusIcon: React.FC<IconProps> = (props) => (
+  <StrokeSvg {...props}>
+    <path d="M5 12h14" />
+  </StrokeSvg>
+);
+
+export const ChevronLeftIcon: React.FC<IconProps> = (props) => (
+  <StrokeSvg {...props}>
+    <path d="M15 18l-6-6 6-6" />
+  </StrokeSvg>
+);

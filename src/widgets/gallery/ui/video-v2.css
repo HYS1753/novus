@@ -1,0 +1,217 @@
+/* ==========================================================================
+   Video player, v2 skin. Same grammar as the photo viewer: the picture on
+   black, chrome over top/bottom scrims (the one gradient family), circles
+   for global actions, ink (white) instead of the v1 blue. Structure and the
+   transparent native/overlay hosts are unchanged (rules in global.css).
+   Every token has a fallback: the overlay window may render outside NvRoot.
+   ========================================================================== */
+
+.video-modal {
+  background: #000000;
+  font-family: var(--nv-font, var(--font-family, inherit));
+}
+
+/* ---------- Top bar ---------- */
+.video-modal .video-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3, 12px);
+  min-height: 0;
+  padding: var(--nv-space-4, 16px) var(--nv-gutter, 40px) var(--nv-space-7, 48px);
+  border: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+}
+
+/* Back is a circle; its word stays for assistive tech only. */
+.video-modal .video-modal__header > .image-viewer__back:first-child {
+  position: relative;
+  width: var(--nv-target-glyph, 56px);
+  height: var(--nv-target-glyph, 56px);
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.video-modal .video-modal__header > .image-viewer__back:first-child > span:last-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.video-modal .video-modal__title {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  margin-left: var(--nv-space-2, 8px);
+}
+
+.video-modal .video-modal__title strong {
+  font-size: var(--nv-size-body, 16px);
+  font-weight: var(--nv-weight-semibold, 600);
+}
+
+.video-modal .video-modal__title span,
+.video-modal .video-modal__engine {
+  font-family: inherit;
+  font-size: var(--nv-size-caption, 12px);
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.video-modal .video-modal__actions .image-viewer__back {
+  min-height: var(--nv-target, 48px);
+  padding: 0 var(--nv-space-4, 16px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: var(--nv-radius-action, 4px);
+  background: rgba(0, 0, 0, 0.42);
+  font-weight: var(--nv-weight-semibold, 600);
+}
+
+.video-modal .image-viewer__back:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.video-modal .image-viewer__back:focus-visible,
+.video-modal .video-player-controls__btn:focus-visible {
+  outline: var(--nv-focus-width, 4px) solid #ffffff;
+  outline-offset: var(--nv-focus-offset, 3px);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ---------- Bottom controls ---------- */
+.video-modal .video-modal__controls {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: var(--nv-space-7, 48px) var(--nv-gutter, 40px) var(--nv-space-5, 20px);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.video-modal .video-player-controls {
+  width: min(960px, 100%);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.video-modal .video-player-controls__timeline {
+  height: 4px;
+  border-radius: var(--nv-radius-content, 4px);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.video-modal .video-player-controls__timeline:hover,
+.video-modal .video-player-controls__timeline:focus-within {
+  height: 6px;
+}
+
+.video-modal .video-player-controls__timeline-fill {
+  border-radius: var(--nv-radius-content, 4px);
+  background: #ffffff;
+}
+
+.video-modal .video-player-controls__timeline-thumb {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35);
+}
+
+.video-modal .video-player-controls__btn {
+  min-width: var(--nv-target, 48px);
+  min-height: var(--nv-target, 48px);
+  color: #ffffff;
+}
+
+.video-modal .video-player-controls__btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Play is the one filled circle, as home is on the rail. */
+.video-modal .video-player-controls__btn--play {
+  min-width: var(--nv-target-glyph, 56px);
+  min-height: var(--nv-target-glyph, 56px);
+  background: #ffffff;
+  color: #000000;
+}
+
+.video-modal .video-player-controls__btn--play:hover {
+  background: #bcbcc5;
+}
+
+.video-modal .video-player-controls__time {
+  font-family: inherit;
+  font-size: var(--nv-size-label, 14px);
+  font-weight: var(--nv-weight-semibold, 600);
+  color: #ffffff;
+}
+
+.video-modal .video-player-controls__time-sep {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.video-modal .video-player-controls__volume-fill {
+  background: #ffffff;
+}
+
+/* ---------- Status and errors ---------- */
+.video-modal .video-modal__engine {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  letter-spacing: 0.02em;
+}
+
+/* An error reads like the photo viewer's: text on black, one action. */
+.video-modal .video-modal__error {
+  gap: var(--nv-space-3, 12px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.video-modal .video-modal__error-icon {
+  width: calc(64px * var(--nv-scale, 1));
+  height: calc(64px * var(--nv-scale, 1));
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.video-modal .video-modal__error h2 {
+  margin: var(--nv-space-2, 8px) 0 0;
+  font-size: var(--nv-size-heading, 20px);
+  font-weight: var(--nv-weight-bold, 700);
+}
+
+.video-modal .video-modal__error p {
+  max-width: 30em;
+  font-size: var(--nv-size-body, 16px);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.video-modal .video-modal__error button {
+  min-height: var(--nv-target, 48px);
+  margin-top: var(--nv-space-3, 12px);
+  padding: 0 var(--nv-space-5, 20px);
+  border: 0;
+  border-radius: var(--nv-radius-action, 4px);
+  background: #ffffff;
+  color: #000000;
+  font-weight: var(--nv-weight-semibold, 600);
+  box-shadow: none;
+}
+
+.video-modal .video-modal__feedback {
+  border-radius: var(--nv-radius-content, 4px);
+  background: #151518;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-size: var(--nv-size-label, 14px);
+}

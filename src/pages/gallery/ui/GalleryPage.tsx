@@ -1,14 +1,20 @@
 import React, { useMemo, useState } from "react";
 import type { FileItem } from "@/entities";
 import { PAGE_SIZE, useGallery, type MediaCollection } from "@/features";
-import { FullscreenImageViewer, GalleryV2, InAppVideoModal } from "@/widgets";
+import { GalleryV2, InAppVideoModal, PhotoViewer } from "@/widgets";
 import { SubpageDock, useDockPosition, useI18n } from "@/shared";
 
 interface GalleryPageProps {
   onBackToDashboard: () => void;
 }
 
-type ViewerSource = { which: "library" | "folder"; path: string };
+/**
+ * The viewer pages through one contiguous loaded run of the collection,
+ * starting where the run began when it opened (so the list only grows at
+ * its end and indices stay stable). After a scrubber jump the run starts at
+ * that page, not at the top of the library.
+ */
+type ViewerSource = { which: "library" | "folder"; path: string; runStart: number };
 
 export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) => {
   const { t } = useI18n();
@@ -23,13 +29,19 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
       : gallery.folderView
     : null;
 
-  // The viewer pages through the images loaded so far, in snapshot order.
+  const runStart = viewer?.runStart ?? 0;
+  let runEnd = runStart;
+  if (source) while (runEnd < source.items.length && source.items[runEnd]) runEnd++;
   const viewerImages = useMemo(
     () =>
-      source ? source.items.filter((item): item is FileItem => item?.media_type === "image") : [],
+      source
+        ? source.items
+            .slice(runStart, runEnd)
+            .filter((item): item is FileItem => item?.media_type === "image")
+        : [],
     // `revision` stands for pages landing in the shared items array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [source, source?.revision],
+    [source, source?.revision, runStart, runEnd],
   );
   const viewerIndex = viewer
     ? Math.max(
@@ -37,22 +49,19 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
         viewerImages.findIndex((item) => item.path === viewer.path),
       )
     : 0;
-  let lastLoaded = -1;
-  if (source) {
-    for (let index = source.items.length - 1; index >= 0; index--) {
-      if (source.items[index]) {
-        lastLoaded = index;
-        break;
-      }
-    }
-  }
+  const imagesAfterRun = source
+    ? source.items.slice(runEnd).some((item) => item === undefined || item.media_type === "image")
+    : false;
 
   const openImage = (collection: MediaCollection, index: number) => {
     const item = collection.items[index];
     if (!item) return;
+    let start = index;
+    while (start > 0 && collection.items[start - 1]) start--;
     setViewer({
       which: collection === gallery.library ? "library" : "folder",
       path: item.path,
+      runStart: start,
     });
   };
 
@@ -78,14 +87,13 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) =
       />
 
       {viewer && source && viewerImages.length > 0 && (
-        <FullscreenImageViewer
+        <PhotoViewer
           images={viewerImages}
           initialIndex={viewerIndex}
-          totalImageCount={source.imageCount}
-          hasMore={viewerImages.length < source.imageCount}
-          isLoadingMore={false}
-          loadMoreError={null}
-          onNeedMore={() => source.ensureRange(lastLoaded + 1, lastLoaded + 1 + PAGE_SIZE)}
+          totalImageCount={imagesAfterRun ? viewerImages.length + 1 : viewerImages.length}
+          hasMore={imagesAfterRun}
+          displayTotal={runStart === 0 ? source.imageCount : undefined}
+          onNeedMore={() => source.ensureRange(runEnd, runEnd + PAGE_SIZE)}
           onClose={() => setViewer(null)}
         />
       )}

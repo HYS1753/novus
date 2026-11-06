@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Photo viewer (v2). Benchmarked on Apple Photos / Google Photos: the photo
+   alone on black, chrome over the photo's own scrims (the one gradient
+   family), a filmstrip, and controls that step aside on a tap.
+   Always dark, whatever the theme: v2 role tokens are pinned here so shared
+   controls (segmented) render dark too.
+   ========================================================================== */
+
+.pv {
+  --nv-ground: #0a0a0c;
+  --nv-surface: #151518;
+  --nv-surface-raised: #222227;
+  --nv-rule: #222227;
+  --nv-rule-strong: #34343b;
+  --nv-text: #ffffff;
+  --nv-text-2: #bcbcc5;
+  --nv-text-3: #8e8e99;
+  --nv-text-disabled: #5c5c66;
+  --nv-focus: #ffffff;
+  --pv-glass: rgba(0, 0, 0, 0.42);
+  --pv-edge: rgba(255, 255, 255, 0.24);
+
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: #000000;
+  color: #ffffff;
+  color-scheme: dark;
+  font-family: var(--nv-font);
+  touch-action: none;
+  user-select: none;
+}
+
+/* ---------- Stage ---------- */
+.pv__stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.pv__photo {
+  position: absolute;
+  inset: 0;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  object-fit: contain;
+  will-change: transform;
+  animation: pv-in 220ms var(--nv-ease-out);
+}
+
+.pv__photo--fill {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+}
+
+/* The outgoing photo holds still under the incoming one. */
+.pv__photo--under {
+  animation: none;
+}
+
+@keyframes pv-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.pv__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: pv-spin 0.9s linear infinite;
+}
+
+@keyframes pv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pv__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-2);
+  max-width: 28em;
+  text-align: center;
+  font-size: var(--nv-size-body);
+  color: var(--nv-text-2);
+}
+
+.pv__state strong {
+  font-size: var(--nv-size-heading);
+  color: #ffffff;
+}
+
+.pv__text-button {
+  margin-top: var(--nv-space-3);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-4);
+  border: 1px solid var(--pv-edge);
+  border-radius: var(--nv-radius-action);
+  background: var(--pv-glass);
+  color: #ffffff;
+  font: inherit;
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+/* ---------- Chrome ---------- */
+.pv__top,
+.pv__bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.pv:not([data-chrome]) .pv__top,
+.pv:not([data-chrome]) .pv__bottom,
+.pv:not([data-chrome]) .pv__info {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pv__top {
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+}
+
+.pv__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin-left: var(--nv-space-2);
+}
+
+.pv__title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.pv__title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-caption);
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+}
+
+.pv__bottom {
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-4);
+  padding: var(--nv-space-7) var(--nv-gutter) var(--nv-space-5);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.66), transparent);
+}
+
+/* Global actions over the photo: circles (the shape rule). */
+.pv__circle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--nv-target-glyph);
+  height: var(--nv-target-glyph);
+  padding: 0;
+  border: 1px solid var(--pv-edge);
+  border-radius: 50%;
+  background: var(--pv-glass);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+/* Content controls: rectangles. */
+.pv__square,
+.pv__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  min-width: var(--nv-target);
+  height: var(--nv-target);
+  padding: 0;
+  border: 1px solid var(--pv-edge);
+  border-radius: var(--nv-radius-action);
+  background: var(--pv-glass);
+  color: #ffffff;
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.pv__square--wide,
+.pv__play {
+  padding: 0 var(--nv-space-3);
+}
+
+.pv__circle:hover,
+.pv__square:hover,
+.pv__play:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pv__circle:active,
+.pv__square:active,
+.pv__play:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.pv__circle[aria-pressed="true"],
+.pv__play[aria-pressed="true"] {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #000000;
+}
+
+.pv__circle:disabled,
+.pv__square:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pv__circle:focus-visible,
+.pv__square:focus-visible,
+.pv__play:focus-visible,
+.pv__frame:focus-visible {
+  outline: var(--nv-focus-width) solid #ffffff;
+  outline-offset: var(--nv-focus-offset);
+}
+
+.pv__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+}
+
+.pv__group {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.pv__rule {
+  width: 1px;
+  height: calc(var(--nv-target) * 0.55);
+  margin: 0 var(--nv-space-2);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.pv__interval {
+  flex: none;
+}
+
+/* ---------- Filmstrip ---------- */
+.pv__strip {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.pv__frame {
+  position: relative;
+  flex: none;
+  width: calc(52px * var(--nv-scale));
+  height: calc(52px * var(--nv-scale));
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    opacity var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.pv__frame:hover {
+  opacity: 0.85;
+}
+
+.pv__frame[aria-current] {
+  opacity: 1;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px #ffffff;
+  z-index: 1;
+}
+
+/* ---------- Info ---------- */
+.pv__info {
+  position: absolute;
+  top: calc(var(--nv-target-glyph) + var(--nv-space-6));
+  right: var(--nv-gutter);
+  z-index: 3;
+  width: min(calc(320px * var(--nv-scale)), 42vw);
+  padding: var(--nv-space-5);
+  border: 1px solid #222227;
+  border-radius: var(--nv-radius-content);
+  background: #151518;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  animation: pv-info-in var(--nv-dur-move) var(--nv-ease-out);
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+  user-select: text;
+}
+
+@keyframes pv-info-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.pv__info h2 {
+  margin: 0 0 var(--nv-space-4);
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-bold);
+}
+
+.pv__info dl {
+  margin: 0;
+}
+
+.pv__info dt {
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.pv__info dd {
+  margin: 2px 0 var(--nv-space-3);
+  font-size: var(--nv-size-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.pv__path {
+  overflow-wrap: anywhere;
+  color: var(--nv-text-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv__photo,
+  .pv__info {
+    animation: none;
+  }
+
+  .pv__spinner {
+    animation-duration: 2.4s;
+  }
+}

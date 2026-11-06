@@ -271,7 +271,7 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 
 - Windows open_embedded_video_overlay(sessionId, video)는 메인 클라이언트 영역에 투명한 세션 ID별 video-controls-* 투명 소유 창 하나를 만듭니다. App은 네이티브가 주입한 로컬 초기화 데이터가 있으면 대시보드 대신 기존 InAppVideoModal의 조작 UI만 렌더링합니다. 디코더와 영상 HWND는 메인 창에 유지하며, 이 창은 별도의 영상 세션을 생성하지 않습니다.
 - request_embedded_video_overlay_action은 갤러리 복귀·앱 종료·전체화면 요청을 세션 ID와 함께 메인 웹뷰로 전달합니다. 영상 닫기에서 소유 조작 창을 먼저 파괴하고 기존 디코더 정리를 이어갑니다. 메인 창 크기 변경 시 조작 창 크기도 맞춥니다. 네이티브 표면의 크기 갱신은 Z 순서를 변경하지 않습니다.
-- FullscreenImageViewer는 전체 화면 크기의 고정 img 박스에 object-fit: contain을 적용합니다. 1600px URI를 Image.decode()로 준비하는 동안 GlassProgress를 표시하며, 이전 사진이나 작은 미리보기를 새 사진으로 확대하지 않습니다. 다음 사진은 미리 요청하고, 확대용 3200px도 디코딩 후 교체합니다. 경로 전환 시 확대·이동을 초기화하고 새 사진에 이전 transform 애니메이션을 넘기지 않습니다.
+- `PhotoViewer`는 전체 화면 고정 박스에 `object-fit: contain`(채우기 시 `cover`)으로 사진을 놓습니다. 1600px URI를 `Image.decode()`로 준비한 뒤 보여 주고, 준비되는 동안 이전 사진을 아래 층에 남겨 두었다가 새 사진의 220ms 페이드가 끝나면 치웁니다. 다음 사진은 미리 요청하고 확대용 3200px도 디코딩 후 교체합니다. 경로 전환 시 확대·이동을 초기화합니다. 필름스트립은 앞뒤 7장(최대 15개 썸네일)만 DOM에 둡니다.
 
 ### 창 모드와 Windows 스트리밍 전체화면
 

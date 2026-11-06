@@ -1,4 +1,4 @@
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc as tauriConvertFileSrc } from "@tauri-apps/api/core";
 import { queueThumbnail } from "./thumbnailQueue";
 import { isTauriRuntime } from "../../lib/runtime";
 
@@ -9,7 +9,14 @@ async function devFixture() {
   return fixture.devFixtureEnabled() ? fixture : null;
 }
 
-export { convertFileSrc };
+/**
+ * Local file → URL the webview can load. Outside Tauri (the browser dev
+ * server) there is no asset protocol, so the path is returned unchanged
+ * instead of throwing and taking the page down.
+ */
+export function convertFileSrc(path: string, protocol?: string): string {
+  return isTauriRuntime() ? tauriConvertFileSrc(path, protocol) : path;
+}
 
 export interface QuickLocation {
   name: string;

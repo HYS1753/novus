@@ -53,6 +53,16 @@ export function useImageViewer({
     setDragOffset(0);
   }, []);
 
+  /** Jump to a loaded image (the filmstrip). */
+  const goToIndex = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= images.length) return;
+      setCurrentIndex(index);
+      setDragOffset(0);
+    },
+    [images.length],
+  );
+
   const goToNext = useCallback(() => {
     if (currentIndex < images.length && currentIndex < (totalCount ?? images.length) - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -152,6 +162,7 @@ export function useImageViewer({
     goToPrev,
     goToNext,
     goToFirst,
+    goToIndex,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
