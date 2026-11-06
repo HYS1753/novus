@@ -13,3 +13,5 @@ export * from "./NvFeedback";
 export * from "./NvRoot";
 export * from "./NvMenu";
 export * from "./NvMediaThumb";
+export * from "./iconMotion";
+export * from "./NvIconMotion";

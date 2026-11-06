@@ -4,6 +4,7 @@ import {
   CloseIcon,
   FolderIcon,
   ImageIcon,
+  NvIconMotion,
   NvMenu,
   NvSegmented,
   SearchIcon,
@@ -164,7 +165,9 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
                 setSearching(false);
               }}
             >
-              <CloseIcon size={16} />
+              <NvIconMotion>
+                <CloseIcon size={16} />
+              </NvIconMotion>
             </button>
           </label>
         ) : (
@@ -175,7 +178,9 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
             title={t("gallery.search")}
             onClick={() => setSearching(true)}
           >
-            <SearchIcon size={20} />
+            <NvIconMotion>
+              <SearchIcon size={20} />
+            </NvIconMotion>
           </button>
         )}
 
@@ -192,7 +197,9 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
               onClick={toggle}
               title={t("files.sort")}
             >
-              <SortDirectionIcon size={20} direction={state.sort.order} />
+              <NvIconMotion>
+                <SortDirectionIcon size={20} direction={state.sort.order} />
+              </NvIconMotion>
               <span>{orders[state.sort.order]}</span>
             </button>
           )}

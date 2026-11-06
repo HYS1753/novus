@@ -11,6 +11,7 @@ import {
   NvButton,
   NvEmptyState,
   NvMediaThumb,
+  NvIconMotion,
   NvMenu,
   NvSegmented,
   SearchIcon,
@@ -378,7 +379,9 @@ export const FilesV2: React.FC<FilesV2Props> = ({
               aria-label={t("files.up")}
               title={t("files.up")}
             >
-              <ArrowUpIcon size={20} />
+              <NvIconMotion>
+                <ArrowUpIcon size={20} />
+              </NvIconMotion>
             </button>
             <div className="fs-head__text">
               <h2 className="fs-head__name" title={currentPath}>
@@ -417,7 +420,9 @@ export const FilesV2: React.FC<FilesV2Props> = ({
                     setSearching(false);
                   }}
                 >
-                  <CloseIcon size={16} />
+                  <NvIconMotion>
+                    <CloseIcon size={16} />
+                  </NvIconMotion>
                 </button>
               </label>
             ) : (
@@ -428,7 +433,9 @@ export const FilesV2: React.FC<FilesV2Props> = ({
                 title={t("finder.search")}
                 onClick={() => setSearching(true)}
               >
-                <SearchIcon size={20} />
+                <NvIconMotion>
+                  <SearchIcon size={20} />
+                </NvIconMotion>
               </button>
             )}
 

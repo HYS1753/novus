@@ -1,4 +1,5 @@
 import React from "react";
+import { motionOf } from "./iconMotion";
 
 export interface NvGlyphButtonProps extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -33,7 +34,7 @@ export const NvGlyphButton: React.FC<NvGlyphButtonProps> = ({
     className={`nv-glyph${onMedia ? " nv-glyph--media nv-on-media" : ""}${muted ? " nv-glyph--muted" : ""} ${className}`}
     {...props}
   >
-    <span className="nv-glyph__circle" aria-hidden="true">
+    <span className="nv-glyph__circle" aria-hidden="true" data-motion={motionOf(icon)}>
       {icon}
     </span>
     {showLabel && (

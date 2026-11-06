@@ -7,6 +7,7 @@ import { useNow } from "../../hooks/useNow";
 import { useI18n } from "@/shared/hooks/useI18n";
 import { ArrowLeftIcon, HomeIcon, RefreshIcon } from "../icons";
 import type { DockPosition } from "../../types";
+import { NvIconMotion } from "../v2/NvIconMotion";
 import "./dock.css";
 
 export interface SubpageDockProps {
@@ -34,7 +35,7 @@ export const DockTool: React.FC<DockToolProps> = ({ label, icon, className = "",
     title={label}
     {...props}
   >
-    {icon}
+    <NvIconMotion>{icon}</NvIconMotion>
   </button>
 );
 
@@ -97,7 +98,9 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
             aria-label={backLabel ?? t("dock.back")}
             title={backLabel ?? t("dock.back")}
           >
-            <ArrowLeftIcon size={22} />
+            <NvIconMotion>
+              <ArrowLeftIcon size={22} />
+            </NvIconMotion>
           </button>
         )}
         <button
@@ -107,7 +110,9 @@ export const SubpageDock: React.FC<SubpageDockProps> = ({
           aria-label={t("dock.home")}
           title={t("dock.homeHint")}
         >
-          <HomeIcon size={24} />
+          <NvIconMotion>
+            <HomeIcon size={24} />
+          </NvIconMotion>
         </button>
       </div>
     </aside>

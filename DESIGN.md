@@ -82,6 +82,7 @@ rounded:
   content: "4px"
   action: "4px"
   glyph: "50%"
+  pill: "999px"
 spacing:
   space-1: "4px"
   space-2: "8px"
@@ -295,7 +296,7 @@ Two shapes carry meaning. Rectangles have gently squared corners (4px for conten
 
 Rectangles: buttons, service plates, fields, dialogs, segmented options (the segmented track is 7px, the option radius plus its 3px padding), toasts, the onboarding posture cards. Hairline rules (1px) separate list rows, calendar weeks, and sheet sections; controls use a 2px border.
 
-Small circles that are not pressable are markers, not actions: the status dot (0.62em) and today's date on the calendar. The toggle is a rectangular switch (4px track, 2px thumb) under the rectangle rule; the slider thumb is a circle.
+Small circles that are not pressable are markers, not actions: the status dot (0.62em) and today's date on the calendar. The toggle is the one rounded control: a pill track with a circular thumb, as on a phone, because a switch reads as a physical thing to slide; the slider thumb is a circle too.
 
 **The Circle Means Global Rule.** A circle is an action reachable from anywhere (search, gallery, files, remote, settings, home). A rectangle is content, or an action that belongs to the content it sits on (이어서 보기, 세션 종료). If a control only acts on the thing beside it, it is a rectangle.
 
@@ -393,8 +394,8 @@ The frame caption over a photo, in a fixed order: the **title** at display size 
 
 ### Selection controls
 
-- **Segmented:** a surface track with a 1px rule and 3px inset; options are 40px (target − 8px) rectangles in label type; the checked option is ink on ground.
-- **Toggle:** 52×32px track (×scale) with a 2px rule-strong border; on, the track fills ink and the 24px thumb turns ground and travels 20px.
+- **Segmented:** a surface track with a 1px rule and 3px inset; options are 40px (target − 8px) rectangles in label type. One ink thumb slides (240ms) under the checked label, which turns ground. Press and drag it across the options, as on a phone: the thumb follows the finger option by option, tightens to 96% while held, and the choice lands on release; a tap or the arrow keys work as before.
+- **Toggle:** a 52×32px pill (×scale) on surface-raised with a 1px rule-strong inner edge; a 26px white circular thumb with a soft shadow. On, the track fills ink, the thumb turns ground and travels 20px. While pressed the thumb stretches to 32px toward the centre.
 - **Slider:** a 6px track filled ink up to the value over rule-strong, with a 24px ink thumb ringed 3px in ground.
 
 ### Lists, sheets, dialogs, toasts
@@ -408,6 +409,10 @@ The frame caption over a photo, in a fixed order: the **title** at display size 
 ### Month calendar
 
 A fixed table: weekday heads in caption text-3, weeks divided by 1px rules, dates in body 500. Sundays in Sunday red, Saturdays in Saturday blue, outside days disabled; today is a filled ink circle (1.75em on the home) with ground text at 800.
+
+### Icon motion
+
+Each action's icon moves the way its function does, once (560ms, ease-out, transform only), when its button is hovered, focused, or pressed (`shared/ui/v2/iconMotion.ts`, `NvIconMotion`): search looks around, settings turns one tooth (90°), theme sways like a dial, refresh spins once, home bounces, back and the previous arrow nudge back, next nudges forward, up lifts, close turns a quarter, a folder lifts open, photo/video/play/info pop, the remote wiggles, fullscreen expands, open-elsewhere pokes out toward its arrow. It is attached by icon type, so every glyph button, button icon, dock tool and viewer control gets it. Still under reduced motion.
 
 ### Focus ring
 

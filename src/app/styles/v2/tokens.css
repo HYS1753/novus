@@ -120,6 +120,8 @@
   --nv-radius-content: 4px;
   --nv-radius-action: 4px;
   --nv-radius-glyph: 50%;
+  /* The toggle's track and thumb: the one rounded control. */
+  --nv-radius-pill: 999px;
 
   /* ---------- Focus ---------- */
   --nv-focus-width: 4px;

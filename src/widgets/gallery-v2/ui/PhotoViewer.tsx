@@ -7,6 +7,7 @@ import {
   CloseIcon,
   InfoIcon,
   MinusIcon,
+  NvIconMotion,
   NvSegmented,
   PauseIcon,
   PlayIcon,
@@ -489,7 +490,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           onClick={onClose}
           aria-label={t("nav.gallery")}
         >
-          <ArrowLeftIcon size={22} />
+          <NvIconMotion>
+            <ArrowLeftIcon size={22} />
+          </NvIconMotion>
         </button>
         <div className="pv__title">
           <strong title={currentImage.name}>{currentImage.name}</strong>
@@ -503,7 +506,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           title={t("viewer.info")}
           onClick={() => setInfo((value) => !value)}
         >
-          <InfoIcon size={22} />
+          <NvIconMotion>
+            <InfoIcon size={22} />
+          </NvIconMotion>
         </button>
         <button
           type="button"
@@ -512,7 +517,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           aria-label={t("viewer.close")}
           title={t("viewer.close")}
         >
-          <CloseIcon size={22} />
+          <NvIconMotion>
+            <CloseIcon size={22} />
+          </NvIconMotion>
         </button>
       </header>
 
@@ -543,7 +550,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             disabled={!hasPrev}
             aria-label={t("viewer.prev")}
           >
-            <ChevronLeftIcon size={22} />
+            <NvIconMotion>
+              <ChevronLeftIcon size={22} />
+            </NvIconMotion>
           </button>
           <button
             type="button"
@@ -552,7 +561,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             disabled={!hasNext}
             aria-label={t("viewer.next")}
           >
-            <ChevronRightIcon size={22} />
+            <NvIconMotion>
+              <ChevronRightIcon size={22} />
+            </NvIconMotion>
           </button>
 
           <span className="pv__rule" aria-hidden="true" />
@@ -565,7 +576,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
               disabled={zoom <= 1}
               aria-label={t("viewer.zoomOut")}
             >
-              <MinusIcon size={18} />
+              <NvIconMotion>
+                <MinusIcon size={18} />
+              </NvIconMotion>
             </button>
             <button
               type="button"
@@ -582,7 +595,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
               disabled={zoom >= 4}
               aria-label={t("viewer.zoomIn")}
             >
-              <PlusIcon size={18} />
+              <NvIconMotion>
+                <PlusIcon size={18} />
+              </NvIconMotion>
             </button>
           </div>
 
@@ -604,7 +619,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             onClick={() => setPlaying((value) => !value)}
             aria-label={playing ? t("viewer.slideshowPause") : t("viewer.slideshowStart")}
           >
-            {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
+            <NvIconMotion>
+              {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
+            </NvIconMotion>
             <span>{playing ? t("viewer.pause") : t("viewer.autoplay")}</span>
           </button>
           <NvSegmented

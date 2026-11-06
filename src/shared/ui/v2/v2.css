@@ -404,16 +404,41 @@
 }
 
 /* ---------- Segmented (single choice) ---------- */
+/* Segmented: one ink thumb slides under the labels; it can be dragged. */
 .nv-segmented {
+  position: relative;
   display: inline-flex;
   padding: 3px;
   gap: 3px;
   border-radius: calc(var(--nv-radius-action) + 3px);
   background: var(--nv-surface);
   border: 1px solid var(--nv-rule);
+  /* Horizontal drags belong to the control; vertical ones still scroll the page. */
+  touch-action: pan-y;
+}
+
+.nv-segmented__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-text);
+  pointer-events: none;
+  transition:
+    transform 240ms var(--nv-ease-out),
+    width 240ms var(--nv-ease-out),
+    scale var(--nv-dur-press) var(--nv-ease-out);
+}
+
+/* Held: the thumb tightens a touch, as if picked up. */
+.nv-segmented[data-pressed] .nv-segmented__thumb {
+  scale: 0.96;
 }
 
 .nv-segmented__option {
+  position: relative;
+  z-index: 1;
   min-height: calc(var(--nv-target) - 8px);
   padding: 0 var(--nv-space-4);
   border: 0;
@@ -425,9 +450,7 @@
   font-weight: var(--nv-weight-bold);
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color var(--nv-dur-move) var(--nv-ease-out),
-    color var(--nv-dur-move) var(--nv-ease-out);
+  transition: color var(--nv-dur-move) var(--nv-ease-out);
 }
 
 .nv-segmented__option:hover {
@@ -435,8 +458,18 @@
 }
 
 .nv-segmented__option.is-checked {
-  background: var(--nv-text);
   color: var(--nv-ground);
+}
+
+.nv-segmented__option:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-segmented__thumb {
+    transition: none;
+  }
 }
 
 /* ---------- Month calendar ---------- */
@@ -505,42 +538,63 @@
 }
 
 /* ---------- Toggle ---------- */
+/* A round switch (pill track, circular thumb). The thumb stretches while
+   pressed and settles on release, as on a phone. */
 .nv-toggle {
   position: relative;
   flex: none;
   width: calc(52px * var(--nv-scale));
   height: calc(32px * var(--nv-scale));
   padding: 0;
-  border: 2px solid var(--nv-rule-strong);
-  border-radius: var(--nv-radius-action);
-  background: var(--nv-surface);
+  border: 0;
+  border-radius: var(--nv-radius-pill);
+  background: var(--nv-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--nv-rule-strong);
   cursor: pointer;
   transition:
     background-color var(--nv-dur-move) var(--nv-ease-out),
-    border-color var(--nv-dur-move) var(--nv-ease-out);
+    box-shadow var(--nv-dur-move) var(--nv-ease-out);
 }
 
 .nv-toggle__thumb {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: calc(24px * var(--nv-scale));
-  height: calc(24px * var(--nv-scale));
-  border-radius: var(--nv-radius-content);
-  background: var(--nv-text-3);
+  top: calc(3px * var(--nv-scale));
+  left: calc(3px * var(--nv-scale));
+  width: calc(26px * var(--nv-scale));
+  height: calc(26px * var(--nv-scale));
+  border-radius: var(--nv-radius-pill);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.15);
   transition:
     transform var(--nv-dur-move) var(--nv-ease-out),
+    width var(--nv-dur-press) var(--nv-ease-out),
     background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-toggle:active .nv-toggle__thumb {
+  width: calc(32px * var(--nv-scale));
 }
 
 .nv-toggle.is-on {
   background: var(--nv-text);
-  border-color: var(--nv-text);
+  box-shadow: none;
 }
 
 .nv-toggle.is-on .nv-toggle__thumb {
   background: var(--nv-ground);
   transform: translateX(calc(20px * var(--nv-scale)));
+}
+
+/* Pressed while on, the wider thumb grows toward the left so it stays inside. */
+.nv-toggle.is-on:active .nv-toggle__thumb {
+  transform: translateX(calc(14px * var(--nv-scale)));
+}
+
+.nv-toggle:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
 }
 
 .nv-toggle:disabled {
@@ -1157,6 +1211,182 @@
 
 @media (prefers-reduced-motion: reduce) {
   .nv-menu__panel {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Icon motion (iconMotion.ts): each action's icon moves like its function,
+   once, when its button is hovered, focused, or pressed. Transform only.
+   ========================================================================== */
+[data-motion] {
+  display: inline-grid;
+  place-items: center;
+}
+
+[data-motion] > svg,
+[data-motion] svg {
+  transform-origin: 50% 50%;
+}
+
+:is(button, a):is(:hover, :focus-visible, :active) [data-motion] svg {
+  animation: var(--nvm-anim, none) 560ms var(--nv-ease-out) both;
+}
+
+[data-motion="seek"] {
+  --nvm-anim: nvm-seek;
+}
+[data-motion="gear"] {
+  --nvm-anim: nvm-gear;
+}
+[data-motion="sway"] {
+  --nvm-anim: nvm-sway;
+}
+[data-motion="spin"] {
+  --nvm-anim: nvm-spin;
+}
+[data-motion="bounce"] {
+  --nvm-anim: nvm-bounce;
+}
+[data-motion="back"] {
+  --nvm-anim: nvm-back;
+}
+[data-motion="forward"] {
+  --nvm-anim: nvm-forward;
+}
+[data-motion="up"] {
+  --nvm-anim: nvm-up;
+}
+[data-motion="turn"] {
+  --nvm-anim: nvm-turn;
+}
+[data-motion="lift"] {
+  --nvm-anim: nvm-lift;
+}
+[data-motion="pop"] {
+  --nvm-anim: nvm-pop;
+}
+[data-motion="wiggle"] {
+  --nvm-anim: nvm-wiggle;
+}
+[data-motion="expand"] {
+  --nvm-anim: nvm-expand;
+}
+[data-motion="out"] {
+  --nvm-anim: nvm-out;
+}
+
+/* The magnifier looks around. */
+@keyframes nvm-seek {
+  30% {
+    transform: rotate(-16deg) scale(1.1);
+  }
+  65% {
+    transform: rotate(8deg) scale(1.05);
+  }
+}
+
+/* The gear turns one tooth-step (it looks the same after 90°). */
+@keyframes nvm-gear {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+/* Sun/moon sway, like a dial being turned. */
+@keyframes nvm-sway {
+  35% {
+    transform: rotate(-28deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(10deg);
+  }
+}
+
+/* Refresh goes round once. */
+@keyframes nvm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nvm-bounce {
+  35% {
+    transform: translateY(-4px);
+  }
+  65% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes nvm-back {
+  40% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes nvm-forward {
+  40% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes nvm-up {
+  40% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Close turns a quarter (an × looks the same after 90°). */
+@keyframes nvm-turn {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+/* The folder lifts open a little. */
+@keyframes nvm-lift {
+  40% {
+    transform: translateY(-3px) rotate(-6deg);
+  }
+}
+
+@keyframes nvm-pop {
+  35% {
+    transform: scale(1.18);
+  }
+  70% {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes nvm-wiggle {
+  20% {
+    transform: rotate(12deg);
+  }
+  45% {
+    transform: rotate(-10deg);
+  }
+  70% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes nvm-expand {
+  40% {
+    transform: scale(1.2);
+  }
+}
+
+/* Open-elsewhere pokes out toward its arrow. */
+@keyframes nvm-out {
+  40% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(button, a):is(:hover, :focus-visible, :active) [data-motion] svg {
     animation: none;
   }
 }

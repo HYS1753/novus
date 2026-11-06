@@ -1,4 +1,5 @@
 import React from "react";
+import { motionOf } from "./iconMotion";
 
 export type NvButtonVariant = "primary" | "secondary" | "quiet";
 
@@ -28,7 +29,7 @@ export const NvButton: React.FC<NvButtonProps> = ({
     {...props}
   >
     {icon && (
-      <span className="nv-button__icon" aria-hidden="true">
+      <span className="nv-button__icon" aria-hidden="true" data-motion={motionOf(icon)}>
         {icon}
       </span>
     )}
