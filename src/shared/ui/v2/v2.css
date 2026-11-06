@@ -881,13 +881,21 @@
 }
 
 .nv-caption__title {
-  margin: var(--nv-space-3) 0 var(--nv-space-2);
+  margin: 0 0 var(--nv-space-3);
   font-family: var(--nv-font-display);
   font-size: var(--nv-size-display);
   font-weight: var(--nv-weight-heavy);
   letter-spacing: var(--nv-track-display);
   line-height: 1.02;
   overflow-wrap: anywhere;
+}
+
+.nv-caption__status {
+  margin-bottom: var(--nv-space-1);
+}
+
+.nv-caption__status .nv-status {
+  font-size: var(--nv-size-body);
 }
 
 .nv-caption__sub {
@@ -900,4 +908,15 @@
   flex-wrap: wrap;
   gap: var(--nv-space-3);
   margin-top: var(--nv-space-5);
+}
+
+.nv-glyph__hint {
+  display: block;
+  font-size: 0.85em;
+  font-weight: var(--nv-weight-medium);
+  opacity: 0.75;
+}
+
+.nv-glyph--muted .nv-glyph__circle {
+  opacity: 0.6;
 }

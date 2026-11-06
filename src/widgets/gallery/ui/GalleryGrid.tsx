@@ -303,7 +303,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = ({
         ) : error ? (
           <div className="subpage-state" role="alert">
             <strong>{t("files.loadError")}</strong>
-            <span>{error}</span>
+            <span title={error}>{t("files.loadErrorHint")}</span>
           </div>
         ) : items.length === 0 ? (
           <div className="subpage-state">

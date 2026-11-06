@@ -49,7 +49,10 @@ export interface NvCaptionProps {
   className?: string;
 }
 
-/** The frame caption over a photo: state line, display title, one line of context, actions. */
+/**
+ * The frame caption over a photo: display title, then a state line, then one
+ * line of context, then actions. Nothing sits above the title.
+ */
 export const NvCaption: React.FC<NvCaptionProps> = ({
   status,
   title,
@@ -58,8 +61,8 @@ export const NvCaption: React.FC<NvCaptionProps> = ({
   className = "",
 }) => (
   <div className={`nv-caption nv-on-media ${className}`}>
-    {status}
     <h2 className="nv-caption__title">{title}</h2>
+    {status && <p className="nv-caption__status">{status}</p>}
     {subtitle && <p className="nv-caption__sub">{subtitle}</p>}
     {actions && <div className="nv-caption__actions">{actions}</div>}
   </div>

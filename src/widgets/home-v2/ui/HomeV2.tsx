@@ -41,6 +41,8 @@ export interface HomeLocation {
 export interface HomeV2Props {
   now: Date;
   photoUrl: string;
+  /** Vertical focal point of the photo (0–1); the folded band shows this strip. */
+  photoFocus?: number;
   /** Marks the photo as sample material (style guide only). */
   sampleLabel?: string;
   weather?: { city: string; condition: WeatherCondition; temperature: number } | null;
@@ -65,6 +67,21 @@ export interface HomeV2Props {
   shortcutsEnabled?: boolean;
 }
 
+function dayOfYear(date: Date) {
+  const start = Date.UTC(date.getFullYear(), 0, 1);
+  const today = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor((today - start) / 86_400_000) + 1;
+}
+
+/** ISO-8601 week number. */
+function isoWeek(date: Date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+  return Math.ceil(((d.getTime() - yearStart) / 86_400_000 + 1) / 7);
+}
+
 function greetingKey(hour: number) {
   if (hour >= 5 && hour < 12) return "home.greeting.morning" as const;
   if (hour >= 12 && hour < 18) return "home.greeting.afternoon" as const;
@@ -80,6 +97,7 @@ function greetingKey(hour: number) {
 export const HomeV2: React.FC<HomeV2Props> = ({
   now,
   photoUrl,
+  photoFocus = 0.5,
   sampleLabel,
   weather,
   services,
@@ -104,6 +122,10 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
   const frameRef = useRef(0);
+  const focusRef = useRef(photoFocus);
+  useEffect(() => {
+    focusRef.current = photoFocus;
+  }, [photoFocus]);
 
   const live = services
     .filter((service) => service.state === "live")
@@ -124,7 +146,10 @@ export const HomeV2: React.FC<HomeV2Props> = ({
     if (!scroller || !photo) return;
     const height = scroller.clientHeight;
     const progress = height ? Math.min(1, scroller.scrollTop / height) : 0;
-    photo.style.transform = `translate3d(0, ${-progress * height * (1 - BAND_RATIO)}px, 0)`;
+    // Folded, the band is centred on the photo's focal strip, not its bottom edge.
+    const band = height * BAND_RATIO;
+    const travel = Math.min(height - band, Math.max(0, focusRef.current * height - band / 2));
+    photo.style.transform = `translate3d(0, ${-progress * travel}px, 0)`;
   }, []);
 
   const onScroll = useCallback(() => {
@@ -201,14 +226,12 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   // ---------- Caption content per state ----------
   let caption: React.ReactNode;
   if (featured && featuredIsLive) {
-    const used = featured.lastUsed
-      ? ` · ${t("home.usedAgo", { time: relativeTime(featured.lastUsed) })}`
-      : "";
+    const used = featured.lastUsed ? ` · ${relativeTime(featured.lastUsed)}` : "";
     caption = (
       <NvCaption
         status={
           <NvStatus tone="live" onMedia>
-            {t("home.live")} · {t("home.sessionKept")}
+            {t("home.live")}
             {used}
           </NvStatus>
         }
@@ -251,7 +274,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           </NvStatus>
         }
         title={featured.name}
-        subtitle={t("home.idleHint")}
+        subtitle={t("home.sessionEnded")}
         actions={
           <NvButton
             variant="primary"
@@ -324,6 +347,8 @@ export const HomeV2: React.FC<HomeV2Props> = ({
               onMedia
               icon={<RemoteIcon />}
               label={t("nav.remote")}
+              hint={t("home.soon")}
+              muted
               onClick={onOpenRemote}
             />
             <NvGlyphButton
@@ -379,6 +404,9 @@ export const HomeV2: React.FC<HomeV2Props> = ({
               <span className="nvh__month">{monthLabel}</span>
               <span className="nv-numeral nvh__numeral">{now.getDate()}</span>
               <span className="nvh__weekday">{weekday}</span>
+              <span className="nvh__dayline">
+                {t("home.dayOfYear", { day: dayOfYear(now), week: isoWeek(now) })}
+              </span>
               <span className="nvh__meta">
                 <span className="nv-numeral nvh__daytime">{time(now)}</span>
                 {weatherLine && <span>{weatherLine}</span>}
@@ -448,6 +476,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
               </NvButton>
               <NvButton variant="quiet" icon={<RemoteIcon />} onClick={onOpenRemote}>
                 {t("home.mobileRemote")}
+                <span className="nvh__soon">{t("home.soon")}</span>
               </NvButton>
             </nav>
           </div>

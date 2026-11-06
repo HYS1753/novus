@@ -305,4 +305,8 @@ export const zhCN: Messages = {
   "loader.openStandalone": "在独立播放器中打开",
   "loader.drmHint":
     "部分服务因安全策略(X-Frame-Options、Widevine DRM)可能无法在应用内显示。遇到这种情况,请在独立播放器中打开。",
+  "home.sessionEnded": "会话已结束 · 将从首页打开",
+  "home.soon": "即将推出",
+  "files.loadErrorHint": "请选择其他位置或刷新。",
+  "home.dayOfYear": "今年第 {day} 天 · 第 {week} 周",
 };

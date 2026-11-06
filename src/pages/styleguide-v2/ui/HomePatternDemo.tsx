@@ -53,6 +53,7 @@ export const HomePatternDemo: React.FC = () => {
         <HomeV2
           now={now}
           photoUrl={artwork?.url ?? ""}
+          photoFocus={artwork?.focusY}
           sampleLabel={language === "ko" ? "예시 데이터" : "Sample data"}
           weather={{ city: "Seoul", condition: "clear", temperature: 12 }}
           services={services}

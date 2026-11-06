@@ -309,6 +309,10 @@ export const ko = {
   "loader.openStandalone": "독립 플레이어로 열기",
   "loader.drmHint":
     "일부 서비스는 보안 정책(X-Frame-Options, Widevine DRM) 때문에 앱 안에 표시되지 않을 수 있습니다. 그럴 때는 독립 플레이어로 열어 보세요.",
+  "home.sessionEnded": "세션이 끝났어요 · 다시 열면 첫 화면부터",
+  "home.soon": "준비 중",
+  "files.loadErrorHint": "다른 위치를 고르거나 새로고침해 보세요.",
+  "home.dayOfYear": "올해 {day}번째 날 · {week}주차",
 } as const;
 
 export type MessageKey = keyof typeof ko;

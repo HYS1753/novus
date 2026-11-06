@@ -311,4 +311,8 @@ export const ja: Messages = {
   "loader.openStandalone": "単独のプレーヤーで開く",
   "loader.drmHint":
     "一部のサービスはセキュリティポリシー(X-Frame-Options、Widevine DRM)によりアプリ内に表示できない場合があります。その場合は単独のプレーヤーで開いてください。",
+  "home.sessionEnded": "セッションは終了しました · 最初の画面から開きます",
+  "home.soon": "準備中",
+  "files.loadErrorHint": "別の場所を選ぶか、再読み込みしてください。",
+  "home.dayOfYear": "今年 {day} 日目 · 第 {week} 週",
 };

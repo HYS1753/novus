@@ -135,6 +135,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
       <HomeV2
         now={now}
         photoUrl={photo.url}
+        photoFocus={photo.focusY}
         weather={weather}
         services={services}
         locations={homeLocations}

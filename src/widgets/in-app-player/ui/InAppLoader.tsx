@@ -1,7 +1,6 @@
 import React from "react";
 import {
   GlassProgress,
-  GlassBadge,
   GlassButton,
   ExternalLinkIcon,
   RefreshIcon,
@@ -64,13 +63,9 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
 
         {/* Title & Status */}
         <div className="in-app-loader__meta">
-          <div className="in-app-loader__badge-row">
-            <GlassBadge variant="primary" pulse>
-              {t("loader.connecting")}
-            </GlassBadge>
-          </div>
           <h2 className="in-app-loader__title">{app.title}</h2>
           <p className="in-app-loader__subtitle">
+            {t("loader.connecting")} ·{" "}
             {showFallbackNotice ? t("loader.checking") : t("loader.linking")}
           </p>
         </div>

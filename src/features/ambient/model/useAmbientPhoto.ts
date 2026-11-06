@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  DEFAULT_PHOTO_FOCUS,
   getAmbientArtworkForDay,
   getImageThumbnail,
   getMediaPage,
@@ -14,6 +15,8 @@ const POOL_SIZE = 40;
 
 export interface AmbientPhoto {
   url: string;
+  /** Vertical focal point for the folded band (0–1). */
+  focusY: number;
   /** True when the user's folder had no usable photo and bundled art is shown. */
   bundled: boolean;
 }
@@ -32,7 +35,11 @@ async function resolveFolder(stored: string | null): Promise<string | null> {
 export function useAmbientPhoto(rotateMs: number): AmbientPhoto {
   const [folder] = usePreference("ambientFolder");
   const fallback = getAmbientArtworkForDay();
-  const [photo, setPhoto] = useState<AmbientPhoto>({ url: fallback?.url ?? "", bundled: true });
+  const [photo, setPhoto] = useState<AmbientPhoto>({
+    url: fallback?.url ?? "",
+    focusY: fallback?.focusY ?? DEFAULT_PHOTO_FOCUS,
+    bundled: true,
+  });
   const poolRef = useRef<string[]>([]);
   const indexRef = useRef(0);
 
@@ -47,7 +54,9 @@ export function useAmbientPhoto(rotateMs: number): AmbientPhoto {
       indexRef.current += 1;
       try {
         const url = await getImageThumbnail(path, PHOTO_DIM, 1, controller.signal);
-        if (!controller.signal.aborted) setPhoto({ url, bundled: false });
+        if (!controller.signal.aborted) {
+          setPhoto({ url, focusY: DEFAULT_PHOTO_FOCUS, bundled: false });
+        }
       } catch {
         // Skip an unreadable file; the next tick tries the next one.
       }
@@ -72,8 +81,19 @@ export function useAmbientPhoto(rotateMs: number): AmbientPhoto {
       }
       if (controller.signal.aborted) return;
       if (poolRef.current.length === 0) {
-        const art = getAmbientArtworkForDay();
-        setPhoto({ url: art?.url ?? "", bundled: true });
+        // No user photos: cycle the bundled artwork on the same cadence.
+        let step = 0;
+        const showArt = () => {
+          const art = getAmbientArtworkForDay(new Date(), step);
+          step += 1;
+          setPhoto({
+            url: art?.url ?? "",
+            focusY: art?.focusY ?? DEFAULT_PHOTO_FOCUS,
+            bundled: true,
+          });
+          timer = window.setTimeout(showArt, Math.max(60_000, rotateMs));
+        };
+        showArt();
         return;
       }
       indexRef.current = 0;

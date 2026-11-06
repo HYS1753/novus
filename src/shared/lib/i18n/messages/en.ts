@@ -310,4 +310,8 @@ export const en: Messages = {
   "loader.openStandalone": "Open in standalone player",
   "loader.drmHint":
     "Some services can't be shown inside the app because of their security policy (X-Frame-Options, Widevine DRM). If that happens, open it in the standalone player.",
+  "home.sessionEnded": "Session ended · Opens from the start",
+  "home.soon": "Soon",
+  "files.loadErrorHint": "Choose another location or refresh.",
+  "home.dayOfYear": "Day {day} of the year · Week {week}",
 };

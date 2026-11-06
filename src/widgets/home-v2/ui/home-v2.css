@@ -47,7 +47,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 62%;
+  /* Stays below the photo's focal light (horizon ≈ 0.55–0.62) so the sun keeps its value. */
+  height: 44%;
   background: var(--nv-scrim);
 }
 
@@ -165,7 +166,7 @@
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   grid-template-rows: minmax(0, 1fr) auto auto;
   gap: var(--nv-space-4) var(--nv-space-7);
-  padding: var(--nv-space-3) var(--nv-space-7) var(--nv-space-5);
+  padding: var(--nv-space-3) var(--nv-space-7) var(--nv-space-4);
   background: var(--nv-ground);
   color: var(--nv-text);
   position: relative;
@@ -177,7 +178,8 @@
   left: 0;
   right: 0;
   bottom: 100%;
-  height: 72px;
+  /* The band fades into the page ground in both themes. */
+  height: calc(var(--nvh-band, 176px) * 0.6);
   background: linear-gradient(to bottom, transparent, var(--nv-ground));
 }
 
@@ -345,7 +347,20 @@
 }
 
 .nvh.is-ambient .nvh__scrim {
-  opacity: 0.55;
+  opacity: 0;
+}
+
+/* Ambient keeps only a local corner scrim behind the clock. */
+.nvh.is-ambient .nvh__bar::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--nv-space-7) * -1);
+  bottom: calc(var(--nv-space-8) * -1);
+  width: calc(560px * var(--nv-scale));
+  height: calc(300px * var(--nv-scale));
+  background: radial-gradient(ellipse at 100% 100%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .nvh__scrim {
@@ -395,7 +410,13 @@
 
 /* ---------- Fit today's page to one screen on short frames ---------- */
 .nvh__numeral {
-  font-size: min(var(--nv-size-numeral), calc(var(--nvh-h, 912px) * 0.22));
+  font-size: min(calc(var(--nv-size-numeral) * 1.25), calc(var(--nvh-h, 912px) * 0.235));
+}
+
+.nvh__dayline {
+  margin-top: var(--nv-space-1);
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
 }
 
 .nvh__cal .nv-calendar td {
@@ -433,4 +454,43 @@
   height: calc(var(--nv-space-8) * 2.5);
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0));
   pointer-events: none;
+}
+
+/* "준비 중" tag on entry points of features that are not built yet. */
+.nvh__soon {
+  margin-left: var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-medium);
+  color: var(--nv-text-3);
+}
+
+/* ---------- Tablet posture: actions within thumb reach ---------- */
+.nv-root[data-posture="tablet"] .nvh__rail {
+  top: auto;
+  bottom: calc(var(--nv-space-8) + var(--nv-space-3));
+  transform: none;
+}
+
+/* ---------- Ambient: the clock becomes the frame's caption ---------- */
+.nvh__time {
+  transition: opacity var(--nv-dur-fold) var(--nv-ease-out);
+}
+
+.nvh.is-ambient .nvh__bar {
+  top: auto;
+  bottom: var(--nv-space-8);
+  align-items: flex-end;
+}
+
+.nvh.is-ambient .nvh__clock {
+  align-items: flex-end;
+}
+
+.nvh.is-ambient .nvh__time {
+  font-size: var(--nv-size-display);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.nvh.is-ambient .nvh__date {
+  font-size: var(--nv-size-heading);
 }

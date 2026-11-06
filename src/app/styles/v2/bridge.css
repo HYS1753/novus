@@ -204,3 +204,139 @@
 .nv-root.nv-bridge[data-theme="dark"] {
   --tint-rgb: 21, 21, 24;
 }
+
+/* ---------- Streaming loader: the v2 world, not a floating card ---------- */
+.nv-root.nv-bridge .in-app-loader__backdrop {
+  background: var(--nv-ground);
+}
+
+.nv-root.nv-bridge .in-app-loader__card {
+  max-width: calc(520px * var(--nv-scale));
+  align-items: flex-start;
+  text-align: left;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.nv-root.nv-bridge .in-app-loader__icon-wrapper {
+  width: calc(120px * var(--nv-scale));
+  height: calc(68px * var(--nv-scale));
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  border: 1px solid var(--nv-rule);
+  box-shadow: none;
+}
+
+.nv-root.nv-bridge .in-app-loader__meta {
+  align-items: flex-start;
+}
+
+.nv-root.nv-bridge .in-app-loader__title {
+  font-size: var(--nv-size-display);
+  font-weight: var(--nv-weight-heavy);
+  letter-spacing: var(--nv-track-display);
+  line-height: 1.05;
+}
+
+.nv-root.nv-bridge .in-app-loader__subtitle,
+.nv-root.nv-bridge .in-app-loader__fallback-desc {
+  font-size: var(--nv-size-body);
+  color: var(--nv-text-2);
+}
+
+.nv-root.nv-bridge .in-app-loader__progress {
+  max-width: none;
+}
+
+.nv-root.nv-bridge .in-app-loader__quick-row {
+  justify-content: flex-start;
+}
+
+.nv-root.nv-bridge .in-app-loader__fallback {
+  background: var(--nv-surface);
+}
+
+/* ---------- Gallery / Finder header: readable sizes and contrast ---------- */
+.nv-root.nv-bridge .gallery-browser__count,
+.nv-root.nv-bridge .path-navigation__separator {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+}
+
+.nv-root.nv-bridge .gallery-browser__controls .glass-segmented__item {
+  height: calc(var(--nv-target) - 8px);
+  font-size: var(--nv-size-label);
+}
+
+.nv-root.nv-bridge .gallery-browser__sort-order,
+.nv-root.nv-bridge .finder__layout-button {
+  width: var(--nv-target);
+  height: var(--nv-target);
+  color: var(--nv-text-2);
+}
+
+.nv-root.nv-bridge .subpage-state > span:last-child {
+  color: var(--nv-text-2);
+  font-size: var(--nv-size-label);
+}
+
+/* ---------- Shape grammar: rectangles for content controls ---------- */
+.nv-root.nv-bridge .glass-segmented,
+.nv-root.nv-bridge .glass-segmented__item,
+.nv-root.nv-bridge .gallery-browser__location-trigger,
+.nv-root.nv-bridge .path-navigation__up,
+.nv-root.nv-bridge .path-navigation__ellipsis,
+.nv-root.nv-bridge .gallery-browser__search,
+.nv-root.nv-bridge .finder__search,
+.nv-root.nv-bridge .gallery-browser__sort-order,
+.nv-root.nv-bridge .finder__layout-button,
+.nv-root.nv-bridge .glass-btn {
+  border-radius: var(--nv-radius-action) !important;
+}
+
+.nv-root.nv-bridge .glass-segmented {
+  padding: 3px;
+}
+
+.nv-root.nv-bridge .glass-btn {
+  gap: var(--nv-space-2);
+  box-shadow: none !important;
+}
+
+/* Loader: one plate for the logo, no nested frame. */
+.nv-root.nv-bridge .in-app-loader__icon-wrapper {
+  width: calc(160px * var(--nv-scale));
+  height: calc(90px * var(--nv-scale));
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.nv-root.nv-bridge .in-app-loader__logo-img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: var(--nv-radius-content);
+}
+
+.nv-root.nv-bridge .glass-btn > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+}
+
+/* Dock buttons stay circles (global actions) even though they reuse the button class. */
+.nv-root.nv-bridge .in-app-dock .in-app-dock__btn {
+  border-radius: 50% !important;
+}
+
+/* Loader logo: the official mark contained whole inside one plate. */
+.nv-root.nv-bridge .in-app-loader__logo-img {
+  object-fit: contain;
+  object-position: center;
+}
