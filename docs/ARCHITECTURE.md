@@ -275,7 +275,8 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 - 전달된 배포 태그와 GitHub의 실제 tag ref는 모두 `v` + 앱 버전과 일치해야 합니다. source info는 버전·기대 태그·HEAD·dirty 여부와 설치 계약을 출력합니다. 자동 배포의 `ci-release.mjs guard`는 저장소, 깨끗한 체크아웃, 실행 커밋, 태그 대상 및 origin/main 포함 여부를 검사합니다. 수동 검증 실행은 main만 허용합니다.
 - 업데이트 서명은 저장소 밖의 암호화된 개인 키와 `signing/updater.pub`의 공개 키를 사용합니다. Windows 설정은 공개 키 내용, GitHub Release의 HTTPS `latest.json` 주소, passive 설치 모드와 `createUpdaterArtifacts: true`, 서명 버전 필수와 다운그레이드 금지를 선언합니다. Windows updater 런타임은 아래 IPC로 동작하며 설치본에서는 사용자 설정에 따라 자동 확인·다운로드합니다.
 - `scripts/update-artifacts.mjs`는 Node 표준 암호화 기능으로 Tauri minisign의 파일 서명과 trusted comment 서명을 모두 검증합니다. 버전·파일명·공개 키·다운로드 주소 계약을 검사한 뒤 EXE 옆에 `latest.json`과 `SHA256SUMS`를 생성합니다. 이 단독 도구는 빌드 출처를 검사하지 않습니다.
-- `.github/workflows/release-windows.yml`은 v* 태그 Push 시 Windows x64 서명 빌드와 Release 초안을 생성합니다. workflow_dispatch는 main에서 동일한 빌드를 검증하되 Release를 만들지 않습니다. Node 24, pnpm 12.6.0, Rust 1.98.1과 잠금 파일을 사용하고 Actions는 커밋 SHA로 고정합니다. 네이티브 updater 및 기존 Rust 회귀 테스트도 실행합니다.
+- `.github/workflows/release-windows.yml`은 v* 태그 Push 시 Windows x64 서명 빌드와 Release 초안을 생성합니다. 기본 workflow_dispatch(`publish_version` 없음)는 main에서 동일한 빌드를 검증하되 Release를 만들지 않습니다. Node 24, pnpm 12.6.0, Rust 1.98.1과 잠금 파일을 사용하고 Actions는 커밋 SHA로 고정합니다. 네이티브 updater 및 기존 Rust 회귀 테스트도 실행합니다.
+- 수동 실행의 `publish_version`이 비어 있으면 검증 빌드이며, 버전을 입력하면 빌드 없이 기존 초안을 게시합니다. `publish-release.mjs`는 별도 태그 체크아웃에서 서명·manifest·출처와 성공한 원본 태그 실행을 검증하고, main의 게시 도구로 공개·Latest 지정합니다. 승인 기준과 명령·HITL·실패 복구는 RELEASING.md의 에이전트 실행 절차를 따릅니다.
 - CI는 빌드 전·후 커밋과 Git tree를 비교하고, 고정 MPV DLL 해시 및 EXE 서명을 확인한 뒤 EXE·sig·latest.json·SHA256SUMS·release-source.json만 별도 폴더에 복사합니다. 메타데이터는 커밋·실행 번호·MPV 및 파일 해시를 연결하는 CI 추적 정보이며 별도의 서명된 attestation은 아닙니다. 별도 Release 작업은 내려받은 파일을 재검증하고 기존 버전의 덮어쓰기를 거부합니다. Secrets는 서명 빌드 단계에만, contents: write는 Release 작업에만 부여합니다. 절차는 RELEASING.md를 따릅니다.
 
 ### 업데이트 런타임

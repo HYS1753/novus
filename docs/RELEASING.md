@@ -2,8 +2,8 @@
 
 ## 현재 범위
 
-- 배포 준비 버전은 `0.2.0`입니다. 버전 표시는 배포 완료를 의미하지 않습니다.
-- Windows 설치 규칙·서명 검증·GitHub Actions와 main 전용 IPC로 동작하는 Windows updater 런타임을 구현했습니다. 자동 조회/설치와 ON/OFF·수동 업데이트 UI는 아직 없습니다. 태그 생성과 최종 공개 게시는 별도 명시적 작업입니다. 런타임 계약은 [UPDATE_RUNTIME.md](UPDATE_RUNTIME.md)를 따릅니다.
+- 앱 버전은 `0.2.0`이며 게시 상태의 기준은 [GitHub Releases](https://github.com/HYS1753/novus/releases)입니다. 소스 버전 표시는 배포 완료를 의미하지 않습니다.
+- Windows 설치 규칙·서명 검증·GitHub Actions·updater와 자동 ON/OFF·수동 확인·진행률·설치 확인 UI를 제공합니다. 자동 업데이트는 조회·다운로드하며 설치·재시작은 사용자 확인 뒤에만 수행합니다. 런타임 계약은 [UPDATE_RUNTIME.md](UPDATE_RUNTIME.md)를 따릅니다.
 - 정식 배포 대상은 Windows x64입니다. macOS와 Linux의 정식 지원 여부는 각 플랫폼 실행 검증 이후 결정합니다.
 - 소스 및 배포 저장소는 공개 저장소 `HYS1753/novus`입니다. 공개 여부는 2026-11-04 인증 없는 GitHub 저장소 API에서 확인했습니다. 저장소 공개 범위는 변경하지 않았습니다.
 
@@ -77,11 +77,11 @@ Windows 빌드 명령은 대상 아키텍처·NSIS 형식·Cargo --locked를 명
 3. 같은 체크아웃의 소스 정보를 빌드 산출물과 함께 보관합니다. `dirty: true`인 산출물은 정식 배포하지 않습니다.
 4. CI는 빌드 전·후 체크아웃을 비교하고 별도의 `release-source.json`에 실행 커밋·태그·파일 해시를 연결해 보관합니다.
 
-기존 버전 설치본의 설정·로그인·MPV 재생 유지와 updater 검증을 통과하기 전에는 `0.2.0`을 정식 배포하지 않습니다. 기존 `0.1.0`에는 updater가 없으므로 updater 탑재 버전으로의 최초 전환은 수동 설치입니다.
+공개 전 QA 설치·업데이트·재시작·로그인/설정 보존 검증의 범위와 결과는 [UPDATE_VALIDATION.md](UPDATE_VALIDATION.md)를 확인합니다. 기존 `0.1.0`에는 updater가 없으므로 updater 탑재 버전으로의 최초 전환은 수동 설치입니다.
 
 ## 다음 단계의 시작 조건
 
-현재 워크플로는 서명 빌드와 Release 초안까지만 자동화합니다. 설치본은 설정의 자동 업데이트 ON/OFF에 따라 새 버전을 확인·다운로드하고 수동 확인·진행률·설치 확인 UI를 제공합니다. 자동 설치는 하지 않습니다. 공개 전 실제 설치·재시작·로그인 및 설정 보존은 별도 QA 식별자의 NSIS 사본으로 검증하며 절차·한계는 UPDATE_VALIDATION.md를 따릅니다. 정식 태그·Release 공개는 사용자 승인 후 별도로 수행합니다. 런타임 계약은 UPDATE_RUNTIME.md를 따릅니다.
+워크플로는 서명 빌드·Release 초안 생성과 별도 명시적 게시 실행을 제공합니다. 설치본은 설정의 자동 업데이트 ON/OFF에 따라 새 버전을 확인·다운로드하고 수동 확인·진행률·설치 확인 UI를 제공합니다. 자동 설치는 하지 않습니다. 공개 전 실제 설치·재시작·로그인 및 설정 보존은 별도 QA 식별자의 NSIS 사본으로 검증하며 절차·한계는 UPDATE_VALIDATION.md를 따릅니다. 정식 태그·Release 공개는 사용자 승인 범위에서 수행합니다. 런타임 계약은 UPDATE_RUNTIME.md를 따릅니다.
 
 ## 업데이트 키 보관
 
@@ -137,11 +137,12 @@ pnpm release:signing manifest src-tauri/target/x86_64-pc-windows-msvc/release/bu
 
 워크플로 이름은 **Windows signed release**, 파일은 `.github/workflows/release-windows.yml`입니다. GitHub-hosted Windows 2022 x64와 Node 24, pnpm 12.6.0, Rust 1.98.1을 사용합니다. Node는 24 계열 최신 패치를 사용하고, 패키지는 pnpm/Cargo 잠금 파일로 설치합니다. packageManager 필드와 pnpm-lock.yaml의 도구 항목은 pnpm 자체 버전도 고정하며 앱 의존성 버전은 바꾸지 않습니다. 사용하는 Actions는 커밋 SHA로 고정합니다.
 
-| 실행 방법                                       | 조건                                         | 결과                                   |
-| ----------------------------------------------- | -------------------------------------------- | -------------------------------------- |
-| Actions → Windows signed release → Run workflow | main 선택                                    | 서명 빌드·검증·Actions artifact만 생성 |
-| `v<앱 버전>` 태그 Push                          | 해당 커밋이 origin/main에 포함되고 버전 일치 | 서명 빌드 후 GitHub Release 초안 생성  |
-| 일반 main Push / PR                             | 실행 대상 아님                               | 배포 작업 없음                         |
+| 실행 방법                                       | 조건                                            | 결과                                      |
+| ----------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| Actions → Windows signed release → Run workflow | main 선택                                       | 서명 빌드·검증·Actions artifact만 생성    |
+| Run workflow에 `publish_version` 입력           | main, 기존 태그·성공한 태그 빌드·정상 초안 필요 | 재빌드 없이 서명·출처 재검증 후 정식 공개 |
+| `v<앱 버전>` 태그 Push                          | 해당 커밋이 origin/main에 포함되고 버전 일치    | 서명 빌드 후 GitHub Release 초안 생성     |
+| 일반 main Push / PR                             | 실행 대상 아님                                  | 배포 작업 없음                            |
 
 Secrets 두 개는 Repository secrets에 등록합니다. 값은 서명 빌드 단계의 환경에만 전달하고, PR 이벤트에서는 이 워크플로를 실행하지 않습니다. 일반 빌드 작업 권한은 contents: read이며, Release 작업만 contents: write를 사용합니다. main과 배포 태그 변경 권한은 저장소 소유자가 제한해야 합니다. 태그를 다른 커밋으로 이동시키거나 같은 버전의 파일을 교체하지 않습니다.
 
@@ -157,7 +158,7 @@ Secrets 두 개는 Repository secrets에 등록합니다. 값은 서명 빌드 �
 
 `release-source.json`은 버전, 태그, 소스 commit/tree, workflow run ID/attempt, ref/event, 빌드 시각, 공개 키·MPV 및 파일 SHA256을 기록합니다. 이는 해당 CI에서 검사한 추적 정보이며 별도의 서명된 attestation은 아닙니다. `latest.json`의 EXE URL은 `/releases/download/v<버전>/...`으로 해당 버전에 고정합니다.
 
-수동 검증은 태그 없이 실제 Secrets와 서명 빌드를 확인할 때 사용합니다. Release 초안 생성 경로는 태그 Push에서 검증합니다. 업데이트 런타임이 있어도 UI·실제 설치/재시작·데이터 보존 검증 전에는 초안을 바로 공개하지 않습니다. 검증 후 담당자가 Release 화면에서 공개합니다. 초안 파일은 공개 updater의 latest endpoint로 배포되지 않습니다.
+수동 검증은 `publish_version`을 비워 두고 실제 Secrets와 서명 빌드를 확인할 때 사용합니다. Release 초안 생성은 태그 Push에서 수행합니다. `publish_version`을 입력하면 빌드를 건너뛰고 기존 초안을 공개하므로 사용자에게 공개 승인을 받은 뒤에만 사용합니다. 초안 파일은 공개 updater의 latest endpoint로 배포되지 않습니다.
 
 실제 태그 배포 시에는 새 버전 변경·검증을 main에 병합하고 원격에 반영한 다음, 해당 커밋에서 다음 명령을 수행합니다. 아래 버전은 예시이며 같은 태그를 다시 사용하지 않습니다.
 
@@ -171,6 +172,28 @@ git push origin v0.2.0
 
 실패 시 로그에서 실패 단계를 확인합니다. Secrets 누락·잘못된 비밀번호·키 불일치·MPV 다운로드/해시 오류·서명 오류는 성공한 Release로 처리하지 않습니다. 이미 존재하는 공개/초안 Release는 덮어쓰지 않습니다. 업로드 도중 실패한 초안이 남았다면 담당자가 실패한 초안을 확인·정리한 뒤 재실행합니다. **Re-run all jobs**를 사용해 새 run attempt에서 전체 산출물을 다시 만들며, 이전 시도의 파일을 다음 시도에 섞지 않습니다. 공개한 버전은 재작성하지 않고 새 버전을 사용합니다.
 
-업데이트 서명은 Windows 게시자 인증서(Authenticode)와 별개입니다. 현재 Windows 게시자 코드 서명 인증서는 구성하지 않았습니다. 실제 업데이트 다운로드·설치와 기존 사용자 데이터 보존 검증은 updater 런타임 구현 이후 수행합니다.
+업데이트 서명은 Windows 게시자 인증서(Authenticode)와 별개입니다. 현재 Windows 게시자 코드 서명 인증서는 구성하지 않았습니다. 실제 QA 설치·업데이트와 Netflix 로그인·설정 보존 검증 결과는 UPDATE_VALIDATION.md를 따릅니다.
+
+## 에이전트 실행 절차: 준비 → 태그 → 초안 → 공개 → 확인
+
+1. **승인 범위 확인**: 사용자의 “릴리즈 준비”, “빌드”, “초안” 요청은 공개 승인으로 취급하지 않습니다. “0.2.0 실제 릴리즈까지”처럼 버전과 공개 의도가 명시된 요청은 태그 Push·초안 생성·공개를 포함합니다. 같은 작업에서 이미 받은 공개 승인을 다시 요구하지 않습니다. 인증·로그인·사용자 계정 조작이 실제로 필요할 때만 HITL로 요청하고 키·비밀번호·토큰을 채팅에 요구하지 않습니다.
+2. **버전·소스 준비**: 깨끗한 main에서 작업 브랜치를 만들고 `pnpm release:version <버전>`으로 네 파일을 맞춥니다. `docs/releases/v<버전>.md`에 사용자가 이해할 변경 내용·설치/이전 방법·지원 범위를 작성합니다. QA 앱·QA 키·로컬 target 산출물은 정식 배포에 사용하지 않습니다.
+3. **검증과 병합**: `pnpm typecheck` → `pnpm lint` → `pnpm format:check` → `pnpm build`, `pnpm release:test`, `pnpm update:test`와 변경에 필요한 네이티브/실설치 검증을 통과시킵니다. 커밋 후 main에 병합·Push합니다. `git status --short`가 비어 있고 HEAD와 origin/main이 같은지 확인합니다.
+4. **태그 Push**: `pnpm release:check --tag v<버전>`을 통과시킨 뒤 로컬/원격에 같은 태그가 없는지 확인합니다. 위의 annotated tag 명령으로 **main의 검증된 커밋**을 태깅하고 그 태그만 Push합니다. 태그는 움직이거나 강제 덮어쓰지 않습니다. 이미 존재하면 해당 커밋과 Actions/Release 상태를 조사해 이어갑니다.
+5. **태그 빌드 완료 대기**: 실행의 event가 `push`, head SHA가 태그 커밋인 `Windows signed release`를 선택합니다. build와 draft-release 작업이 모두 성공하고 파일 5개가 초안에 있는지 확인합니다. 과거 workflow_dispatch의 같은 버전 artifact와 혼합하지 않습니다.
+6. **승인된 초안 공개**: 인증된 `gh`가 있으면 아래 명령을 사용합니다. `gh auth status`로 인증 여부만 확인하며 토큰 값을 출력하지 않습니다. 없으면 Actions 페이지에서 **Run workflow → Branch main → publish_version에 버전만 입력(예: 0.2.0, v 제외) → Run workflow**를 사용자에게 HITL로 요청합니다. 빈 값은 게시가 아니라 검증 빌드입니다. 새 장기 토큰을 만들거나 개인 키를 가져올 필요가 없습니다.
+
+   ```powershell
+   gh workflow run release-windows.yml --repo HYS1753/novus --ref main -f publish_version=0.2.0
+   ```
+
+7. **게시 성공 확인**: publish-release 작업 성공, Release의 draft=false/prerelease=false/published_at, `/releases/latest`의 tag_name을 확인합니다. 실제 `https://github.com/HYS1753/novus/releases/latest/download/latest.json`이 버전·Windows 서명·해당 태그 EXE URL을 반환하는지 확인합니다. 공개 asset 5개를 새 검증 디렉터리에 내려받아 EXE와 `.sig`를 `release:signing verify`로 검증하고 `SHA256SUMS`·`release-source.json`의 SHA256 및 태그 소스 SHA와 비교합니다. 다운로드 URL만 존재하는 것과 실제 설치 파일 검증을 구분합니다.
+8. **결과 전달**: 버전·태그 커밋·태그 빌드/게시 실행 링크·Release 페이지·EXE 다운로드 링크와 검증 결과를 알려줍니다. 사용자는 EXE 하나를 설치하며 나머지 파일은 updater/검증용입니다. 기존 0.1.0의 최초 수동 설치와 이후 앱 내 업데이트의 차이를 설명합니다.
+
+게시 job은 실행 당시 main SHA의 게시 도구와 별도로 태그 소스를 체크아웃합니다. `scripts/publish-release.mjs`가 원격 태그/main 포함 여부, stable 초안의 파일명·크기·완료 상태, 성공한 동일 저장소 태그 빌드의 run ID/attempt·SHA·워크플로 ID, 파일 해시·공개 키 서명·manifest를 재검증합니다. 수동 빌드 artifact, 이전 시도, 공개된 버전, 기존 stable보다 낮거나 같은 버전은 거부합니다. 게시 직전에 원격 태그와 초안 asset ID/크기/수정시각을 다시 확인하고, 태그에 포함된 릴리즈 노트로 공개·Latest 지정합니다. 게시 도구 수정이 필요해도 배포 태그를 움직이지 않고 main 도구를 고친 뒤 재실행할 수 있습니다.
+
+GitHub 게시 실패나 공개 직후 검증 실패를 성공으로 보고하지 않습니다. 공개된 버전의 EXE·서명·manifest를 교체하지 않고 문제를 보고한 뒤 다음 patch 버전으로 수정합니다. 버전 철회·Release 삭제·태그 이동은 별도 사용자 지시 없이 수행하지 않습니다. 인증 없는 GitHub API는 초안을 보여주지 않으므로 빈 목록을 초안 부재의 증거로 사용하지 않습니다.
+
+공식 명령: [GitHub CLI release edit](https://cli.github.com/manual/gh_release_edit), [workflow run](https://cli.github.com/manual/gh_workflow_run).
 
 공식 형식: [Tauri updater](https://v2.tauri.app/plugin/updater/), [minisign 서명 검증 구현](https://github.com/jedisct1/rust-minisign/blob/master/src/lib.rs).

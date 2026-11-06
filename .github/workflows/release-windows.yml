@@ -4,6 +4,12 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publish_version:
+        description: "Publish an approved, verified draft (e.g. 0.2.0). Leave empty for build validation only."
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -14,6 +20,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'push' || inputs.publish_version == ''
     runs-on: windows-2022
     timeout-minutes: 60
     outputs:
@@ -119,3 +126,41 @@ jobs:
             --draft --title "Novus $RELEASE_TAG" \
             --notes "Windows x64 NSIS. Source: $GITHUB_SHA. Build: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Draft pending installation and updater validation." \
             src-tauri/target/release-assets/*
+
+  publish-release:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_version != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Validate explicit publication request
+        env:
+          PUBLISH_VERSION: ${{ inputs.publish_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          [[ "$PUBLISH_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: publisher
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: v${{ inputs.publish_version }}
+          path: release-source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - name: Verify draft, signed assets, successful tag build and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH_VERSION: ${{ inputs.publish_version }}
+          RELEASE_ASSETS_DIR: ${{ runner.temp }}/publish-assets
+          RELEASE_SOURCE_DIR: ${{ github.workspace }}/release-source
+        run: node publisher/scripts/publish-release.mjs
