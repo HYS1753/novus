@@ -1,5 +1,6 @@
 pub mod device_profile;
 pub mod embedded_player;
+pub mod image_meta;
 #[cfg(target_os = "macos")]
 pub mod macos_player;
 pub mod media_fs;

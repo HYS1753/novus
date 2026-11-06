@@ -20,6 +20,9 @@ export interface FileItem {
   modified_ms: number;
   extension: string;
   media_type: MediaType;
+  /** Displayed image size (EXIF orientation applied); absent for folders, videos, unreadable formats. */
+  width?: number;
+  height?: number;
 }
 
 export interface DirectoryScanResult {
@@ -37,6 +40,19 @@ export interface MediaPageResult {
   video_count: number;
   items: FileItem[];
   has_more: boolean;
+  /** The recursive scan stopped at its 20,000-file limit. */
+  truncated: boolean;
+}
+
+/** "all": folders + media (folder view) · "media": images + videos · "image" · "video". */
+export type MediaKind = "all" | "media" | "image" | "video";
+
+/** A run of consecutive snapshot items in one calendar month (local time). */
+export interface TimelineBucket {
+  year: number;
+  month: number;
+  count: number;
+  first_index: number;
 }
 
 export async function getMediaPage(options: {
@@ -47,6 +63,9 @@ export async function getMediaPage(options: {
   snapshotId?: number;
   offset?: number;
   pageSize?: number;
+  kind?: MediaKind;
+  /** Walk every subfolder (timeline). Bounded to 20,000 files and 8 levels. */
+  recursive?: boolean;
 }): Promise<MediaPageResult> {
   return await invoke<MediaPageResult>("get_media_page", {
     path: options.path,
@@ -56,6 +75,17 @@ export async function getMediaPage(options: {
     snapshotId: options.snapshotId ?? null,
     offset: options.offset ?? 0,
     pageSize: options.pageSize ?? 80,
+    kind: options.kind ?? "all",
+    recursive: options.recursive ?? false,
+  });
+}
+
+/** Month runs of the current snapshot, for the date scrubber. */
+export async function getMediaTimeline(snapshotId: number): Promise<TimelineBucket[]> {
+  return await invoke<TimelineBucket[]>("get_media_timeline", {
+    snapshotId,
+    // getTimezoneOffset() is minutes *behind* UTC; the command wants minutes ahead.
+    utcOffsetMinutes: -new Date().getTimezoneOffset(),
   });
 }
 
