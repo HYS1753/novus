@@ -81,3 +81,28 @@
 .nv-root.nv-contents {
   display: contents;
 }
+
+/* ==========================================================================
+   Touch-first: nothing on screen is selectable text, nothing shows a
+   long-press callout, and images do not drag. Fields stay editable.
+   (WebKit — the macOS webview — needs the prefixed property.)
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img {
+  -webkit-user-drag: none;
+}

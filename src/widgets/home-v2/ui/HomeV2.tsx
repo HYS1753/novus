@@ -25,6 +25,7 @@ import {
   type WeatherCondition,
 } from "@/shared";
 import "./home-v2.css";
+import { useFrameDrag } from "./useFrameDrag";
 
 /** Share of the viewport the folded photo keeps as the band on today's page. */
 const BAND_RATIO = 0.13;
@@ -264,6 +265,9 @@ export const HomeV2: React.FC<HomeV2Props> = ({
       .forEach((node) => observer.observe(node));
     return () => observer.disconnect();
   }, []);
+
+  // Press and pull between the photo and today's page (touch, mouse, pen).
+  useFrameDrag(scrollerRef, !ambient);
 
   // Ambient always shows the first frame.
   useEffect(() => {

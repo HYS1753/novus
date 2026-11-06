@@ -48,6 +48,10 @@
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
+  /* The page turn is a pulled sheet (useFrameDrag), for touch as for mouse:
+     the browser must not pan it on its own. */
+  touch-action: none;
+  user-select: none;
 }
 
 .nvh__scroller::-webkit-scrollbar {

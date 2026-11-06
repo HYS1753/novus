@@ -335,7 +335,6 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   animation: pv-info-in var(--nv-dur-move) var(--nv-ease-out);
   transition: opacity var(--nv-dur-move) var(--nv-ease-out);
-  user-select: text;
 }
 
 @keyframes pv-info-in {
