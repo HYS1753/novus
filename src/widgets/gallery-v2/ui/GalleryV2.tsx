@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GalleryState, MediaCollection } from "@/features";
 import {
   ChevronRightIcon,
@@ -11,7 +11,8 @@ import {
   type FileItem,
 } from "@/shared";
 import { GalleryHeader } from "./GalleryHeader";
-import { JustifiedGrid } from "./JustifiedGrid";
+import { DateScrubber } from "./DateScrubber";
+import { JustifiedGrid, type GridPlacement, type GridSection } from "./JustifiedGrid";
 import "./gallery-v2.css";
 
 export interface GalleryV2Props {
@@ -21,17 +22,115 @@ export interface GalleryV2Props {
   onOpenVideo: (item: FileItem) => void;
 }
 
-/** Row height and gap come from CSS (`--gv-row`, `--gv-gap`), so posture and scale apply. */
+/**
+ * Row height, gap, and heading height come from CSS (`--gv-row`, `--gv-gap`,
+ * `--gv-heading`), so posture, scale, and density all apply.
+ */
 function useGridMetrics(probe: HTMLElement | null) {
-  const [metrics, setMetrics] = useState({ row: 180, gap: 4 });
+  const [metrics, setMetrics] = useState({ row: 180, gap: 4, heading: 56 });
   useLayoutEffect(() => {
     if (!probe) return;
-    const read = () => setMetrics({ row: probe.offsetHeight || 180, gap: probe.offsetWidth || 4 });
+    const heading = probe.firstElementChild as HTMLElement | null;
+    const read = () =>
+      setMetrics({
+        row: probe.offsetHeight || 180,
+        gap: probe.offsetWidth || 4,
+        heading: heading?.offsetHeight || 56,
+      });
     const observer = new ResizeObserver(read);
     observer.observe(probe);
+    if (heading) observer.observe(heading);
     return () => observer.disconnect();
   }, [probe]);
   return metrics;
+}
+
+/** Three densities, as pinching in Google Photos steps between them. */
+const DENSITY = [0.66, 1, 1.5] as const;
+const DENSITY_KEY = "novus.gallery.v2.density";
+
+function readDensity(): number {
+  try {
+    const stored = localStorage.getItem(DENSITY_KEY);
+    const value = stored === null ? NaN : Number(stored);
+    return Number.isInteger(value) && value >= 0 && value < DENSITY.length ? value : 1;
+  } catch {
+    return 1;
+  }
+}
+
+/** Pinch (two fingers) or ctrl+wheel (trackpad pinch) steps the density. */
+function usePinchDensity(target: HTMLElement | null) {
+  const [density, setDensity] = useState(readDensity);
+  const step = useCallback((direction: 1 | -1) => {
+    setDensity((current) => {
+      const next = Math.min(DENSITY.length - 1, Math.max(0, current + direction));
+      try {
+        localStorage.setItem(DENSITY_KEY, String(next));
+      } catch {
+        // Density still changes for this visit.
+      }
+      return next;
+    });
+  }, []);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const startDistance = useRef(0);
+
+  useEffect(() => {
+    if (!target) return;
+    let wheel = 0;
+    let wheelTimer = 0;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      wheel += event.deltaY;
+      window.clearTimeout(wheelTimer);
+      wheelTimer = window.setTimeout(() => (wheel = 0), 240);
+      if (Math.abs(wheel) > 60) {
+        step(wheel < 0 ? 1 : -1);
+        wheel = 0;
+      }
+    };
+    const distance = () => {
+      const [a, b] = [...pointers.current.values()];
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    };
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.current.size === 2) startDistance.current = distance();
+    };
+    const onMove = (event: PointerEvent) => {
+      if (!pointers.current.has(event.pointerId)) return;
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.current.size === 2 && startDistance.current > 0) {
+        const ratio = distance() / startDistance.current;
+        if (ratio > 1.3 || ratio < 0.77) {
+          step(ratio > 1 ? 1 : -1);
+          startDistance.current = distance();
+        }
+      }
+    };
+    const onUp = (event: PointerEvent) => {
+      pointers.current.delete(event.pointerId);
+      if (pointers.current.size < 2) startDistance.current = 0;
+    };
+    target.addEventListener("wheel", onWheel, { passive: false });
+    target.addEventListener("pointerdown", onDown);
+    target.addEventListener("pointermove", onMove);
+    target.addEventListener("pointerup", onUp);
+    target.addEventListener("pointercancel", onUp);
+    return () => {
+      target.removeEventListener("wheel", onWheel);
+      target.removeEventListener("pointerdown", onDown);
+      target.removeEventListener("pointermove", onMove);
+      target.removeEventListener("pointerup", onUp);
+      target.removeEventListener("pointercancel", onUp);
+      window.clearTimeout(wheelTimer);
+    };
+  }, [step, target]);
+
+  return density;
 }
 
 const Skeleton: React.FC = () => (
@@ -47,10 +146,12 @@ const Skeleton: React.FC = () => (
  * (photos across every subfolder, folders, videos), one scroller.
  */
 export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpenVideo }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [scroller, setScroller] = useState<HTMLDivElement | null>(null);
   const [probe, setProbe] = useState<HTMLSpanElement | null>(null);
   const metrics = useGridMetrics(probe);
+  const density = usePinchDensity(scroller);
+  const [placement, setPlacement] = useState<GridPlacement>({ sections: [], height: 0, offset: 0 });
   const collection = state.tab === "folders" ? state.folderView : state.library;
 
   const open = (target: MediaCollection) => (index: number) => {
@@ -75,13 +176,38 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
     if (folderGap) ensureRange(folderCount, folderCount + 1);
   }, [ensureRange, folderCount, folderGap]);
 
+  // The timeline groups by month when sorted by date; other sorts read as one run.
+  const byDate = state.tab !== "folders" && state.sort.field === "modified";
+  const { buckets, total } = collection;
+  const sections = useMemo<GridSection[]>(() => {
+    if (byDate && buckets.length > 0) {
+      const month = new Intl.DateTimeFormat(locale, { year: "numeric", month: "long" });
+      const count = new Intl.NumberFormat(locale);
+      return buckets.map((bucket) => ({
+        key: `${bucket.year}-${bucket.month}-${bucket.first_index}`,
+        start: bucket.first_index,
+        end: bucket.first_index + bucket.count,
+        label: month.format(new Date(bucket.year, bucket.month - 1, 1)),
+        meta: count.format(bucket.count),
+        year: bucket.year,
+      }));
+    }
+    return [{ key: "all", start: folderCount, end: total }];
+  }, [buckets, byDate, folderCount, locale, total]);
+
   const empty = collection.status === "ready" && collection.total === 0;
   const searchMiss = empty && state.search.trim().length > 0;
 
   return (
-    <section className="gv" aria-label={t("nav.gallery")}>
+    <section
+      className="gv"
+      aria-label={t("nav.gallery")}
+      style={{ ["--gv-density" as string]: DENSITY[density] }}
+    >
       <GalleryHeader state={state} />
-      <span ref={setProbe} className="gv__probe" aria-hidden="true" />
+      <span ref={setProbe} className="gv__probe" aria-hidden="true">
+        <span className="gv__probe-heading" />
+      </span>
 
       <div ref={setScroller} className="gv__body" data-nav-scope>
         {state.tab === "folders" && state.crumbs.length > 1 && (
@@ -160,18 +286,23 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
             {folderCount > 0 && <h3 className="gv-section">{t("gallery.mediaHeading")}</h3>}
             <JustifiedGrid
               items={collection.items}
-              start={folderCount}
-              end={collection.total}
+              sections={sections}
               revision={collection.revision}
               ensureRange={collection.ensureRange}
               scroller={scroller}
               rowHeight={metrics.row}
               gap={metrics.gap}
+              headerHeight={metrics.heading}
               onOpen={open(collection)}
+              onPlacement={setPlacement}
             />
           </>
         )}
       </div>
+
+      {collection.status === "ready" && state.tab !== "folders" && (
+        <DateScrubber scroller={scroller} placement={placement} />
+      )}
     </section>
   );
 };

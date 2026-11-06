@@ -5,7 +5,9 @@
    ========================================================================== */
 
 .gv {
-  --gv-row: calc(176px * var(--nv-scale));
+  --gv-density: 1;
+  --gv-row: calc(176px * var(--nv-scale) * var(--gv-density));
+  --gv-heading: calc(60px * var(--nv-scale));
   --gv-gap: max(2px, calc(4px * var(--nv-scale)));
   position: relative;
   display: flex;
@@ -26,6 +28,11 @@
   height: var(--gv-row);
   visibility: hidden;
   pointer-events: none;
+}
+
+.gv__probe-heading {
+  position: absolute;
+  height: var(--gv-heading);
 }
 
 /* ---------- Bar ---------- */
@@ -307,6 +314,8 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* The grid anchors its own scroll position when rows re-layout. */
+  overflow-anchor: none;
   padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
 }
 
@@ -406,6 +415,101 @@
   font-size: var(--nv-size-caption);
   font-weight: var(--nv-weight-bold);
   color: var(--nv-text-3);
+}
+
+/* Month headings sit on the grid's own coordinates (virtualized with the rows). */
+.gv-grid__heading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--nv-space-3);
+  margin: 0;
+  padding-bottom: var(--nv-space-3);
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text);
+}
+
+.gv-grid__meta {
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Date scrubber ---------- */
+.gv-scrub {
+  position: absolute;
+  top: calc(var(--nv-target) * 2 + var(--nv-space-6));
+  right: 0;
+  bottom: var(--nv-space-4);
+  z-index: 5;
+  width: calc(var(--nv-gutter) - 4px);
+  min-width: 28px;
+  touch-action: none;
+  cursor: ns-resize;
+}
+
+.gv-scrub__thumb {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  width: 6px;
+  height: 44px;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-text-3);
+  opacity: 0;
+  transition:
+    opacity var(--nv-dur-move) var(--nv-ease-out),
+    width var(--nv-dur-move) var(--nv-ease-out),
+    background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.gv-scrub[data-active] .gv-scrub__thumb {
+  opacity: 1;
+}
+
+.gv-scrub:hover .gv-scrub__thumb,
+.gv-scrub:active .gv-scrub__thumb {
+  width: 10px;
+  background: var(--nv-text);
+}
+
+.gv-scrub__bubble {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--nv-space-3));
+  padding: var(--nv-space-2) var(--nv-space-3);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-text);
+  color: var(--nv-ground);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.gv-scrub__year {
+  position: absolute;
+  right: 20px;
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--nv-text-3);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+  pointer-events: none;
+}
+
+.gv-scrub[data-active] .gv-scrub__year {
+  opacity: 1;
 }
 
 /* ---------- Loading ---------- */

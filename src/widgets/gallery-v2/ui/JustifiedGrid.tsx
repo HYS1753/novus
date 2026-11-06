@@ -1,13 +1,45 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { firstRowBelow, layoutJustified, useI18n, type FileItem } from "@/shared";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  firstRowBelow,
+  layoutJustified,
+  useI18n,
+  type FileItem,
+  type JustifiedRow,
+} from "@/shared";
 import { MediaThumb } from "./MediaThumb";
+
+/** A run of items shown under one heading (a month on the timeline). */
+export interface GridSection {
+  key: string;
+  start: number;
+  end: number;
+  /** Heading text; sections without one are laid out with no heading. */
+  label?: string;
+  /** Secondary heading text, e.g. the item count. */
+  meta?: string;
+  /** Year, for the scrubber's year marks. */
+  year?: number;
+}
+
+/** Where each section sits once laid out, for the scrubber. */
+export interface PlacedSection {
+  key: string;
+  top: number;
+  label?: string;
+  year?: number;
+}
+
+export interface GridPlacement {
+  sections: PlacedSection[];
+  height: number;
+  /** The grid's top inside the scrolled content. */
+  offset: number;
+}
 
 export interface JustifiedGridProps {
   /** The collection's sparse items (snapshot index space). */
   items: (FileItem | undefined)[];
-  /** First and one-past-last index this grid shows. */
-  start: number;
-  end: number;
+  sections: GridSection[];
   /** Bumps when pages land. */
   revision: number;
   ensureRange: (start: number, end: number) => void;
@@ -15,7 +47,9 @@ export interface JustifiedGridProps {
   scroller: HTMLElement | null;
   rowHeight: number;
   gap: number;
+  headerHeight: number;
   onOpen: (index: number) => void;
+  onPlacement?: (placement: GridPlacement) => void;
 }
 
 /** Rows rendered beyond the viewport, above and below. */
@@ -30,19 +64,102 @@ function aspectOf(item: FileItem | undefined): number | undefined {
   return 4 / 3;
 }
 
-function useViewport(scroller: HTMLElement | null, grid: HTMLElement | null) {
+interface Heading {
+  key: string;
+  top: number;
+  label: string;
+  meta?: string;
+}
+
+/** The grid's top inside the scrolled content. */
+function offsetIn(scroller: HTMLElement, grid: HTMLElement) {
+  return (
+    grid.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
+  );
+}
+
+/**
+ * Justified photo grid under section headings, virtualized: only rows near
+ * the viewport exist in the DOM, and the pages under them are requested as
+ * they come into view. When estimated rows above the viewport are replaced
+ * by real sizes, the scroll position follows the first visible photo, so
+ * nothing jumps under the reader.
+ */
+export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
+  items,
+  sections,
+  revision,
+  ensureRange,
+  scroller,
+  rowHeight,
+  gap,
+  headerHeight,
+  onOpen,
+  onPlacement,
+}) => {
+  const { t } = useI18n();
+  const [grid, setGrid] = useState<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(0);
   const [view, setView] = useState({ top: 0, height: 0 });
+  const anchorRef = useRef<{ index: number; top: number } | null>(null);
+  // Scroll writes go through a ref: the element itself is a prop.
+  const scrollerRef = useRef(scroller);
+  useEffect(() => {
+    scrollerRef.current = scroller;
+  }, [scroller]);
+
+  useLayoutEffect(() => {
+    if (!grid) return;
+    // Fires once on observe, then on every width change.
+    const observer = new ResizeObserver(() => setWidth(grid.clientWidth));
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [grid]);
+
+  const layout = useMemo(() => {
+    const rows: JustifiedRow[] = [];
+    const headings: Heading[] = [];
+    const placed: PlacedSection[] = [];
+    let y = 0;
+    sections.forEach((section, index) => {
+      if (index > 0) y += gap * 6;
+      placed.push({ key: section.key, top: y, label: section.label, year: section.year });
+      if (section.label) {
+        headings.push({ key: section.key, top: y, label: section.label, meta: section.meta });
+        y += headerHeight;
+      }
+      const part = layoutJustified(
+        (item) => aspectOf(items[item]),
+        section.start,
+        section.end,
+        width,
+        rowHeight,
+        gap,
+        y,
+      );
+      rows.push(...part.rows);
+      y += part.height;
+    });
+    return { rows, headings, placed, height: y };
+    // `revision` stands for the in-place mutation of `items`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, revision, sections, width, rowHeight, gap, headerHeight]);
+
+  // Track the viewport and remember the first visible photo as the anchor.
+  const rowsRef = useRef(layout.rows);
+  useEffect(() => {
+    rowsRef.current = layout.rows;
+  }, [layout.rows]);
   useLayoutEffect(() => {
     if (!scroller || !grid) return;
     let frame = 0;
     const read = () => {
       frame = 0;
-      // The grid's position inside the scrolled content.
-      const offset =
-        grid.getBoundingClientRect().top -
-        scroller.getBoundingClientRect().top +
-        scroller.scrollTop;
-      setView({ top: scroller.scrollTop - offset, height: scroller.clientHeight });
+      const top = scroller.scrollTop - offsetIn(scroller, grid);
+      const rows = rowsRef.current;
+      const row = rows[firstRowBelow(rows, top)];
+      anchorRef.current = row ? { index: row.start, top: row.top } : null;
+      setView({ top, height: scroller.clientHeight });
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(read);
@@ -57,51 +174,41 @@ function useViewport(scroller: HTMLElement | null, grid: HTMLElement | null) {
       cancelAnimationFrame(frame);
     };
   }, [grid, scroller]);
-  return view;
-}
 
-/**
- * Justified photo grid, virtualized: only rows near the viewport exist in
- * the DOM, and the pages under them are requested as they come into view.
- */
-export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
-  items,
-  start,
-  end,
-  revision,
-  ensureRange,
-  scroller,
-  rowHeight,
-  gap,
-  onOpen,
-}) => {
-  const { t } = useI18n();
-  const [grid, setGrid] = useState<HTMLDivElement | null>(null);
-  const [width, setWidth] = useState(0);
-
+  // Re-layout: keep the anchor photo where the reader left it.
   useLayoutEffect(() => {
-    if (!grid) return;
-    // Fires once on observe, then on every width change.
-    const observer = new ResizeObserver(() => setWidth(grid.clientWidth));
-    observer.observe(grid);
-    return () => observer.disconnect();
-  }, [grid]);
+    const anchor = anchorRef.current;
+    const target = scrollerRef.current;
+    if (!anchor || !target) return;
+    const row = layout.rows.find(
+      (entry) => anchor.index >= entry.start && anchor.index < entry.end,
+    );
+    if (!row || row.top === anchor.top) return;
+    target.scrollTop += row.top - anchor.top;
+    anchorRef.current = { index: anchor.index, top: row.top };
+  }, [layout]);
 
-  const layout = useMemo(
-    () => layoutJustified((index) => aspectOf(items[index]), start, end, width, rowHeight, gap),
-    // `revision` stands for the in-place mutation of `items`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, revision, start, end, width, rowHeight, gap],
-  );
+  useEffect(() => {
+    if (!scroller || !grid) return;
+    onPlacement?.({
+      sections: layout.placed,
+      height: layout.height,
+      offset: offsetIn(scroller, grid),
+    });
+  }, [grid, layout.placed, layout.height, onPlacement, scroller]);
 
-  const view = useViewport(scroller, grid);
   const first = firstRowBelow(layout.rows, view.top - OVERSCAN_PX);
   let last = first;
   while (last < layout.rows.length && layout.rows[last].top < view.top + view.height + OVERSCAN_PX)
     last++;
   const visible = layout.rows.slice(first, last);
-  const visibleStart = visible[0]?.start ?? start;
-  const visibleEnd = visible.at(-1)?.end ?? start;
+  const visibleStart = visible[0]?.start ?? 0;
+  const visibleEnd = visible.at(-1)?.end ?? 0;
+  const headings = layout.headings.filter(
+    (heading) =>
+      heading.top + headerHeight > view.top - OVERSCAN_PX &&
+      heading.top < view.top + view.height + OVERSCAN_PX,
+  );
 
   useEffect(() => {
     if (visibleEnd > visibleStart) ensureRange(visibleStart, visibleEnd + PREFETCH_ITEMS);
@@ -109,6 +216,16 @@ export const JustifiedGrid: React.FC<JustifiedGridProps> = ({
 
   return (
     <div ref={setGrid} className="gv-grid" style={{ height: layout.height }}>
+      {headings.map((heading) => (
+        <h3
+          key={heading.key}
+          className="gv-grid__heading"
+          style={{ transform: `translate3d(0, ${heading.top}px, 0)`, height: headerHeight }}
+        >
+          <span>{heading.label}</span>
+          {heading.meta && <span className="gv-grid__meta">{heading.meta}</span>}
+        </h3>
+      ))}
       {visible.map((row) =>
         row.widths.map((tileWidth, column) => {
           const index = row.start + column;
