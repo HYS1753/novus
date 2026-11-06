@@ -135,33 +135,81 @@
   transform: translateY(-50%);
 }
 
+/* The way between the two frames: a real tap target, not a caption.
+   A translucent plate on the photo (no blur), the word and a chevron that
+   nudges in its direction now and then to invite a tap. */
 .nvh__hint {
   position: absolute;
   left: 50%;
   bottom: var(--nv-space-4);
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--nv-space-1);
+  gap: var(--nv-space-2);
   min-height: var(--nv-target);
-  padding: 0 var(--nv-space-4);
-  border: 0;
+  padding: 0 var(--nv-space-5);
+  border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: var(--nv-radius-action);
-  background: none;
-  color: var(--nv-on-media-2);
+  background: rgba(0, 0, 0, 0.34);
+  color: var(--nv-on-media);
   font-family: var(--nv-font);
   font-size: var(--nv-size-label);
   font-weight: var(--nv-weight-bold);
+  white-space: nowrap;
   cursor: pointer;
+  transition: background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nvh__hint:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.nvh__hint:active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.nvh__hint:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-on-media);
+  outline-offset: var(--nv-focus-offset);
 }
 
 .nvh__chev {
-  width: 10px;
-  height: 10px;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(45deg);
+  animation: nvh-nudge-down 2.8s var(--nv-ease-in-out) infinite;
+}
+
+@keyframes nvh-nudge-down {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) rotate(45deg);
+  }
+  80% {
+    transform: translateY(3px) rotate(45deg);
+  }
+}
+
+@keyframes nvh-nudge-up {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) rotate(-135deg);
+  }
+  80% {
+    transform: translateY(-3px) rotate(-135deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nvh__chev {
+    animation: none;
+  }
 }
 
 .nvh__spacer {
@@ -418,7 +466,9 @@
   overflow: hidden;
 }
 
+/* The band is the photo: a tap on it (off the buttons) goes back up to it. */
 .nvh__band {
+  cursor: pointer;
   position: relative;
   flex: none;
   height: var(--nvh-band, 146px);
@@ -863,4 +913,5 @@
 .nvh__chev--up {
   margin-top: 4px;
   transform: rotate(-135deg);
+  animation-name: nvh-nudge-up;
 }

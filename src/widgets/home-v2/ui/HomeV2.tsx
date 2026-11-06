@@ -527,7 +527,13 @@ export const HomeV2: React.FC<HomeV2Props> = ({
 
         {/* ---------- Frame 2: today's page ---------- */}
         <section className="nvh__frame nvh__frame--today" aria-label={t("home.today")}>
-          <div className="nvh__band nv-on-media">
+          <div
+            className="nvh__band nv-on-media"
+            onClick={(event) => {
+              // Only the photo itself: buttons in the band keep their own action.
+              if (!(event.target as Element).closest("button")) goTop();
+            }}
+          >
             <button type="button" className="nvh__hint nvh__hint--up" onClick={goTop}>
               <span aria-hidden="true" className="nvh__chev nvh__chev--up" />
               {t("home.photoHint")}
