@@ -68,18 +68,25 @@ export function useImageViewer({
 
   // Keyboard navigation
   useEffect(() => {
+    // Capture phase + preventDefault: the viewer owns these keys, so arrow-key
+    // spatial navigation never moves focus in the grid behind it.
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         onClose();
       } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
         goToPrev();
       } else if (e.key === "ArrowRight") {
+        e.preventDefault();
         goToNext();
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [goToPrev, goToNext, onClose]);
 
   // Pointer / Touch gestures

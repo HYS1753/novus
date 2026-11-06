@@ -11,6 +11,7 @@ import {
   type FileItem,
 } from "@/shared";
 import { GalleryHeader } from "./GalleryHeader";
+import { GalleryShelves } from "./GalleryShelves";
 import { MediaThumb } from "./MediaThumb";
 import { DateScrubber } from "./DateScrubber";
 import { JustifiedGrid, type GridPlacement, type GridSection } from "./JustifiedGrid";
@@ -246,6 +247,15 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
           </nav>
         )}
 
+        {state.tab === "home" && collection.status === "ready" && (
+          <GalleryShelves
+            state={state}
+            rowHeight={metrics.row}
+            onOpenImage={onOpenImage}
+            onOpenVideo={onOpenVideo}
+          />
+        )}
+
         {collection.status === "loading" && <Skeleton />}
 
         {collection.status === "error" && (
@@ -312,26 +322,28 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
           </div>
         )}
 
-        {collection.status === "ready" && collection.total > folderCount && (
-          <>
-            {folderCount > 0 && <h3 className="gv-section">{t("gallery.mediaHeading")}</h3>}
-            <JustifiedGrid
-              items={collection.items}
-              sections={sections}
-              revision={collection.revision}
-              ensureRange={collection.ensureRange}
-              scroller={scroller}
-              rowHeight={metrics.row}
-              gap={metrics.gap}
-              headerHeight={metrics.heading}
-              onOpen={open(collection)}
-              onPlacement={setPlacement}
-            />
-          </>
-        )}
+        {state.tab !== "home" &&
+          collection.status === "ready" &&
+          collection.total > folderCount && (
+            <>
+              {folderCount > 0 && <h3 className="gv-section">{t("gallery.mediaHeading")}</h3>}
+              <JustifiedGrid
+                items={collection.items}
+                sections={sections}
+                revision={collection.revision}
+                ensureRange={collection.ensureRange}
+                scroller={scroller}
+                rowHeight={metrics.row}
+                gap={metrics.gap}
+                headerHeight={metrics.heading}
+                onOpen={open(collection)}
+                onPlacement={setPlacement}
+              />
+            </>
+          )}
       </div>
 
-      {collection.status === "ready" && state.tab !== "folders" && (
+      {collection.status === "ready" && (state.tab === "photos" || state.tab === "videos") && (
         <DateScrubber scroller={scroller} placement={placement} />
       )}
     </section>

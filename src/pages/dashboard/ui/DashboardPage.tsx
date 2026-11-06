@@ -131,7 +131,7 @@ export const DashboardPage: React.FC = () => {
         : "";
 
   // Gallery, Finder, and streaming run v1 components inside a bridged v2 root.
-  // Gallery and streaming keep their own arrow keys, so spatial navigation is off there.
+  // Streaming keeps its own arrow keys, so spatial navigation is off there.
   const bridged = (content: React.ReactNode, spatialNavigation = true) => (
     <NvRoot className="nv-bridge" spatialNavigation={spatialNavigation}>
       {content}
@@ -193,7 +193,8 @@ export const DashboardPage: React.FC = () => {
 
   if (activeView === "gallery") {
     return withRunningApps(
-      bridged(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />, false),
+      // The viewer and video player claim their keys first, so arrows can move focus here.
+      bridged(<GalleryPage onBackToDashboard={() => setActiveView("dashboard")} />),
     );
   }
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getSystemLocations, type QuickLocation } from "@/shared";
+import { getSystemLocations, usePreference, type QuickLocation } from "@/shared";
 import {
   useMediaCollection,
   type MediaCollectionQuery,
@@ -7,7 +7,8 @@ import {
   type MediaSortOrder,
 } from "./useMediaCollection";
 
-export type GalleryTab = "photos" | "folders" | "videos";
+/** "home" is the TV posture's shelf view; tablet posture never shows it. */
+export type GalleryTab = "home" | "photos" | "folders" | "videos";
 
 export interface GallerySort {
   field: MediaSortField;
@@ -23,6 +24,7 @@ const STORAGE_KEY = "novus.gallery.v2";
 
 /** Time first for the libraries, names first for folders (as file managers do). */
 const DEFAULT_SORT: Record<GalleryTab, GallerySort> = {
+  home: { field: "modified", order: "desc" },
   photos: { field: "modified", order: "desc" },
   videos: { field: "modified", order: "desc" },
   folders: { field: "name", order: "asc" },
@@ -71,7 +73,11 @@ export function useGallery() {
   const [saved] = useState(readSaved);
   const [locations, setLocations] = useState<QuickLocation[]>([]);
   const [root, setRootState] = useState(saved.root ?? "");
-  const [tab, setTabState] = useState<GalleryTab>(saved.tab ?? "photos");
+  const [posture] = usePreference("posture");
+  const tv = posture === "tv";
+  const [storedTab, setTabState] = useState<GalleryTab>(saved.tab ?? (tv ? "home" : "photos"));
+  // The shelf view belongs to TV posture; a tablet shows the timeline instead.
+  const tab: GalleryTab = !tv && storedTab === "home" ? "photos" : storedTab;
   const [folder, setFolder] = useState(saved.folder ?? saved.root ?? "");
   const [history, setHistory] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -112,11 +118,11 @@ export function useGallery() {
   useEffect(() => {
     if (!root) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ root, tab, folder, sort }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ root, tab: storedTab, folder, sort }));
     } catch {
       // Browsing still works without storage.
     }
-  }, [root, tab, folder, sort]);
+  }, [root, storedTab, folder, sort]);
 
   const libraryTab: GalleryTab = tab === "videos" ? "videos" : "photos";
   const libraryQuery = useMemo<MediaCollectionQuery | null>(
@@ -129,7 +135,7 @@ export function useGallery() {
             slot: "library",
             sortField: sort[libraryTab].field,
             sortOrder: sort[libraryTab].order,
-            search: tab === "folders" ? "" : debounced,
+            search: tab === "folders" || tab === "home" ? "" : debounced,
             withTimeline: true,
           }
         : null,
@@ -153,6 +159,40 @@ export function useGallery() {
 
   const library = useMediaCollection(tab === "folders" ? null : libraryQuery);
   const folderView = useMediaCollection(folderQuery);
+
+  // TV shelves: recent videos and the location's folders, alongside recent photos (library).
+  const videoShelfQuery = useMemo<MediaCollectionQuery | null>(
+    () =>
+      tab === "home" && root
+        ? {
+            path: root,
+            kind: "video",
+            recursive: true,
+            slot: "videos",
+            sortField: "modified",
+            sortOrder: "desc",
+            search: "",
+          }
+        : null,
+    [root, tab],
+  );
+  const folderShelfQuery = useMemo<MediaCollectionQuery | null>(
+    () =>
+      tab === "home" && root
+        ? {
+            path: root,
+            kind: "all",
+            recursive: false,
+            slot: "folder",
+            sortField: "name",
+            sortOrder: "asc",
+            search: "",
+          }
+        : null,
+    [root, tab],
+  );
+  const videoShelf = useMediaCollection(videoShelfQuery);
+  const folderShelf = useMediaCollection(folderShelfQuery);
 
   const location = locations.find((entry) => entry.path === root);
   const rootLabel = location?.name ?? root.split(/[\\/]/).filter(Boolean).pop() ?? root;
@@ -202,7 +242,11 @@ export function useGallery() {
   const reload = useCallback(() => {
     if (tab === "folders") folderView.reload();
     else library.reload(true);
-  }, [folderView, library, tab]);
+    if (tab === "home") {
+      videoShelf.reload();
+      folderShelf.reload();
+    }
+  }, [folderShelf, folderView, library, tab, videoShelf]);
 
   return {
     locations,
@@ -216,6 +260,9 @@ export function useGallery() {
     sort: sort[tab],
     setSort,
     library,
+    videoShelf,
+    folderShelf,
+    tv,
     folder,
     folderView,
     crumbs,

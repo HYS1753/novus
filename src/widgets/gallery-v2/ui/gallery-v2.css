@@ -116,6 +116,10 @@
   gap: var(--nv-space-2);
 }
 
+.gv-head__tools[hidden] {
+  display: none;
+}
+
 .gv-tool {
   display: inline-flex;
   align-items: center;
@@ -645,9 +649,133 @@
   color: var(--nv-text-3);
 }
 
+/* ---------- TV shelves (Apple TV / Google TV photos) ---------- */
+.gv-shelves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-6);
+  padding-top: var(--nv-space-3);
+}
+
+.gv-shelf__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nv-space-4);
+  margin-bottom: var(--nv-space-2);
+}
+
+.gv-shelf__title {
+  margin: 0;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+.gv-shelf__all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-1);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-3);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+.gv-shelf__all:hover,
+.gv-shelf__all:focus-visible {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  outline: none;
+}
+
+.gv-shelf__all:focus-visible {
+  box-shadow: 0 0 0 var(--nv-focus-width) var(--nv-focus);
+}
+
+/* Room above and below for the focus lift; the row scrolls as focus moves. */
+.gv-shelf__row {
+  display: flex;
+  gap: var(--nv-space-4);
+  overflow-x: auto;
+  padding: var(--nv-space-4) var(--nv-space-2);
+  margin: calc(-1 * var(--nv-space-4)) calc(-1 * var(--nv-space-2));
+  scroll-padding-inline: var(--nv-space-6);
+  scrollbar-width: none;
+}
+
+.gv-shelf__row::-webkit-scrollbar {
+  display: none;
+}
+
+.gv-shelf__tile {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+/* The home's focus grammar: lift and the ink ring. */
+.gv-shelf__tile:hover,
+.gv-shelf__tile:focus-visible {
+  z-index: 1;
+  transform: scale(1.06);
+}
+
+.gv-shelf__tile:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-shelf__tile:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+/* A solid caption band (no gradient: the photo scrim is the only one). */
+.gv-shelf__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--nv-space-2) var(--nv-space-3);
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gv-shelf__count {
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-regular, 400);
+  opacity: 0.8;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gv-skeleton span,
   .gv-menu__panel {
     animation: none;
+  }
+
+  .gv-shelf__tile,
+  .gv-album__cover {
+    transition: none;
   }
 }

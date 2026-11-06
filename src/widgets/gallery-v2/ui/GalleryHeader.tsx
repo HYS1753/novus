@@ -104,6 +104,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
       : "\u00a0";
 
   const tabs: { value: GalleryTab; label: string }[] = [
+    ...(state.tv ? [{ value: "home" as const, label: t("gallery.tabHome") }] : []),
     { value: "photos", label: t("gallery.tabPhotos") },
     { value: "folders", label: t("gallery.tabFolders") },
     { value: "videos", label: t("gallery.tabVideos") },
@@ -170,7 +171,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
         className="gv-head__tabs"
       />
 
-      <div className="gv-head__tools">
+      <div className="gv-head__tools" hidden={state.tab === "home"}>
         {searching ? (
           <label className="gv-search">
             <SearchIcon size={18} />
