@@ -40,6 +40,9 @@ export const DashboardPage: React.FC = () => {
   const { appFullscreen } = useDisplayMode();
   const [endedIds, setEndedIds] = useState<string[]>([]);
   const [finderPath, setFinderPath] = useState<string | undefined>(undefined);
+  // First launch shows the photo frame; returning from any surface lands on today's page.
+  const [homeEntry, setHomeEntry] = useState<"photo" | "today">("photo");
+  const leaveHome = () => setHomeEntry("today");
 
   // Record when each service is on screen and when the user leaves it.
   useEffect(() => {
@@ -114,6 +117,7 @@ export const DashboardPage: React.FC = () => {
     if (closingRef.current) return;
     const app = ALL_APPS.find((entry) => entry.id === id);
     if (app) {
+      setHomeEntry("today");
       setActiveView("dashboard");
       setActiveApp(app);
     }
@@ -151,6 +155,7 @@ export const DashboardPage: React.FC = () => {
   );
 
   const handleItemClick = (item: AppItem) => {
+    leaveHome();
     if (item.id === "photos") {
       setActiveView("gallery");
       return;
@@ -215,8 +220,13 @@ export const DashboardPage: React.FC = () => {
       suspended={isSettingsOpen}
       onOpenItem={handleItemClick}
       onEndSession={(id) => void closeRunningApp(id)}
-      onOpenGallery={() => setActiveView("gallery")}
+      entry={homeEntry}
+      onOpenGallery={() => {
+        leaveHome();
+        setActiveView("gallery");
+      }}
       onOpenFinder={(path) => {
+        leaveHome();
         setFinderPath(path);
         setActiveView("finder");
       }}

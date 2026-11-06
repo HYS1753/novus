@@ -18,8 +18,28 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  background: var(--nv-frame);
   will-change: transform;
+}
+
+/* Two layers: the next photo is decoded off-screen, then crossfades in. */
+.nvh__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* First appearance is quick (only hides a half-decoded image); swaps crossfade slowly. */
+  transition: opacity 240ms var(--nv-ease-out);
+}
+
+.nvh__photo[data-crossfade] img {
+  transition-duration: 700ms;
+}
+
+.nvh__photo img[data-front][data-loaded] {
+  opacity: 1;
 }
 
 .nvh__scroller {
@@ -162,9 +182,10 @@
 
 .nvh__sheet {
   flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: var(--nv-space-4) var(--nv-space-7);
   padding: var(--nv-space-3) var(--nv-space-7) var(--nv-space-4);
   background: var(--nv-ground);
@@ -260,10 +281,45 @@
   color: var(--nv-text-3);
 }
 
+.nvh__services {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Services sit right under the calendar as two rows of four (the eighth is All apps). */
 .nvh__plates {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: var(--nv-space-3);
+}
+
+.nvh__plates .nv-plate--row .nv-plate__field {
+  max-width: 52%;
+}
+
+.nvh__all-apps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  padding: 0;
+  border: 1px dashed var(--nv-rule-strong);
+  border-radius: var(--nv-radius-content);
+  background: transparent;
+  color: var(--nv-text-2);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  cursor: pointer;
+}
+
+.nvh__all-apps:hover {
+  background: var(--nv-surface);
+  color: var(--nv-text);
 }
 
 .nvh__files {
@@ -292,7 +348,7 @@
   left: var(--nv-space-7);
   top: calc(var(--nv-space-6) + 44px);
   padding: 2px 8px;
-  border-radius: 2px;
+  border-radius: var(--nv-radius-content);
   background: rgba(0, 0, 0, 0.55);
   color: var(--nv-on-media-2);
   font-size: 12px;
@@ -304,9 +360,10 @@
   min-width: calc(120px * var(--nv-scale));
 }
 
+/* Today's page is exactly one frame: the services rows take what is left. */
 .nvh__frame--today {
-  min-height: 100%;
-  height: auto;
+  height: 100%;
+  overflow: hidden;
 }
 
 .nvh__error {
@@ -410,7 +467,7 @@
 
 /* ---------- Fit today's page to one screen on short frames ---------- */
 .nvh__numeral {
-  font-size: min(calc(var(--nv-size-numeral) * 1.25), calc(var(--nvh-h, 912px) * 0.235));
+  font-size: min(calc(var(--nv-size-numeral) * 1.15), calc(var(--nvh-h, 912px) * 0.2));
 }
 
 .nvh__dayline {
@@ -493,4 +550,79 @@
 
 .nvh.is-ambient .nvh__date {
   font-size: var(--nv-size-heading);
+}
+
+/* ---------- Running tray (multitasking) on the photo frame ---------- */
+.nvh__tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nv-space-2);
+  margin-top: var(--nv-space-5);
+}
+
+.nvh__tray-label {
+  margin-right: var(--nv-space-1);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-on-media-2);
+}
+
+.nvh__chip {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--nv-radius-action);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  overflow: hidden;
+}
+
+.nvh__chip-open,
+.nvh__chip-close {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--nv-target);
+  border: 0;
+  background: none;
+  color: var(--nv-on-media);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  cursor: pointer;
+}
+
+.nvh__chip-open {
+  gap: var(--nv-space-2);
+  padding: 0 var(--nv-space-3) 0 var(--nv-space-1);
+}
+
+.nvh__chip-art {
+  width: calc(48px * var(--nv-scale));
+  height: calc(27px * var(--nv-scale));
+  object-fit: cover;
+  border-radius: var(--nv-radius-content);
+  background: #000;
+}
+
+.nvh__chip-close {
+  justify-content: center;
+  width: var(--nv-target);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--nv-on-media-2);
+}
+
+.nvh__chip-open:hover,
+.nvh__chip-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--nv-on-media);
+}
+
+.nvh__chip-open:focus-visible,
+.nvh__chip-close:focus-visible {
+  outline-offset: -4px;
+}
+
+.nvh__band-logo {
+  align-self: center;
+  margin-left: var(--nv-space-2);
 }

@@ -315,4 +315,7 @@ export const ja: Messages = {
   "home.soon": "準備中",
   "files.loadErrorHint": "別の場所を選ぶか、再読み込みしてください。",
   "home.dayOfYear": "今年 {day} 日目 · 第 {week} 週",
+  "home.allApps": "すべてのアプリ",
+  "onboarding.previewTv": "ソファから 1–2 m · リモコンや方向キーで移動",
+  "onboarding.previewTablet": "手に持って 30–50 cm · タッチで操作",
 };

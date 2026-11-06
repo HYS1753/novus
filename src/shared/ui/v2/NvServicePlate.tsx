@@ -1,5 +1,6 @@
 import React from "react";
 import { getBundledBrandAssetUrl } from "../../lib";
+import { CloseIcon } from "../icons";
 
 export type NvSessionState = "idle" | "live" | "ended";
 
@@ -28,6 +29,11 @@ export interface NvServicePlateProps {
   liveLabel?: string;
   endedLabel?: string;
   onPress?: () => void;
+  /** "tile": art above, name below. "row": art left, name and state right (dense grids). */
+  layout?: "tile" | "row";
+  /** Ends the session; shown as a close button beside the plate when provided. */
+  onClose?: () => void;
+  closeLabel?: string;
   className?: string;
 }
 
@@ -39,43 +45,67 @@ export const NvServicePlate: React.FC<NvServicePlateProps> = ({
   liveLabel = "실행 중",
   endedLabel = "종료됨",
   onPress,
+  layout = "tile",
+  onClose,
+  closeLabel,
   className = "",
 }) => {
   const asset = getBundledBrandAssetUrl(id);
   const plate = PLATE_GROUND[id] ?? { ground: "var(--nv-surface-raised)", fit: "contain" };
   const stateLabel = state === "live" ? liveLabel : state === "ended" ? endedLabel : "";
 
-  return (
+  const field = (
+    <span className="nv-plate__field" style={{ background: plate.ground }} aria-hidden="true">
+      {asset ? (
+        <img
+          className={`nv-plate__art nv-plate__art--${plate.fit}`}
+          src={asset}
+          alt=""
+          draggable={false}
+          decoding="async"
+        />
+      ) : (
+        <span className="nv-plate__wordmark">{name}</span>
+      )}
+    </span>
+  );
+  const meta =
+    state !== "idle" ? (
+      <span className={`nv-status nv-status--${state}`}>
+        <span className="nv-status__text">{stateLabel}</span>
+      </span>
+    ) : (
+      shortcut && <span className="nv-plate__key nv-numeral">{shortcut}</span>
+    );
+  const main = (
     <button
       type="button"
-      className={`nv-plate nv-plate--${state} ${className}`}
+      className="nv-plate__main"
       onClick={onPress}
       aria-label={stateLabel ? `${name}, ${stateLabel}` : name}
       aria-keyshortcuts={shortcut ? String(shortcut) : undefined}
     >
-      <span className="nv-plate__field" style={{ background: plate.ground }} aria-hidden="true">
-        {asset ? (
-          <img
-            className={`nv-plate__art nv-plate__art--${plate.fit}`}
-            src={asset}
-            alt=""
-            draggable={false}
-            decoding="async"
-          />
-        ) : (
-          <span className="nv-plate__wordmark">{name}</span>
-        )}
-      </span>
+      {field}
       <span className="nv-plate__bar" aria-hidden="true">
         <span className="nv-plate__name">{name}</span>
-        {state !== "idle" ? (
-          <span className={`nv-status nv-status--${state}`}>
-            <span className="nv-status__text">{stateLabel}</span>
-          </span>
-        ) : (
-          shortcut && <span className="nv-plate__key nv-numeral">{shortcut}</span>
-        )}
+        {meta}
       </span>
     </button>
+  );
+
+  return (
+    <div className={`nv-plate nv-plate--${layout} nv-plate--${state} ${className}`}>
+      {main}
+      {onClose && (
+        <button
+          type="button"
+          className="nv-plate__close"
+          onClick={onClose}
+          aria-label={closeLabel ?? name}
+        >
+          <CloseIcon size={16} />
+        </button>
+      )}
+    </div>
   );
 };

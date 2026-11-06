@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  CloseIcon,
   FolderIcon,
+  getBundledBrandAssetUrl,
   ImageIcon,
   MoonIcon,
   NovusLogo,
@@ -25,6 +27,9 @@ import "./home-v2.css";
 
 /** Share of the viewport the folded photo keeps as the band on today's page. */
 const BAND_RATIO = 0.193;
+/** Default wait on today's page before the home returns to the photo frame. */
+const AUTO_RETURN_MS = 60_000;
+const ACTIVITY_EVENTS = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
 
 export interface HomeService {
   id: string;
@@ -65,6 +70,10 @@ export interface HomeV2Props {
   onToggleTheme: () => void;
   /** Suspends number-key shortcuts while an overlay owns the keyboard. */
   shortcutsEnabled?: boolean;
+  /** Which frame to show on mount: the photo, or today's page (coming back from an app). */
+  entry?: "photo" | "today";
+  /** Idle time on today's page before scrolling back to the photo frame; 0 disables. */
+  autoReturnMs?: number;
 }
 
 function dayOfYear(date: Date) {
@@ -117,10 +126,12 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   onWake,
   onToggleTheme,
   shortcutsEnabled = true,
+  entry = "photo",
+  autoReturnMs = AUTO_RETURN_MS,
 }) => {
-  const { t, locale, relativeTime, time, list } = useI18n();
+  const { t, locale, relativeTime, time } = useI18n();
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const photoRef = useRef<HTMLImageElement>(null);
+  const photoRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef(0);
   const focusRef = useRef(photoFocus);
   useEffect(() => {
@@ -136,7 +147,33 @@ export const HomeV2: React.FC<HomeV2Props> = ({
       .filter((service) => service.lastUsed)
       .sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0))[0];
   const featuredIsLive = featured?.state === "live";
-  const others = live.slice(1);
+
+  // ---------- Photo double buffer: decode the next photo, then crossfade ----------
+  const [layers, setLayers] = useState<{ a: string; b: string; front: "a" | "b" }>(() => ({
+    a: photoUrl,
+    b: "",
+    front: "a",
+  }));
+  const frontUrl = layers[layers.front];
+  useEffect(() => {
+    if (!photoUrl || photoUrl === frontUrl) return;
+    let cancelled = false;
+    const next = new Image();
+    next.src = photoUrl;
+    next
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        if (cancelled) return;
+        setLayers((prev) => {
+          const back = prev.front === "a" ? "b" : "a";
+          return { ...prev, [back]: photoUrl, front: back };
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [photoUrl, frontUrl]);
 
   // ---------- Photo fold: one transformed element tracks the scroll ----------
   const applyFold = useCallback(() => {
@@ -179,6 +216,42 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   useEffect(() => {
     if (ambient) scrollerRef.current?.scrollTo({ top: 0 });
   }, [ambient]);
+
+  // Coming back from an app lands on today's page, already folded.
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (entry !== "today" || !scroller) return;
+    scroller.scrollTop = scroller.clientHeight;
+    applyFold();
+    // Only on mount: later scrolling belongs to the user.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Left alone on today's page, the home returns to the photo frame.
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || ambient || !shortcutsEnabled || autoReturnMs <= 0) return;
+    let timer = 0;
+    const arm = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (scroller.scrollTop >= scroller.clientHeight / 2) {
+          const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+          scroller.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        }
+      }, autoReturnMs);
+    };
+    arm();
+    ACTIVITY_EVENTS.forEach((type) =>
+      window.addEventListener(type, arm, { passive: true, capture: true }),
+    );
+    scroller.addEventListener("scroll", arm, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      ACTIVITY_EVENTS.forEach((type) => window.removeEventListener(type, arm, { capture: true }));
+      scroller.removeEventListener("scroll", arm);
+    };
+  }, [ambient, shortcutsEnabled, autoReturnMs]);
 
   // ---------- Number keys 1–N open services ----------
   useEffect(() => {
@@ -236,32 +309,18 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           </NvStatus>
         }
         title={featured.name}
-        subtitle={
-          others.length > 0
-            ? `${t("home.alsoRunning", { names: list(others.map((s) => s.name)) })} · ${t("home.pressToResume")}`
-            : t("home.pressToResume")
-        }
+        subtitle={t("home.pressToResume")}
         actions={
-          <>
-            <NvButton
-              variant="primary"
-              size="large"
-              onMedia
-              icon={<PlayIcon />}
-              data-nav-default
-              onClick={() => onOpenService(featured.id)}
-            >
-              {t("home.resume")}
-            </NvButton>
-            {others[0] && (
-              <NvButton size="large" onMedia onClick={() => onOpenService(others[0].id)}>
-                {t("home.openService", { name: others[0].name })}
-              </NvButton>
-            )}
-            <NvButton size="large" onMedia onClick={() => onEndSession(featured.id)}>
-              {t("home.endSession")}
-            </NvButton>
-          </>
+          <NvButton
+            variant="primary"
+            size="large"
+            onMedia
+            icon={<PlayIcon />}
+            data-nav-default
+            onClick={() => onOpenService(featured.id)}
+          >
+            {t("home.resume")}
+          </NvButton>
         }
       />
     );
@@ -295,14 +354,28 @@ export const HomeV2: React.FC<HomeV2Props> = ({
 
   return (
     <div className={`nvh${ambient ? " is-ambient" : ""}`}>
-      <img
+      <div
         ref={photoRef}
         className="nvh__photo"
-        src={photoUrl || undefined}
-        alt=""
-        draggable={false}
-        decoding="async"
-      />
+        aria-hidden="true"
+        data-crossfade={layers.b ? "" : undefined}
+      >
+        {(["a", "b"] as const).map((key) =>
+          layers[key] ? (
+            <img
+              key={key}
+              src={layers[key]}
+              alt=""
+              draggable={false}
+              decoding="async"
+              data-front={layers.front === key ? "" : undefined}
+              onLoad={(event) => {
+                event.currentTarget.dataset.loaded = "";
+              }}
+            />
+          ) : null,
+        )}
+      </div>
 
       <div ref={scrollerRef} className="nvh__scroller" onScroll={onScroll}>
         {/* ---------- Frame 1 ---------- */}
@@ -322,7 +395,40 @@ export const HomeV2: React.FC<HomeV2Props> = ({
           </header>
           {sampleLabel && <span className="nvh__sample">{sampleLabel}</span>}
 
-          <div className="nvh__caption nvh__fade">{caption}</div>
+          <div className="nvh__caption nvh__fade">
+            {caption}
+            {live.length > 0 && (
+              <div className="nvh__tray" role="group" aria-label={t("running.label")}>
+                <span className="nvh__tray-label">
+                  {t("running.count", { count: live.length })}
+                </span>
+                {live.map((service) => {
+                  const art = getBundledBrandAssetUrl(service.id);
+                  return (
+                    <span key={service.id} className="nvh__chip">
+                      <button
+                        type="button"
+                        className="nvh__chip-open"
+                        onClick={() => onOpenService(service.id)}
+                        aria-label={t("running.background", { name: service.name })}
+                      >
+                        {art && <img src={art} alt="" className="nvh__chip-art" />}
+                        <span>{service.name}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="nvh__chip-close"
+                        onClick={() => onEndSession(service.id)}
+                        aria-label={t("running.close", { name: service.name })}
+                      >
+                        <CloseIcon size={16} />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <NvGlyphRail label={t("nav.globalActions")} className="nvh__rail nvh__fade">
             <NvGlyphButton
@@ -375,6 +481,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
               label={t("home.backToTop")}
               onClick={goTop}
             />
+            <NovusLogo height={24} className="nvh__band-logo" />
             <span className="nvh__spacer" />
             <NvGlyphButton
               onMedia
@@ -436,6 +543,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                 {services.map((service, index) => (
                   <NvServicePlate
                     key={service.id}
+                    layout="row"
                     id={service.id}
                     name={service.name}
                     shortcut={index + 1}
@@ -443,8 +551,14 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                     liveLabel={t("home.live")}
                     endedLabel={t("home.ended")}
                     onPress={() => onOpenService(service.id)}
+                    onClose={service.state === "live" ? () => onEndSession(service.id) : undefined}
+                    closeLabel={t("running.close", { name: service.name })}
                   />
                 ))}
+                <button type="button" className="nvh__all-apps" onClick={onOpenSearch}>
+                  <SearchIcon size={22} />
+                  <span>{t("home.allApps")}</span>
+                </button>
               </div>
               {error && (
                 <p className="nvh__error" role="alert">

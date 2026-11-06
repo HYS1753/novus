@@ -45,6 +45,8 @@ export interface HomeV2ScreenProps {
   onOpenGallery: () => void;
   onOpenFinder: (path?: string) => void;
   onOpenSettings: () => void;
+  /** Frame to open on: the photo (first launch) or today's page (returning). */
+  entry?: "photo" | "today";
   /** Settings sheet and update notice, rendered inside the v2 root. */
   children?: React.ReactNode;
 }
@@ -59,6 +61,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
   onOpenGallery,
   onOpenFinder,
   onOpenSettings,
+  entry = "photo",
   children,
 }) => {
   const { t } = useI18n();
@@ -160,6 +163,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
         onWake={wake}
         onToggleTheme={() => setTheme(resolveDark(theme) ? "light" : "dark")}
         shortcutsEnabled={!overlayOpen}
+        entry={entry}
       />
 
       {children}

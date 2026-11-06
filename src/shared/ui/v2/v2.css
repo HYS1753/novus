@@ -183,23 +183,92 @@
 
 /* ---------- Service plate (rectangle: content) ---------- */
 .nv-plate {
+  position: relative;
   display: flex;
-  flex-direction: column;
   min-width: 0;
-  padding: 0;
-  border: 0;
+  min-height: 0;
   border-radius: var(--nv-radius-content);
   background: var(--nv-surface);
   color: var(--nv-text);
+  overflow: hidden;
+}
+
+.nv-plate__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
   font-family: var(--nv-font);
   text-align: left;
   cursor: pointer;
-  overflow: hidden;
   transition: transform var(--nv-dur-press) var(--nv-ease-out);
 }
 
-.nv-plate:active {
+.nv-plate__main:active {
   transform: scale(var(--nv-press-scale));
+}
+
+.nv-plate__main:focus-visible {
+  outline-offset: calc(var(--nv-focus-offset) * -1 - var(--nv-focus-width));
+}
+
+/* Row layout: art left at full height, facts right. */
+.nv-plate--row .nv-plate__main {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.nv-plate--row .nv-plate__field {
+  flex: none;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.nv-plate--row .nv-plate__bar {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--nv-space-1);
+  padding: 0 var(--nv-space-3);
+}
+
+.nv-plate--row .nv-plate__name {
+  font-size: var(--nv-size-body);
+}
+
+.nv-plate__close {
+  position: absolute;
+  top: var(--nv-space-2);
+  right: var(--nv-space-2);
+  display: grid;
+  place-items: center;
+  width: calc(32px * var(--nv-scale));
+  height: calc(32px * var(--nv-scale));
+  padding: 0;
+  border: 1px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-ground);
+  color: var(--nv-text-2);
+  cursor: pointer;
+}
+
+.nv-plate__close:hover {
+  color: var(--nv-text);
+  border-color: var(--nv-text-3);
+}
+
+/* The close target grows to the full touch size without changing the visual. */
+.nv-plate__close::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--nv-target) - 32px * var(--nv-scale)) / -2);
 }
 
 .nv-plate__bar {
@@ -430,7 +499,7 @@
   height: calc(32px * var(--nv-scale));
   padding: 0;
   border: 2px solid var(--nv-rule-strong);
-  border-radius: 999px;
+  border-radius: var(--nv-radius-action);
   background: var(--nv-surface);
   cursor: pointer;
   transition:
@@ -444,7 +513,7 @@
   left: 2px;
   width: calc(24px * var(--nv-scale));
   height: calc(24px * var(--nv-scale));
-  border-radius: 50%;
+  border-radius: var(--nv-radius-content);
   background: var(--nv-text-3);
   transition:
     transform var(--nv-dur-move) var(--nv-ease-out),
@@ -485,7 +554,7 @@
 
 .nv-slider input::-webkit-slider-runnable-track {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--nv-radius-content);
   background: linear-gradient(
     to right,
     var(--nv-text) var(--nv-slider-fill),
@@ -505,13 +574,13 @@
 
 .nv-slider input::-moz-range-track {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--nv-radius-content);
   background: var(--nv-rule-strong);
 }
 
 .nv-slider input::-moz-range-progress {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--nv-radius-content);
   background: var(--nv-text);
 }
 

@@ -1,73 +1,45 @@
 import React from "react";
+import novusLogoUrl from "@/assets/novus-logo.png";
 
-export interface NovusLogoProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface NovusLogoProps extends React.HTMLAttributes<HTMLSpanElement> {
+  /** Rendered height in px; width follows the artwork's 779×260 ratio. */
   height?: number;
-  showWordmark?: boolean;
   className?: string;
 }
 
+const RATIO = 779 / 260;
+
 /**
- * Official Novus Logo:
- * Features an architectonic N+V unified monogram accompanied by the lowercase 'novus' wordmark.
+ * The official novus lockup (NV mark + wordmark) from `src/assets/novus-logo.png`.
+ * The white artwork is used as a mask, so the logo takes the current text
+ * colour: white over photos, ink on light grounds.
  */
 export const NovusLogo: React.FC<NovusLogoProps> = ({
   height = 34,
-  showWordmark = true,
   className = "",
+  style,
   ...props
-}) => {
-  const iconWidth = Math.round(height * 0.95);
-  const fontSize = Math.round(height * 0.72);
-
-  return (
-    <div
-      className={`novus-logo-lockup ${className}`}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "10px",
-        userSelect: "none",
-        color: "var(--nv-logo-color, var(--nv-text, var(--color-text-primary)))",
-      }}
-      {...props}
-    >
-      {/* N+V Combined Monogram */}
-      <svg
-        width={iconWidth}
-        height={height}
-        viewBox="0 0 36 38"
-        fill="none"
-        style={{ flexShrink: 0 }}
-        aria-hidden="true"
-      >
-        {/* N-pillars with deep V-vertex */}
-        <path
-          d="M6 31V7L18 29L30 7V31"
-          stroke="currentColor"
-          strokeWidth="3.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Luminous accent core */}
-        <circle cx="18" cy="29" r="1.6" fill="currentColor" />
-      </svg>
-
-      {/* Modern 'novus' display text */}
-      {showWordmark && (
-        <span
-          className="novus-logo-text"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: `${fontSize}px`,
-            fontWeight: 800,
-            letterSpacing: "0.06em",
-            lineHeight: 1,
-            color: "currentColor",
-          }}
-        >
-          novus
-        </span>
-      )}
-    </div>
-  );
-};
+}) => (
+  <span
+    role="img"
+    aria-label="novus"
+    className={`novus-logo ${className}`}
+    style={{
+      display: "inline-block",
+      flex: "none",
+      width: Math.round(height * RATIO),
+      height,
+      backgroundColor: "var(--nv-logo-color, var(--nv-text, var(--color-text-primary)))",
+      WebkitMaskImage: `url(${novusLogoUrl})`,
+      maskImage: `url(${novusLogoUrl})`,
+      WebkitMaskSize: "contain",
+      maskSize: "contain",
+      WebkitMaskRepeat: "no-repeat",
+      maskRepeat: "no-repeat",
+      WebkitMaskPosition: "left center",
+      maskPosition: "left center",
+      ...style,
+    }}
+    {...props}
+  />
+);

@@ -313,6 +313,9 @@ export const ko = {
   "home.soon": "준비 중",
   "files.loadErrorHint": "다른 위치를 고르거나 새로고침해 보세요.",
   "home.dayOfYear": "올해 {day}번째 날 · {week}주차",
+  "home.allApps": "모든 앱",
+  "onboarding.previewTv": "소파에서 1–2m · 리모컨이나 방향키로 이동",
+  "onboarding.previewTablet": "손에 들고 30–50cm · 터치로 바로 조작",
 } as const;
 
 export type MessageKey = keyof typeof ko;

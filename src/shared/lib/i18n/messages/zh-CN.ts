@@ -309,4 +309,7 @@ export const zhCN: Messages = {
   "home.soon": "即将推出",
   "files.loadErrorHint": "请选择其他位置或刷新。",
   "home.dayOfYear": "今年第 {day} 天 · 第 {week} 周",
+  "home.allApps": "全部应用",
+  "onboarding.previewTv": "在沙发上 1–2 米外 · 用遥控器或方向键移动",
+  "onboarding.previewTablet": "拿在手上 30–50 厘米 · 直接触控",
 };
