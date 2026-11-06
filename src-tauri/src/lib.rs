@@ -39,6 +39,11 @@ pub fn run() {
         .manage(EmbeddedPlayerState::default())
         .manage(DeviceProfile::detect())
         .plugin(tauri_plugin_opener::init())
+        // Launch at login (Settings › 부팅 시 자동 시작). macOS uses a LaunchAgent.
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(updater::UpdaterState::default());
     #[cfg(windows)]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());

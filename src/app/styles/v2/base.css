@@ -76,3 +76,8 @@
 .nv-root .nv-on-media {
   --nv-logo-color: var(--nv-on-media);
 }
+
+/* A v2 root that only provides tokens and the overlay portal, without a box. */
+.nv-root.nv-contents {
+  display: contents;
+}

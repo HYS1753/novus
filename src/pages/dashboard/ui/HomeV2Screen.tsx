@@ -44,6 +44,8 @@ export interface HomeV2ScreenProps {
   onOpenGallery: () => void;
   onOpenFinder: (path?: string) => void;
   onOpenSettings: () => void;
+  /** Settings sheet and update notice, rendered inside the v2 root. */
+  children?: React.ReactNode;
 }
 
 export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
@@ -56,6 +58,7 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
   onOpenGallery,
   onOpenFinder,
   onOpenSettings,
+  children,
 }) => {
   const { t } = useI18n();
   const now = useNow();
@@ -150,6 +153,8 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
         onToggleTheme={() => setTheme(resolveDark(theme) ? "light" : "dark")}
         shortcutsEnabled={!overlayOpen}
       />
+
+      {children}
 
       <NvSheet
         open={searchOpen}

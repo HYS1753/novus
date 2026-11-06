@@ -5,3 +5,4 @@ export * from "./play-video";
 export * from "@/features/update-app";
 export * from "./weather";
 export * from "./ambient";
+export * from "./pick-folder";

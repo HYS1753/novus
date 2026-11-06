@@ -10,11 +10,14 @@ import {
   WINDOW_MODE_ERROR,
   listenDisplayError,
   useResolvedTheme,
+  usePreference,
+  isHomeV2Enabled,
+  NvRoot,
 } from "@/shared";
 import "./styles/global.css";
 import "./styles/v2/tokens.css";
 import "./styles/v2/base.css";
-import { InAppVideoModal } from "@/widgets";
+import { InAppVideoModal, Onboarding } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
 import { useUpdateLifecycle } from "@/features";
@@ -80,6 +83,8 @@ function readStyleGuideRoute(): "v1" | "v2" | null {
 const DashboardApp: React.FC = () => {
   useUpdateLifecycle();
   const [styleGuide, setStyleGuide] = useState<"v1" | "v2" | null>(() => readStyleGuideRoute());
+  const [onboardingDone] = usePreference("onboardingDone");
+  const showOnboarding = !styleGuide && !onboardingDone && isHomeV2Enabled();
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
@@ -107,7 +112,11 @@ const DashboardApp: React.FC = () => {
     <>
       <div className="app-ambient" aria-hidden="true" />
       <div className="app-shell">
-        {styleGuide === "v2" ? (
+        {showOnboarding ? (
+          <NvRoot>
+            <Onboarding />
+          </NvRoot>
+        ) : styleGuide === "v2" ? (
           <StyleGuideV2Page />
         ) : styleGuide === "v1" ? (
           <StyleGuidePage />

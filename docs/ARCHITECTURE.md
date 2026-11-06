@@ -115,6 +115,9 @@ src-tauri/
 
 ---
 
+- **자동 시작 플러그인**: `tauri-plugin-autostart`를 `lib.rs`에서 등록하고 `capabilities/default.json`에 `autostart:allow-enable/disable/is-enabled`를 허용합니다. 프런트 래퍼는 `src/shared/api/tauri/autostart.ts`.
+- **외부 HTTP**: 날씨는 IPC가 아니라 웹뷰에서 직접 `https://api.open-meteo.com`, `https://geocoding-api.open-meteo.com`을 호출합니다(`src/shared/api/weather/`). 현재 CSP는 `null`입니다.
+
 ## 4. 디렉토리 구조 맵
 
 ```

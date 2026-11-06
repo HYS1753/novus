@@ -36,6 +36,15 @@
 - **모바일 리모컨**: 서버가 아직 없어 "준비 중" 안내만 띄웁니다.
 - **테마 브리지**: v1 화면이 읽는 `html.dark`를 v2 테마 설정(`useResolvedTheme`)에 맞춰 App이 동기화합니다.
 
+### ①-2 첫 실행 온보딩 · 설정 v2
+
+- **온보딩** (`widgets/onboarding`): `onboardingDone`이 false이고 v2 홈일 때 앱 시작 화면으로 나옵니다. 언어 → 보기 모드(고르는 즉시 배율 적용) → 사진 폴더(폴더 선택기, 건너뛰면 OS 사진 폴더). 마지막 단계에서 `onboardingDone=true`.
+- **설정 v2** (`widgets/settings-v2`): 오른쪽 시트 하나에 화면·홈·시스템·업데이트·현재 기기 구역. 언어·사진 폴더·날씨 지역은 시트 안 하위 화면(뒤로 버튼)입니다. 스트리밍 화면에서 열 때도 같은 시트를 씁니다(네이티브 웹뷰는 그동안 숨김).
+- **날씨 지역 검색**: Open-Meteo 지오코딩을 350ms 대기 후 호출, 2자 이상일 때만. 고른 도시는 `weatherCity`에 저장.
+- **부팅 시 자동 시작**: `tauri-plugin-autostart`(Windows 레지스트리 Run 키, macOS LaunchAgent). 프런트는 `shared/api/tauri/autostart.ts`가 `plugin:autostart|*` 커맨드를 호출합니다. 브라우저 DEV에서는 비활성 + "데스크톱 앱에서 사용할 수 있습니다".
+- **업데이트 v2 화면** (`UpdateSettingsV2`, `UpdateNoticeV2`): v1과 같은 `updateController`를 쓰고 화면·문구만 v2(다국어)입니다. 컨트롤러가 만드는 오류 문구는 한국어라서, 다른 언어에서는 일반 오류 문구로 대체합니다.
+- v1에 있던 "배터리 스웰링 방지 모드" 토글은 동작이 없는 자리표시라 v2에서 뺐습니다.
+
 ### ② 스트리밍 페이지 매니저 (`src-tauri/src/page_manager.rs`)
 
 1. **지연 생성 (Lazy Creation)**:

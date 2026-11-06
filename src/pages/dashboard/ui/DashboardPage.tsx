@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
-import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer } from "@/widgets";
+import { QuickHeader, MediaShelf, SettingsSheet, InAppPlayer, SettingsV2 } from "@/widgets";
 import {
   GlassDivider,
   GlassModal,
@@ -14,9 +14,10 @@ import {
   exitWindowFullscreen,
   reportWindowModeError,
   isHomeV2Enabled,
+  NvRoot,
   markSessionUsed,
 } from "@/shared";
-import { useLaunchApp, UpdateNotice } from "@/features";
+import { useLaunchApp, UpdateNotice, UpdateNoticeV2 } from "@/features";
 import { ALL_APPS, QUICK_CONTROLS, SMART_TOOLS, STREAMING_APPS, type AppItem } from "@/entities";
 import { GalleryPage } from "../../gallery";
 import { FinderPage } from "../../finder";
@@ -213,7 +214,13 @@ export const DashboardPage: React.FC = () => {
           onOpenSettings={() => setIsSettingsOpen(true)}
           suspended={isSettingsOpen}
         />
-        <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        {homeV2 ? (
+          <NvRoot className="nv-contents">
+            <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+          </NvRoot>
+        ) : (
+          <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        )}
       </div>,
     );
   }
@@ -253,9 +260,10 @@ export const DashboardPage: React.FC = () => {
             setActiveView("finder");
           }}
           onOpenSettings={() => setIsSettingsOpen(true)}
-        />
-        <UpdateNotice onOpen={() => setIsSettingsOpen(true)} />
-        <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        >
+          <UpdateNoticeV2 onOpen={() => setIsSettingsOpen(true)} />
+          <SettingsV2 open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        </HomeV2Screen>
       </>
     );
   }
