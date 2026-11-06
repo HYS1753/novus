@@ -745,7 +745,7 @@
   width: var(--nv-target);
   height: var(--nv-target);
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--nv-radius-action);
   background: none;
   color: var(--nv-text);
   cursor: pointer;

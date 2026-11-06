@@ -18,17 +18,17 @@ Novus는 저사양 태블릿/PC(4GB RAM급) 환경에서 시동 시 즉시 실�
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                       pages                            │
-│           (DashboardPage, SettingsPage, etc.)          │
+│        (DashboardPage, HomeV2Screen, StyleGuideV2)     │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                      widgets                           │
-│     (QuickHeader, MediaShelf, WeatherClock, etc.)      │
+│   (HomeV2, SettingsV2, Onboarding, Gallery, Finder)    │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                      features                          │
-│     (useLaunchApp, TouchNavigation, VirtualDPad)       │
+│  (useLaunchApp, useWeather, useAmbientPhoto, useIdle)  │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
@@ -128,18 +128,18 @@ novus/
 │   └── HANDOVER.md       # 인수인계 및 기능 구현 명세
 ├── src/                  # React 19 프론트엔드 소스
 │   ├── app/              # 앱 루트 & 글로벌 스타일
-│   ├── pages/            # 화면 (DashboardPage, StyleGuidePage 등)
+│   ├── pages/            # 화면 (DashboardPage + HomeV2Screen, Gallery, Finder, StyleGuideV2)
 │   ├── widgets/          # 모듈형 위젯
 │   ├── features/         # 비즈니스 기능
 │   ├── entities/         # 도메인 모델
 │   ├── shared/           # 공통 기반 인프라 (UI Kit, Tauri IPC, Hooks)
 │   │   ├── ui/           # 공통 UI 컴포넌트 (모든 화면 UI는 이 계층에서 재활용)
-│   │   │   ├── common/   # UI 코어 18종 (GlassCard, GlassButton, GlassSegmentedControl, etc.)
+│   │   │   ├── v2/       # v2 컴포넌트 (NvRoot, NvButton, NvGlyphButton, NvServicePlate, NvSheet, …)
+│   │   │   ├── common/   # v1 코어 6종 (갤러리·파인더·뷰어가 브리지 안에서 사용)
 │   │   │   ├── media/    # GlassMediaTile (1:1 풀커버 타일 + GPU 저비용 하단 틴트 오버레이)
 │   │   │   ├── nav/      # SubpageDock (내부 서브페이지 표준 시스템 독)
 │   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons 및 공통 MotionIcon 모션 프리셋
-│   │   │   ├── button/   # TouchButton
-│   │   │   └── card/     # MediaCard
+│   │   │   └── button/   # TouchButton
 │   │   ├── api/          # Tauri IPC 래퍼 (mediaFs, mediaPlayer, window)
 │   │   ├── hooks/        # 저사양 최적화 훅 (useCurrentTime, useDockPosition, etc.)
 │   │   └── types/        # 공통 타입 (DockPosition, etc.)
@@ -163,20 +163,12 @@ novus/
 
 ## 5. 디자인 시스템 & Style Guide
 
-- **토큰**: `src/app/styles/variables.css` (색·타입·모션·머티리얼), 컴포넌트는 `src/shared/ui/common`
-- **머티리얼 모델**: 모든 면은 `틴트 + 헤어라인 엣지 + 상단 스펙큘러 + elevation`으로 구성되며, 여기에 역할별 블러가 더해집니다.
-  - **머티리얼 강도는 0–100 연속값 하나**입니다. 런타임이 `<html>`에 `--material-intensity`(0–1)를 씁니다.
-  - 역할별 블러는 강도에 비례하며 항상 `14 : 26 : 40` 비율을 유지합니다 (`--material-blur-control` / `-panel` / `-overlay`).
-  - 설계상 상한이 있습니다: 100에서도 틴트 알파는 `0.62`에서 멈추고(`--material-tint-alpha`), 엣지는 `--material-edge-boost`만큼 진해집니다. 값을 끝까지 올려도 면이 배경에 녹아 떠 보이지 않습니다.
-  - 기본값은 `0`(완전 불투명)이며, `html[data-frost]`가 없을 때는 `backdrop-filter`를 **한 선언도 출력하지 않습니다**. 저사양 타깃에서 합성 레이어가 생기지 않습니다.
-  - `backdrop-filter` 미지원 또는 `prefers-reduced-transparency: reduce`일 때 강도는 강제로 0으로 내려갑니다.
-- **런타임 제어**: `src/shared/lib/material.ts`(`applyMaterialIntensity`, `resolveMaterialIntensity`, `clampMaterialIntensity`, `describeMaterialIntensity`)와 `useMaterialIntensity` 훅. 향후 설정 화면이 이 API를 그대로 사용합니다.
-- **모션 시스템**: 인터랙션 → 레시피 매핑을 고정합니다. `press`(누름) · `lift`(호버) · `reveal`(제자리 등장) · `emerge`(트리거 기반 오버레이) · `enter`(가장자리 진입) · `pulse`(무한 진행). 컴포넌트는 duration/easing을 직접 쓰지 않고 `--motion-*`, `--ease-*`, `--press-scale`, `--lift-distance` 토큰과 `.motion-*` 클래스를 참조합니다. `prefers-reduced-motion: reduce`에서 이동은 제거되고 상태 변화만 남습니다.
-- **Style Guide 페이지** (`StyleGuidePage`): Vite 브라우저 DEV에서만 `/styleguide`로 접근. Tauri 런타임 및 프로덕션 빌드에서는 마운트되지 않음 (`isStyleGuideRouteEnabled`). 제품 설정 화면이 아니라 톤앤매너·토큰·컴포넌트 스펙시먼 문서입니다.
+디자인 시스템 명세(토큰 값, 형태·색 규칙, 금지 목록)는 루트의 [`DESIGN.md`](../DESIGN.md)와 `.impeccable/design.json`이 기준입니다. 이 절은 런타임 동작만 설명합니다.
 
-### v2 디자인 시스템 (전환 중)
+- **머티리얼 강도**: 0–100 값 하나(`useMaterialIntensity`, `src/shared/lib/material.ts`)가 `<html>`에 `--material-intensity`(0–1)를 씁니다. v2에서는 블러가 아니라 사진 스크림 농도(`--nv-scrim-strength`)로만 반영됩니다.
+- **Style Guide 페이지** (`StyleGuideV2Page`): Vite 브라우저 DEV에서만 `/styleguide`로 접근(`isStyleGuideRouteEnabled`). Tauri 런타임과 프로덕션 빌드에서는 마운트되지 않습니다. 실제 `HomeV2` 위젯을 예시 데이터로 1368×912에 렌더링하고, 언어·테마·보기 모드를 실시간으로 바꿉니다.
 
-v2는 v1 옆에 병행 구축되며 화면 단위로 교체됩니다. 진행 순서는 [`REDESIGN_V2.md`](REDESIGN_V2.md).
+### v2 디자인 시스템
 
 - **범위**: v2 토큰은 `.nv-root` 요소 아래에서만 적용됩니다. v1 화면(`html.dark`, `--color-*`)에는 영향이 없습니다.
 - **토큰**: `src/app/styles/v2/tokens.css`. 중립 9단 램프(`--nv-n0`~`--nv-n8`) → 역할 토큰(`--nv-ground`, `--nv-surface`, `--nv-text` 등). 의미색은 `--nv-live`(실행 중), `--nv-attention`(확인 필요), `--nv-sun`/`--nv-sat`(달력 주말) 네 개뿐입니다.
@@ -190,8 +182,8 @@ v2는 v1 옆에 병행 구축되며 화면 단위로 교체됩니다. 진행 순
 - **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
 - **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
 - **v1 → v2 토큰 브리지** (`src/app/styles/v2/bridge.css`): v2 모드에서 갤러리·파인더·뷰어·영상·스트리밍 화면은 `NvRoot className="nv-bridge"` 안에서 렌더링됩니다. 그 안에서 v1 토큰(`--color-*`, `--glass-*`, `--radius-*`)이 v2 램프로 다시 연결되어, 로직은 v1 그대로 두고 색·모서리·그림자만 v2가 됩니다. 브리지 안에서는 `backdrop-filter`를 강제로 끕니다. 독(`in-app-dock`)은 원형 글리프 레일(채운 홈 원)로 바뀝니다. 갤러리·스트리밍은 자체 방향키를 쓰므로 공간 탐색을 끄고, 파인더는 켭니다.
-- **기본 앰비언트 아트워크**: `src/assets/ambient/*.svg`, `getAmbientArtworkForDay()`가 날짜별로 하나를 고릅니다.
-- **v2 Style Guide**: DEV 브라우저에서 `/styleguide/v2`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
+- **기본 앰비언트 아트워크**: `src/assets/ambient/*.jpg`(1600×1000 절차 생성 래스터, 생성기 `scripts/design/generate-ambient-art.py`). 각 이미지에 초점 높이(`focusY`)가 있어, 사진이 접힐 때 띠가 그 높이(수평선 등)를 중심으로 보입니다. 사용자 사진은 0.5.
+- **v2 Style Guide**: DEV 브라우저에서 `/styleguide`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 
 ---
 
