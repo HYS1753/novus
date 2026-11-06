@@ -137,10 +137,10 @@ export const HomeV2: React.FC<HomeV2Props> = ({
     const observer = new ResizeObserver(() => {
       // The band keeps a fixed share of the frame; percentages cannot express it
       // because today's page grows with its content.
-      scroller.parentElement?.style.setProperty(
-        "--nvh-band",
-        `${Math.round(scroller.clientHeight * BAND_RATIO)}px`,
-      );
+      const host = scroller.parentElement;
+      host?.style.setProperty("--nvh-band", `${Math.round(scroller.clientHeight * BAND_RATIO)}px`);
+      // Today's page caps its largest elements by the frame height so it fits one screen.
+      host?.style.setProperty("--nvh-h", `${scroller.clientHeight}px`);
       applyFold();
     });
     observer.observe(scroller);
@@ -172,11 +172,13 @@ export const HomeV2: React.FC<HomeV2Props> = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [services, onOpenService, shortcutsEnabled, ambient]);
 
+  const scrollBehavior = (): ScrollBehavior =>
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
   const goToday = () => {
     const scroller = scrollerRef.current;
-    scroller?.scrollTo({ top: scroller.clientHeight, behavior: "smooth" });
+    scroller?.scrollTo({ top: scroller.clientHeight, behavior: scrollBehavior() });
   };
-  const goTop = () => scrollerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  const goTop = () => scrollerRef.current?.scrollTo({ top: 0, behavior: scrollBehavior() });
 
   const dateLine = new Intl.DateTimeFormat(locale, {
     month: "long",

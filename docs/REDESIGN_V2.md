@@ -126,10 +126,10 @@ UI를 바꾼 페이즈는 추가로 `.claude/skills/impeccable/scripts/impeccabl
 
 ### P6. 품질 마감
 
-- [ ] `/impeccable adapt`: 1280–1600 폭, 세로 회전, 두 posture 전 화면
-- [ ] `/impeccable harden`: 다국어 긴 라벨, 오프라인, 권한 오류, 빈 폴더
-- [ ] `/impeccable audit`: 대비, 포커스 순서, `prefers-reduced-motion`
-- [ ] Surface Pro 4 실측: 유휴 RAM, 스냅·뷰어 프레임, 콜드 부팅 시간 → `PERFORMANCE_GUIDE.md`
+- [x] `/impeccable adapt`: 1280×800·1368×912·912×1368(세로), 두 posture. 오늘 화면은 프레임 높이로 큰 날짜·달력 칸을 제한해 기준 기기에서 한 화면에 맞춤
+- [x] `/impeccable harden`: 영어 긴 라벨(잘림은 말줄임), 날씨 오프라인 시 숨김, 폴더 오류·빈 폴더 상태, 사진 없음 → 번들 아트워크
+- [x] `/impeccable audit`: 의미색·3차 글자 대비 4.5:1 이상, 방향키 포커스(시트 범위 고정), 동작 줄이기 시 스크롤·모션 즉시, 밝은 사진 위 시계용 상단 스크림
+- [ ] Surface Pro 4 실측: 측정 절차와 빈 표를 `PERFORMANCE_GUIDE.md` §4에 준비. 실기 측정 필요(개발 Mac에서 대체 불가)
 
 ### P7. 마무리 · v1 제거 · 문서화
 

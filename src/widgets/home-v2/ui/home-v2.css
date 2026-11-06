@@ -392,3 +392,45 @@
   inset: 0;
   overflow: hidden;
 }
+
+/* ---------- Fit today's page to one screen on short frames ---------- */
+.nvh__numeral {
+  font-size: min(var(--nv-size-numeral), calc(var(--nvh-h, 912px) * 0.22));
+}
+
+.nvh__cal .nv-calendar td {
+  height: min(calc(46px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.052));
+  padding-top: min(var(--nv-space-2), calc(var(--nvh-h, 912px) * 0.008));
+}
+
+.nvh__sheet {
+  row-gap: min(var(--nv-space-4), calc(var(--nvh-h, 912px) * 0.016));
+}
+
+/* The calendar link keeps its full touch target but does not add row height. */
+.nvh__cal-head {
+  height: var(--nv-space-6);
+}
+
+.nvh__cal-head .nv-button {
+  margin-block: calc((var(--nv-space-6) - var(--nv-target)) / 2);
+}
+
+.nvh__cal .nv-calendar td span {
+  min-width: 1.75em;
+  height: 1.75em;
+}
+
+.nvh__meta {
+  margin-top: min(var(--nv-space-5), calc(var(--nvh-h, 912px) * 0.02));
+}
+
+/* A faint top scrim keeps the clock legible over bright user photos. */
+.nvh__frame--hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--nv-space-8) * 2.5);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0));
+  pointer-events: none;
+}
