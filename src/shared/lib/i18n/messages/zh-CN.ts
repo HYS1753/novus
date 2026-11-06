@@ -48,7 +48,6 @@ export const zhCN: Messages = {
   "home.servicesHintIdle": "按 1–{max} 直接打开",
   "home.explorer": "浏览",
   "home.pictures": "图片",
-  "home.downloads": "下载",
   "home.radio": "电台",
   "home.ambient": "氛围模式",
   "home.mobileRemote": "手机遥控",
@@ -346,6 +345,5 @@ export const zhCN: Messages = {
   "home.allApps": "全部应用",
   "onboarding.previewTv": "在沙发上 1–2 米外 · 用遥控器或方向键移动",
   "onboarding.previewTablet": "拿在手上 30–50 厘米 · 直接触控",
-  "home.drives": "驱动器",
   "home.photoHint": "照片",
 };

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   getSessionLastUsed,
-  getSystemLocations,
   NvButton,
   NvDialog,
   NvEmptyState,
@@ -14,17 +13,15 @@ import {
   useI18n,
   useNow,
   usePreference,
-  type QuickLocation,
 } from "@/shared";
 import { useAmbientPhoto, useIdle, useWeather } from "@/features";
 import { ALL_APPS, SMART_TOOLS, STREAMING_APPS, type AppItem } from "@/entities";
-import { HomeV2, type HomeLocation, type HomeService } from "@/widgets";
+import { HomeV2, type HomeService } from "@/widgets";
 
 /** Photo rotation while the home is in use vs. in the ambient frame. */
 const HOME_ROTATE_MS = 10 * 60_000;
 const AMBIENT_ROTATE_MS = 60_000;
 /** Explorer row shows at most this many drives to keep the row to one line. */
-const MAX_DRIVES = 3;
 
 const tool = (id: string) => SMART_TOOLS.find((item) => item.id === id);
 
@@ -71,23 +68,10 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
   const [searchOpen, setSearchOpen] = useState(false);
   const [remoteOpen, setRemoteOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [locations, setLocations] = useState<QuickLocation[]>([]);
   const overlayOpen = suspended || searchOpen || remoteOpen;
   const { idle, wake, sleep } = useIdle(delay, !overlayOpen);
   const photo = useAmbientPhoto(idle ? AMBIENT_ROTATE_MS : HOME_ROTATE_MS);
   const weather = useWeather();
-
-  useEffect(() => {
-    let cancelled = false;
-    getSystemLocations()
-      .then((result) => {
-        if (!cancelled) setLocations(result);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const services: HomeService[] = STREAMING_APPS.map((app) => ({
     id: app.id,
@@ -95,24 +79,6 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
     state: endedIds.includes(app.id) ? "ended" : runningIds.includes(app.id) ? "live" : "idle",
     lastUsed: getSessionLastUsed(app.id),
   }));
-
-  const homeLocations: HomeLocation[] = [
-    ...locations
-      .filter((location) => location.category === "downloads")
-      .map((location) => ({
-        label: t("home.downloads"),
-        path: location.path,
-        kind: "downloads" as const,
-      })),
-    ...locations
-      .filter((location) => location.category === "drive")
-      .slice(0, MAX_DRIVES)
-      .map((location) => ({
-        label: /^[A-Z]:\\$/.test(location.path) ? location.path : location.name,
-        path: location.path,
-        kind: "drive" as const,
-      })),
-  ];
 
   const openById = (id: string) => {
     const item = ALL_APPS.find((entry) => entry.id === id);
@@ -146,7 +112,6 @@ export const HomeV2Screen: React.FC<HomeV2ScreenProps> = ({
         photoFocus={photo.focusY}
         weather={weather}
         services={services}
-        locations={homeLocations}
         ambient={idle}
         error={error || undefined}
         onOpenService={openById}

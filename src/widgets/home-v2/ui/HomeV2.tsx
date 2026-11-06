@@ -46,12 +46,6 @@ export interface HomeService {
   lastUsed?: number;
 }
 
-export interface HomeLocation {
-  label: string;
-  path: string;
-  kind: "downloads" | "drive";
-}
-
 export interface HomeV2Props {
   now: Date;
   photoUrl: string;
@@ -61,8 +55,6 @@ export interface HomeV2Props {
   sampleLabel?: string;
   weather?: { city: string; condition: WeatherCondition; temperature: number } | null;
   services: HomeService[];
-  /** Locations for the explorer row (Downloads, drives). */
-  locations: HomeLocation[];
   ambient: boolean;
   error?: string;
   onOpenService: (id: string) => void;
@@ -134,7 +126,6 @@ export const HomeV2: React.FC<HomeV2Props> = ({
   sampleLabel,
   weather,
   services,
-  locations,
   ambient,
   error,
   onOpenService,
@@ -657,16 +648,6 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                 <NvButton variant="quiet" icon={<ImageIcon />} onClick={onOpenGallery}>
                   {t("nav.gallery")}
                 </NvButton>
-                {locations.map((location) => (
-                  <NvButton
-                    key={location.path}
-                    variant="quiet"
-                    icon={<FolderIcon />}
-                    onClick={() => onOpenFinder(location.path)}
-                  >
-                    {location.label}
-                  </NvButton>
-                ))}
                 <NvButton variant="quiet" icon={<FolderIcon />} onClick={() => onOpenFinder()}>
                   {t("nav.files")}
                 </NvButton>

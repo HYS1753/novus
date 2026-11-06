@@ -59,11 +59,6 @@ export const HomePatternDemo: React.FC = () => {
           sampleLabel={language === "ko" ? "예시 데이터" : "Sample data"}
           weather={{ city: "Seoul", condition: "clear", temperature: 12 }}
           services={services}
-          locations={[
-            { label: "Downloads", path: "C:\\Users\\novus\\Downloads", kind: "downloads" },
-            { label: "C:\\", path: "C:\\", kind: "drive" },
-            { label: "D:\\", path: "D:\\", kind: "drive" },
-          ]}
           ambient={ambient}
           onOpenService={noop}
           onEndSession={noop}

@@ -47,7 +47,6 @@ export const ko = {
   "home.servicesHintIdle": "숫자키 1–{max}로 바로 열기",
   "home.explorer": "탐색기",
   "home.pictures": "사진",
-  "home.downloads": "다운로드",
   "home.radio": "라디오",
   "home.ambient": "앰비언트",
   "home.mobileRemote": "모바일 리모컨",
@@ -350,7 +349,6 @@ export const ko = {
   "home.allApps": "모든 앱",
   "onboarding.previewTv": "소파에서 1–2m · 리모컨이나 방향키로 이동",
   "onboarding.previewTablet": "손에 들고 30–50cm · 터치로 바로 조작",
-  "home.drives": "드라이브",
   "home.photoHint": "사진",
 } as const;
 

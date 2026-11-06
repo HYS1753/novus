@@ -48,7 +48,6 @@ export const ja: Messages = {
   "home.servicesHintIdle": "1–{max} キーで開く",
   "home.explorer": "エクスプローラー",
   "home.pictures": "写真",
-  "home.downloads": "ダウンロード",
   "home.radio": "ラジオ",
   "home.ambient": "アンビエント",
   "home.mobileRemote": "モバイルリモコン",
@@ -352,6 +351,5 @@ export const ja: Messages = {
   "home.allApps": "すべてのアプリ",
   "onboarding.previewTv": "ソファから 1–2 m · リモコンや方向キーで移動",
   "onboarding.previewTablet": "手に持って 30–50 cm · タッチで操作",
-  "home.drives": "ドライブ",
   "home.photoHint": "写真",
 };
