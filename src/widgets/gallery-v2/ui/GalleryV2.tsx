@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { GalleryState, MediaCollection } from "@/features";
+import { useFolderSummaries, type GalleryState, type MediaCollection } from "@/features";
 import {
   ChevronRightIcon,
   FolderIcon,
@@ -11,6 +11,7 @@ import {
   type FileItem,
 } from "@/shared";
 import { GalleryHeader } from "./GalleryHeader";
+import { MediaThumb } from "./MediaThumb";
 import { DateScrubber } from "./DateScrubber";
 import { JustifiedGrid, type GridPlacement, type GridSection } from "./JustifiedGrid";
 import "./gallery-v2.css";
@@ -176,6 +177,19 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
     if (folderGap) ensureRange(folderCount, folderCount + 1);
   }, [ensureRange, folderCount, folderGap]);
 
+  // Folder cards: the loaded subfolders, each with a cover and count.
+  const folders = useMemo(
+    () =>
+      collection.items
+        .slice(0, folderCount)
+        .filter((item): item is FileItem => Boolean(item?.is_dir)),
+    // `revision` stands for pages landing in the shared items array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [collection.items, collection.revision, folderCount],
+  );
+  const summaries = useFolderSummaries(folders.map((item) => item.path));
+  const fmt = new Intl.NumberFormat(locale);
+
   // The timeline groups by month when sorted by date; other sorts read as one run.
   const byDate = state.tab !== "folders" && state.sort.field === "modified";
   const { buckets, total } = collection;
@@ -261,23 +275,40 @@ export const GalleryV2: React.FC<GalleryV2Props> = ({ state, onOpenImage, onOpen
         )}
 
         {collection.status === "ready" && folderCount > 0 && (
-          <div className="gv-folders">
-            {collection.items.slice(0, folderCount).map(
-              (item, index) =>
-                item && (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className="gv-folder"
-                    onClick={() => open(collection)(index)}
-                  >
-                    <span className="gv-folder__icon" aria-hidden="true">
-                      <FolderIcon size={22} />
-                    </span>
-                    <span className="gv-folder__name">{item.name}</span>
-                  </button>
-                ),
-            )}
+          <div className="gv-albums">
+            {folders.map((item) => {
+              const summary = summaries.get(item.path);
+              const meta = summary
+                ? [
+                    summary.media_count > 0
+                      ? t("gallery.folderItems", { count: fmt.format(summary.media_count) })
+                      : t("gallery.folderNoMedia"),
+                    summary.has_subfolders ? t("gallery.folderHasSub") : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : "\u00a0";
+              return (
+                <button
+                  key={item.path}
+                  type="button"
+                  className="gv-album"
+                  onClick={() => state.openFolder(item.path)}
+                >
+                  <span className="gv-album__cover">
+                    {summary?.cover ? (
+                      <MediaThumb item={summary.cover} size={metrics.row * 1.4} />
+                    ) : (
+                      <span className="gv-album__glyph" aria-hidden="true">
+                        <FolderIcon size={28} />
+                      </span>
+                    )}
+                  </span>
+                  <span className="gv-album__name">{item.name}</span>
+                  <span className="gv-album__meta">{meta}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 

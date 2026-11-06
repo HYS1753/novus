@@ -571,48 +571,78 @@
   color: var(--nv-text-disabled);
 }
 
-.gv-folders {
+/* Folder cards as albums (Google Photos): cover, name, count. */
+.gv-albums {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(220px * var(--nv-scale)), 1fr));
-  gap: var(--nv-space-3);
+  grid-template-columns: repeat(auto-fill, minmax(calc(190px * var(--nv-scale)), 1fr));
+  gap: var(--nv-space-5) var(--nv-space-4);
 }
 
-.gv-folder {
+.gv-album {
   display: flex;
-  align-items: center;
-  gap: var(--nv-space-3);
-  min-height: calc(var(--nv-target) + 12px);
-  padding: var(--nv-space-3) var(--nv-space-4);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--nv-space-1);
+  min-width: 0;
+  padding: 0;
   border: 0;
-  border-radius: var(--nv-radius-content);
-  background: var(--nv-surface);
+  background: transparent;
   color: var(--nv-text);
   font: inherit;
-  font-size: var(--nv-size-body);
-  font-weight: var(--nv-weight-semibold);
   text-align: left;
   cursor: pointer;
 }
 
-.gv-folder:hover {
-  background: var(--nv-surface-raised);
+.gv-album__cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  margin-bottom: var(--nv-space-2);
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
 }
 
-.gv-folder:focus-visible {
+.gv-album:hover .gv-album__cover {
+  transform: scale(1.02);
+}
+
+.gv-album:active .gv-album__cover {
+  transform: scale(var(--nv-press-scale));
+}
+
+.gv-album:focus-visible {
+  outline: none;
+}
+
+.gv-album:focus-visible .gv-album__cover {
   outline: var(--nv-focus-width) solid var(--nv-focus);
   outline-offset: var(--nv-focus-offset);
 }
 
-.gv-folder__icon {
+.gv-album__glyph {
+  position: absolute;
+  inset: 0;
   display: grid;
-  color: var(--nv-text-2);
+  place-items: center;
+  color: var(--nv-text-3);
 }
 
-.gv-folder__name {
-  min-width: 0;
+.gv-album__name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.gv-album__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
 }
 
 @media (prefers-reduced-motion: reduce) {

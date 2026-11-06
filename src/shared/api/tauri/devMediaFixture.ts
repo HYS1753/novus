@@ -7,7 +7,13 @@
  * dynamic import behind `import.meta.env.DEV`, so production builds never
  * contain it. Paths are bundled artwork URLs with a `#n` suffix.
  */
-import type { FileItem, MediaPageResult, QuickLocation, TimelineBucket } from "./mediaFs";
+import type {
+  FileItem,
+  FolderSummary,
+  MediaPageResult,
+  QuickLocation,
+  TimelineBucket,
+} from "./mediaFs";
 import { BUNDLED_AMBIENT_ARTWORK } from "../../lib/ambientArtwork";
 
 const ROOT = "/dev/Pictures";
@@ -176,4 +182,17 @@ export function devSystemLocations(): QuickLocation[] {
 /** The fixture's "thumbnail" is the artwork itself (strip the uniqueness suffix). */
 export function devThumbnail(path: string): string {
   return path.startsWith("dev://") ? "" : path.split("#")[0];
+}
+
+export async function devFolderSummaries(paths: string[]): Promise<FolderSummary[]> {
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  const all = buildLibrary();
+  return paths.slice(0, 48).map((path) => {
+    const name = path.split("/").pop();
+    const inside = all.filter((item) => folderOf(item) === name);
+    const cover = inside
+      .filter((item) => item.media_type === "image")
+      .sort((a, b) => b.modified_ms - a.modified_ms)[0];
+    return { path, media_count: inside.length, cover: cover ?? null, has_subfolders: false };
+  });
 }

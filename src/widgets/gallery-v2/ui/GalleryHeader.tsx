@@ -83,13 +83,18 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ state }) => {
     if (searching) inputRef.current?.focus();
   }, [searching]);
 
+  const media = collection.imageCount + collection.videoCount;
+  const folderTotal = collection.total - media;
   const counts =
     collection.status === "ready"
       ? [
-          t("gallery.libraryCount", {
-            images: fmt.format(collection.imageCount),
-            videos: fmt.format(collection.videoCount),
-          }),
+          folderTotal > 0 ? t("gallery.foldersCount", { count: fmt.format(folderTotal) }) : "",
+          media > 0 || folderTotal === 0
+            ? t("gallery.libraryCount", {
+                images: fmt.format(collection.imageCount),
+                videos: fmt.format(collection.videoCount),
+              })
+            : "",
           collection.truncated
             ? t("gallery.truncated", { count: fmt.format(collection.total) })
             : "",

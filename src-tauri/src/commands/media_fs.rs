@@ -219,6 +219,75 @@ fn media_item(entry_path: &Path, file_name: String, metadata: Option<fs::Metadat
     }
 }
 
+/// A folder card in the gallery: how many photos/videos it holds directly,
+/// its newest image as the cover, and whether it has subfolders.
+#[derive(Debug, Serialize)]
+pub struct FolderSummary {
+    pub path: String,
+    pub media_count: usize,
+    pub cover: Option<FileItem>,
+    pub has_subfolders: bool,
+}
+
+/// Folders summarised per request; the gallery asks for the visible cards only.
+const SUMMARY_BATCH_LIMIT: usize = 48;
+/// Entries read per folder before the count is reported as a floor.
+const SUMMARY_ENTRY_LIMIT: usize = 5_000;
+
+fn summarise_folder(path: &str) -> FolderSummary {
+    let mut summary = FolderSummary {
+        path: path.to_string(),
+        media_count: 0,
+        cover: None,
+        has_subfolders: false,
+    };
+    let Ok(entries) = fs::read_dir(path) else {
+        return summary;
+    };
+    for entry in entries.flatten().take(SUMMARY_ENTRY_LIMIT) {
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name.starts_with('.') {
+            continue;
+        }
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+        if file_type.is_dir() {
+            summary.has_subfolders = true;
+            continue;
+        }
+        let entry_path = entry.path();
+        let item = media_item(&entry_path, file_name, entry.metadata().ok());
+        if item.media_type != "image" && item.media_type != "video" {
+            continue;
+        }
+        summary.media_count += 1;
+        if item.media_type == "image"
+            && summary
+                .cover
+                .as_ref()
+                .is_none_or(|cover| item.modified_ms > cover.modified_ms)
+        {
+            summary.cover = Some(item);
+        }
+    }
+    summary
+}
+
+/// Cover and count for each folder card (at most 48 per call).
+#[tauri::command]
+pub async fn get_folder_summaries(paths: Vec<String>) -> Result<Vec<FolderSummary>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        paths
+            .iter()
+            .take(SUMMARY_BATCH_LIMIT)
+            .map(|path| summarise_folder(path))
+            .collect()
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Every image and video under `root` (no folders), bounded in count and depth.
 /// Returns whether the walk stopped at the file limit.
 fn collect_media_recursive(root: &Path, items: &mut Vec<FileItem>) -> bool {
@@ -783,6 +852,28 @@ mod tests {
         again.slot = "library".into();
         let next = get_media_page_blocking(&state, again, Some(photos.snapshot_id), 1, 1).unwrap();
         assert_eq!(next.items[0].name, "b.mp4");
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn folder_summaries_count_media_and_pick_the_newest_image() {
+        let directory = temp_dir("summary");
+        fs::create_dir_all(directory.join("nested")).unwrap();
+        fs::write(directory.join("old.jpg"), "o").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        fs::write(directory.join("new.png"), "n").unwrap();
+        fs::write(directory.join("clip.mp4"), "v").unwrap();
+        fs::write(directory.join("notes.txt"), "t").unwrap();
+        let summary = summarise_folder(&directory.to_string_lossy());
+        assert_eq!(summary.media_count, 3);
+        assert!(summary.has_subfolders);
+        assert_eq!(
+            summary.cover.map(|cover| cover.name),
+            Some("new.png".to_string())
+        );
+        let empty = summarise_folder(&directory.join("nested").to_string_lossy());
+        assert_eq!(empty.media_count, 0);
+        assert!(empty.cover.is_none());
         fs::remove_dir_all(directory).unwrap();
     }
 

@@ -96,6 +96,21 @@ export async function getMediaPage(options: {
   });
 }
 
+/** A folder card: media held directly, the newest image as cover, and whether it nests. */
+export interface FolderSummary {
+  path: string;
+  media_count: number;
+  cover: FileItem | null;
+  has_subfolders: boolean;
+}
+
+/** Cover and count for up to 48 folders per call. */
+export async function getFolderSummaries(paths: string[]): Promise<FolderSummary[]> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devFolderSummaries(paths);
+  return await invoke<FolderSummary[]>("get_folder_summaries", { paths });
+}
+
 /** Month runs of the current snapshot, for the date scrubber. */
 export async function getMediaTimeline(snapshotId: number): Promise<TimelineBucket[]> {
   const fixture = await devFixture();

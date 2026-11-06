@@ -11,8 +11,8 @@ use commands::embedded_player::{
     request_embedded_video_overlay_action, update_embedded_video_bounds, EmbeddedPlayerState,
 };
 use commands::media_fs::{
-    get_media_page, get_media_timeline, get_system_locations, open_file_in_os, scan_directory,
-    MediaPageState,
+    get_folder_summaries, get_media_page, get_media_timeline, get_system_locations,
+    open_file_in_os, scan_directory, MediaPageState,
 };
 use commands::player::play_video_native;
 use commands::system::{
@@ -84,6 +84,7 @@ pub fn run() {
             scan_directory,
             get_media_page,
             get_media_timeline,
+            get_folder_summaries,
             open_file_in_os,
             get_image_thumbnail,
             cleanup_thumbnail_cache,
