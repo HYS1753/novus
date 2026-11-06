@@ -36,7 +36,12 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
       <div className="nvl__stack">
         {/* The plate breathes over a blurred bloom of its own art while the service connects. */}
         <div className="nvl__media" role="progressbar" aria-label={t("loader.connecting")}>
-          <NvBrandArt id={app.id} name={app.title} className="nvl__glow" />
+          {/* The bloom is the service's colour as a soft radial light: no blur filter. */}
+          <span
+            className="nvl__glow"
+            aria-hidden="true"
+            style={{ color: app.accentColor || "var(--nv-text)" }}
+          />
           <NvBrandArt id={app.id} name={app.title} className="nvl__art" />
           <span className="nvl__sheen" aria-hidden="true" />
         </div>

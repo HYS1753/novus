@@ -1,14 +1,10 @@
 /**
- * Material intensity is a single 0-100 knob for how much of the backdrop
- * shows through surfaces.
+ * The 0-100 "사진 위 글자 배경" knob. It once set how much backdrop showed
+ * through frosted surfaces; in v2 it only sets the scrim strength under
+ * text on photos (`--nv-scrim-strength`). Nothing uses backdrop-filter.
  *
- *    0   opaque tints, no compositing cost — the shipped default
- *   50   balanced frosting
- *  100   maximum frosting the system allows
- *
- * The scale is bounded by design: even at 100 the tint keeps a 0.62 alpha
- * floor and the hairline edge firms up, so surfaces stay anchored to the
- * layout instead of dissolving into the backdrop.
+ *    0   the lightest scrim (0.78 at the darkest point) — the default
+ *  100   the strongest scrim (0.95)
  */
 export type MaterialIntensity = number;
 
@@ -17,7 +13,7 @@ export const MATERIAL_INTENSITY_MAX = 100;
 /** Step used by settings UI so stored values stay predictable. */
 export const MATERIAL_INTENSITY_STEP = 5;
 
-/** Frosting is opt-in: the shipped default must stay cheap to composite. */
+/** Default: the lightest scrim that still keeps white text legible. */
 export const DEFAULT_MATERIAL_INTENSITY: MaterialIntensity = 0;
 
 const STORAGE_KEY = "novus.material-intensity";
@@ -41,7 +37,7 @@ export function describeMaterialIntensity(value: MaterialIntensity): string {
   return "Maximum";
 }
 
-/** True when the OS asks for reduced transparency; frosting must yield to it. */
+/** True when the OS asks for reduced transparency (the scrim then goes to full strength in CSS). */
 export function prefersReducedTransparency(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-transparency: reduce)").matches;
@@ -64,11 +60,8 @@ export function resolveMaterialIntensity(): MaterialIntensity {
 }
 
 /**
- * Writes the knob to <html> so every surface token resolves from one place.
- *
- * `data-frost` gates the backdrop-filter rules entirely: at 0 the property is
- * never emitted, so integrated GPUs get no compositing layers at all.
- * Persistence is best-effort; the visual state is applied either way.
+ * Writes the knob to <html> (`--material-intensity`, 0..1), read by the v2
+ * scrim. Persistence is best-effort; the visual state is applied either way.
  */
 export function applyMaterialIntensity(value: MaterialIntensity, persist = true): void {
   if (typeof document === "undefined") return;
@@ -77,11 +70,9 @@ export function applyMaterialIntensity(value: MaterialIntensity, persist = true)
   const root = document.documentElement;
 
   root.style.setProperty(INTENSITY_PROPERTY, String(intensity / 100));
-  if (intensity > 0) {
-    root.setAttribute(FROST_ATTRIBUTE, "on");
-  } else {
-    root.removeAttribute(FROST_ATTRIBUTE);
-  }
+  // No surface frosts any more (no backdrop-filter on the HD 515); clear the
+  // flag older builds may have left behind.
+  root.removeAttribute(FROST_ATTRIBUTE);
 
   if (!persist || typeof localStorage === "undefined") return;
   try {

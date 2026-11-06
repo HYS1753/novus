@@ -34,17 +34,15 @@
   animation: nvl-breathe 2.4s var(--nv-ease-in-out) infinite alternate;
 }
 
-/* The bloom: the art itself, blurred once and only scaled/faded afterwards
-   (transform + opacity), so the GPU never re-blurs per frame. */
-.nvl__glow.nv-plate__field {
+/* The bloom: the service's accent as a radial light behind the plate. No
+   filter (a blur re-renders on the HD 515); only opacity and scale animate. */
+.nvl__glow {
   position: absolute;
-  inset: 0;
+  inset: -45% -25%;
   z-index: 0;
-  width: 100%;
-  filter: blur(calc(28px * var(--nv-scale))) saturate(1.3);
+  background: radial-gradient(closest-side, currentColor, transparent);
   opacity: 0.55;
   transform: scale(1.12);
-  will-change: transform, opacity;
   animation: nvl-bloom 2.4s var(--nv-ease-in-out) infinite alternate;
 }
 
@@ -72,7 +70,6 @@
     transparent 100%
   );
   transform: translateX(-120%);
-  will-change: transform;
   animation: nvl-sheen 2.2s var(--nv-ease-in-out) infinite;
 }
 

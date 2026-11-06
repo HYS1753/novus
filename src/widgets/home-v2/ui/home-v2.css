@@ -112,26 +112,6 @@
   max-width: 720px;
 }
 
-.nvh__title {
-  margin: var(--nv-space-3) 0 var(--nv-space-2);
-  font-family: var(--nv-font-display);
-  font-size: var(--nv-size-display);
-  font-weight: var(--nv-weight-heavy);
-  letter-spacing: var(--nv-track-display);
-  line-height: 1.02;
-}
-
-.nvh__sub {
-  font-size: var(--nv-size-body);
-  color: var(--nv-on-media-2);
-}
-
-.nvh__actions {
-  display: flex;
-  gap: var(--nv-space-3);
-  margin-top: var(--nv-space-5);
-}
-
 .nvh__rail {
   position: absolute;
   right: var(--nv-space-6);
@@ -184,8 +164,8 @@
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(45deg);
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
-  animation: nvh-nudge-down 2.2s var(--nv-ease-in-out) infinite;
+  /* Three nudges, then still: an always-on screen must let the GPU idle. */
+  animation: nvh-nudge-down 2.2s var(--nv-ease-in-out) 3;
 }
 
 @keyframes nvh-nudge-down {
@@ -216,6 +196,10 @@
   }
 }
 
+.nvh.is-ambient .nvh__chev {
+  animation: none;
+}
+
 .nvh__spacer {
   flex: 1;
 }
@@ -239,15 +223,6 @@
 
 .nvh__error {
   margin-top: var(--nv-space-2);
-}
-
-.nvh__up {
-  width: 10px;
-  height: 10px;
-  margin-top: 4px;
-  border-left: 2px solid currentColor;
-  border-top: 2px solid currentColor;
-  transform: rotate(45deg);
 }
 
 /* ---------- Ambient: only the photo, the clock, and the date remain ---------- */
@@ -328,14 +303,8 @@
 }
 
 /* ---------- Fit today's page to one screen on short frames ---------- */
-.nvh__numeral {
-  font-size: min(calc(var(--nv-size-numeral) * 1.15), calc(var(--nvh-h, 912px) * 0.2));
-}
 
 /* The calendar link keeps its full touch target but does not add row height. */
-.nvh__cal-head {
-  height: var(--nv-space-6);
-}
 
 /* A faint top scrim keeps the clock legible over bright user photos. */
 .nvh__frame--hero::before {

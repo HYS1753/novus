@@ -368,7 +368,7 @@ The viewing-mode step plays a miniature of the real Novus screens, not an illust
 
 ### Launch screen
 
-While a service connects (`widgets/in-app-player/ui/InAppLoader.tsx`): centred on ground, the service's plate at 240px × scale over a bloom of its own art (blurred once; only opacity 0.35–0.75 and scale 1.04–1.22 animate, 2.4s alternate; 0.15–0.35 on light ground so a dark plate does not read as a shadow), a soft light band sweeping across the plate every 2.2s as the progress, the name at title size, one status line, and "독립 플레이어로 열기". After the slow-load delay the DRM hint, retry, and home follow. Reduced motion holds everything still. The sheen is the one gradient outside the photo scrim, and it only exists while loading.
+While a service connects (`widgets/in-app-player/ui/InAppLoader.tsx`): centred on ground, the service's plate at 240px × scale over a bloom of the service's accent colour (a radial gradient, no filter; only opacity 0.35–0.75 and scale 1.04–1.22 animate, 2.4s alternate; 0.15–0.35 on light ground), a soft light band sweeping across the plate every 2.2s as the progress, the name at title size, one status line, and "독립 플레이어로 열기". After the slow-load delay the DRM hint, retry, and home follow. Reduced motion holds everything still. The bloom and the sheen are the gradients outside the photo scrim, and they only exist while loading.
 
 ### Service plates (signature)
 
@@ -440,7 +440,7 @@ After the ambient delay (default 10 minutes, one timeout reset on input, no poll
 
 ### The bridge
 
-Only the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, all blur tokens are 0px and `backdrop-filter` is forced off. The gallery, Files, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
+Only the video player's internals still run on v1 components inside `.nv-root.nv-bridge`, where v1 tokens resolve to v2 roles: primary and accent become ink, warning and danger become attention, success becomes ink, every radius becomes 4px, glass becomes plain surface with no sheen, there are no blur tokens any more and `backdrop-filter` is forced off. The gallery, Files, the photo viewer, the dock (theater rail), and the streaming launch screen are v2 components of their own; the video player wears a v2 skin (`video-v2.css`) over its v1 structure. See their sections.
 
 ## Do's and Don'ts
 

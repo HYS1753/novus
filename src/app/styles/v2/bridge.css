@@ -70,10 +70,6 @@
   --glass-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.4);
   --app-glow: none;
   --material-tint-alpha: 1;
-  --material-blur-control: 0px;
-  --material-blur-panel: 0px;
-  --material-blur-overlay: 0px;
-  --material-saturate: 100%;
   --material-edge-boost: 0;
 
   --focus-ring: 0 0 0 var(--nv-focus-width) var(--nv-focus);
@@ -114,45 +110,10 @@
 }
 
 /* ---------- Gallery / Finder header: readable sizes and contrast ---------- */
-.nv-root.nv-bridge .gallery-browser__count,
-.nv-root.nv-bridge .path-navigation__separator {
-  font-size: var(--nv-size-caption);
-  color: var(--nv-text-3);
-}
-
-.nv-root.nv-bridge .gallery-browser__controls .glass-segmented__item {
-  height: calc(var(--nv-target) - 8px);
-  font-size: var(--nv-size-label);
-}
-
-.nv-root.nv-bridge .gallery-browser__sort-order,
-.nv-root.nv-bridge .finder__layout-button {
-  width: var(--nv-target);
-  height: var(--nv-target);
-  color: var(--nv-text-2);
-}
-
-.nv-root.nv-bridge .subpage-state > span:last-child {
-  color: var(--nv-text-2);
-  font-size: var(--nv-size-label);
-}
 
 /* ---------- Shape grammar: rectangles for content controls ---------- */
-.nv-root.nv-bridge .glass-segmented,
-.nv-root.nv-bridge .glass-segmented__item,
-.nv-root.nv-bridge .gallery-browser__location-trigger,
-.nv-root.nv-bridge .path-navigation__up,
-.nv-root.nv-bridge .path-navigation__ellipsis,
-.nv-root.nv-bridge .gallery-browser__search,
-.nv-root.nv-bridge .finder__search,
-.nv-root.nv-bridge .gallery-browser__sort-order,
-.nv-root.nv-bridge .finder__layout-button,
 .nv-root.nv-bridge .glass-btn {
   border-radius: var(--nv-radius-action) !important;
-}
-
-.nv-root.nv-bridge .glass-segmented {
-  padding: 3px;
 }
 
 .nv-root.nv-bridge .glass-btn {

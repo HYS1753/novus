@@ -52,14 +52,15 @@ function useBeat(active: boolean, beats: number): number {
 }
 
 /** The launch screen in miniature: the plate over a bloom of its own art. */
-const MiniLoader: React.FC<{ id: string; title: string; open: boolean }> = ({
+const MiniLoader: React.FC<{ id: string; title: string; accent: string; open: boolean }> = ({
   id,
   title,
+  accent,
   open,
 }) => (
   <div className="ppv-loader" data-open={open || undefined}>
     <div className="ppv-loader__media">
-      <NvBrandArt id={id} name={title} className="ppv-loader__glow" />
+      <span className="ppv-loader__glow" aria-hidden="true" style={{ color: accent }} />
       <NvBrandArt id={id} name={title} className="ppv-loader__art" />
     </div>
     <span className="ppv-loader__title">{title}</span>
@@ -116,7 +117,12 @@ const TvScene: React.FC<{ active: boolean; photo: string }> = ({ active, photo }
               ))}
             </div>
           </div>
-          <MiniLoader id={focused.id} title={focused.title} open={launching} />
+          <MiniLoader
+            id={focused.id}
+            title={focused.title}
+            accent={focused.accent}
+            open={launching}
+          />
         </div>
         <span className="ppv-tv__stand" />
       </div>
@@ -189,7 +195,7 @@ const TabletScene: React.FC<{ active: boolean; photo: string }> = ({ active, pho
               <span className="ppv-ui__tile ppv-ui__tile--slot" />
             </div>
           </div>
-          <MiniLoader id={tapped.id} title={tapped.title} open={launching} />
+          <MiniLoader id={tapped.id} title={tapped.title} accent={tapped.accent} open={launching} />
         </div>
       </div>
     </div>

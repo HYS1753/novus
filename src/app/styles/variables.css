@@ -80,10 +80,6 @@
   --material-intensity: 0;
 
   /* Blur grows with intensity but keeps the role ratio 14 : 26 : 40. */
-  --material-blur-control: calc(var(--material-intensity) * 14px);
-  --material-blur-panel: calc(var(--material-intensity) * 26px);
-  --material-blur-overlay: calc(var(--material-intensity) * 40px);
-  --material-saturate: calc(100% + var(--material-intensity) * 80%);
 
   /* Legibility floor: at full intensity the tint still holds 0.62 alpha,
      so surfaces stay anchored instead of dissolving into the backdrop. */
@@ -234,21 +230,13 @@ html.dark,
 }
 
 /* ==========================================================================
-   Material intensity guards
-   The knob itself lives on <html> as an inline `--material-intensity`.
-   These rules force it back to 0 when frosting is unavailable or unwanted.
+   Scrim strength guard
+   `--material-intensity` (0..1, written to <html> at runtime) now only sets
+   how strongly photos are darkened under text (the v2 scrim). When the OS
+   asks for reduced transparency, the scrim goes to full strength.
    ========================================================================== */
-
-/* Frosting requires backdrop-filter; fall back to an opaque tint without it. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html {
-    --material-intensity: 0;
-  }
-}
-
-/* The OS-level transparency preference overrides any app setting. */
 @media (prefers-reduced-transparency: reduce) {
   html {
-    --material-intensity: 0;
+    --material-intensity: 1 !important;
   }
 }
