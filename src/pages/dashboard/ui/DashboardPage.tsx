@@ -13,128 +13,17 @@ import {
   useDisplayMode,
   exitWindowFullscreen,
   reportWindowModeError,
+  isHomeV2Enabled,
+  markSessionUsed,
 } from "@/shared";
 import { useLaunchApp, UpdateNotice } from "@/features";
-import type { AppItem } from "@/entities";
+import { ALL_APPS, QUICK_CONTROLS, SMART_TOOLS, STREAMING_APPS, type AppItem } from "@/entities";
 import { GalleryPage } from "../../gallery";
 import { FinderPage } from "../../finder";
+import { HomeV2Screen } from "./HomeV2Screen";
 
-const STREAMING_APPS: AppItem[] = [
-  {
-    id: "netflix",
-    title: "Netflix",
-    category: "media",
-    url: "https://www.netflix.com",
-    imageUrl:
-      "https://images.ctfassets.net/y2ske730sjqp/5QQ9SVIdc1tmkqrtFnG9U1/de758bba0f65dcc1c6bc1f31f161003d/BrandAssets_Logos_02-NSymbol.jpg?w=940",
-    accentColor: "#E50914",
-  },
-  {
-    id: "youtube",
-    title: "YouTube",
-    category: "media",
-    url: "https://www.youtube.com",
-    imageUrl:
-      "https://www.gstatic.com/marketing-cms/assets/images/08/25/fffdc76145f28be3a1ca63859c4a/external-logo-core-1.png=n-w1860-h1047-fcrop64=1,00000000ffffffff-rw",
-    accentColor: "#FF0000",
-  },
-  {
-    id: "disney",
-    title: "Disney+",
-    category: "media",
-    url: "https://www.disneyplus.com",
-    imageUrl:
-      "https://lumiere-a.akamaihd.net/v1/images/disney_logo_march_2024_050fef2e.png?region=0%2C0%2C1920%2C1080",
-    accentColor: "#113CCF",
-  },
-  {
-    id: "tving",
-    title: "TVING",
-    category: "media",
-    url: "https://www.tving.com",
-    accentColor: "#FF153C",
-    imageFit: "contain",
-  },
-  {
-    id: "wavve",
-    title: "Wavve",
-    category: "media",
-    url: "https://www.wavve.com",
-    accentColor: "#004FFF",
-  },
-  {
-    id: "watcha",
-    title: "Watcha",
-    category: "media",
-    url: "https://watcha.com",
-    accentColor: "#FF0558",
-    imageFit: "contain",
-  },
-  {
-    id: "coupang",
-    title: "Coupang Play",
-    category: "media",
-    url: "https://www.coupangplay.com",
-    accentColor: "#00AFFF",
-  },
-];
-
-const SMART_TOOLS: AppItem[] = [
-  {
-    id: "calendar",
-    title: "Google Calendar",
-    category: "tools",
-    url: "https://calendar.google.com",
-    accentColor: "#1A73E8",
-  },
-  {
-    id: "radio",
-    title: "Web Radio & BGM",
-    category: "tools",
-    url: "https://radio.garden",
-    accentColor: "#8E24AA",
-  },
-  {
-    id: "photos",
-    title: "미디어 갤러리",
-    category: "media",
-    url: "#photos",
-    accentColor: "#EC4899",
-  },
-  {
-    id: "finder",
-    title: "파일 파인더",
-    category: "tools",
-    url: "#finder",
-    accentColor: "#3B82F6",
-  },
-  {
-    id: "browser",
-    title: "Quick Search",
-    category: "tools",
-    url: "https://www.google.com",
-    accentColor: "#EA4335",
-  },
-];
-
-const QUICK_CONTROLS: AppItem[] = [
-  {
-    id: "ambient",
-    title: "Ambient Display",
-    category: "system",
-    url: "#ambient",
-    accentColor: "#6366F1",
-  },
-  {
-    id: "remote",
-    title: "Mobile Remote",
-    category: "system",
-    url: "#remote",
-    accentColor: "#10B981",
-  },
-];
-
-const ALL_APPS = [...STREAMING_APPS, ...SMART_TOOLS, ...QUICK_CONTROLS];
+/** How long a closed session shows "종료됨" before it leaves the list. */
+const ENDED_BEAT_MS = 1500;
 
 export const DashboardPage: React.FC = () => {
   const [activeView, setActiveView] = useState<"dashboard" | "gallery" | "finder">("dashboard");
@@ -152,6 +41,17 @@ export const DashboardPage: React.FC = () => {
   const closingRef = useRef(false);
   const [runningError, setRunningError] = useState("");
   const { appFullscreen } = useDisplayMode();
+  const [endedIds, setEndedIds] = useState<string[]>([]);
+  const [finderPath, setFinderPath] = useState<string | undefined>(undefined);
+  const homeV2 = isHomeV2Enabled();
+
+  // Record when each service is on screen and when the user leaves it.
+  useEffect(() => {
+    if (!activeApp) return;
+    const id = activeApp.id;
+    markSessionUsed(id);
+    return () => markSessionUsed(id);
+  }, [activeApp]);
 
   useEffect(() => {
     if (
@@ -201,6 +101,11 @@ export const DashboardPage: React.FC = () => {
     try {
       await discardStreamingPage(id);
       setRunningIds((ids) => ids.filter((entry) => entry !== id));
+      setEndedIds((ids) => [...ids, id]);
+      window.setTimeout(
+        () => setEndedIds((ids) => ids.filter((entry) => entry !== id)),
+        ENDED_BEAT_MS,
+      );
       if (activeApp?.id === id) {
         setActiveApp(null);
         setActiveView("dashboard");
@@ -320,7 +225,39 @@ export const DashboardPage: React.FC = () => {
 
   // Dedicated System Finder view (All files)
   if (activeView === "finder") {
-    return withRunningApps(<FinderPage onBackToDashboard={() => setActiveView("dashboard")} />);
+    return withRunningApps(
+      <FinderPage
+        key={finderPath ?? "default"}
+        initialPath={finderPath}
+        onBackToDashboard={() => {
+          setFinderPath(undefined);
+          setActiveView("dashboard");
+        }}
+      />,
+    );
+  }
+
+  if (homeV2) {
+    return (
+      <>
+        <HomeV2Screen
+          runningIds={runningIds}
+          endedIds={endedIds}
+          error={runningError}
+          suspended={isSettingsOpen}
+          onOpenItem={handleItemClick}
+          onEndSession={(id) => void closeRunningApp(id)}
+          onOpenGallery={() => setActiveView("gallery")}
+          onOpenFinder={(path) => {
+            setFinderPath(path);
+            setActiveView("finder");
+          }}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+        <UpdateNotice onOpen={() => setIsSettingsOpen(true)} />
+        <SettingsSheet isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      </>
+    );
   }
 
   return (

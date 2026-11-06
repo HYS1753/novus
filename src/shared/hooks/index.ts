@@ -6,3 +6,4 @@ export * from "./usePreference";
 export * from "./useI18n";
 export * from "./useSpatialNavigation";
 export * from "./useNow";
+export * from "./useResolvedTheme";

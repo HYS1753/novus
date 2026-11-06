@@ -111,6 +111,14 @@ export const ko = {
     "이 폴더의 사진이 홈과 앰비언트 화면에 나옵니다. 사진이 없으면 기본 그림을 보여드려요.",
   "onboarding.start": "시작하기",
   "onboarding.step": "{current} / {total}",
+  "home.remoteSoonTitle": "모바일 리모컨은 준비 중이에요",
+  "home.remoteSoonBody": "스마트폰으로 novus를 조작하는 기능을 만들고 있어요.",
+  "search.title": "검색",
+  "search.field": "서비스 · 도구 이름",
+  "search.noResult": "일치하는 항목이 없습니다.",
+  "search.web": "Google 열기",
+  "home.weather": "{city} · {condition} {temperature}°",
+  "home.calendar": "캘린더",
 } as const;
 
 export type MessageKey = keyof typeof ko;

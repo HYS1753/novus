@@ -111,4 +111,12 @@ export const zhCN: Messages = {
   "onboarding.photoBody": "此文件夹中的照片会显示在主页和氛围模式中。如果没有照片,将显示内置图片。",
   "onboarding.start": "开始使用",
   "onboarding.step": "{current} / {total}",
+  "home.remoteSoonTitle": "手机遥控即将推出",
+  "home.remoteSoonBody": "我们正在开发用手机控制 novus 的功能。",
+  "search.title": "搜索",
+  "search.field": "服务或工具名称",
+  "search.noResult": "没有匹配的项目。",
+  "search.web": "打开 Google",
+  "home.weather": "{city} · {condition} {temperature}°",
+  "home.calendar": "日历",
 };

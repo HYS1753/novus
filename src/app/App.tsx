@@ -9,6 +9,7 @@ import {
   toggleFullscreen,
   WINDOW_MODE_ERROR,
   listenDisplayError,
+  useResolvedTheme,
 } from "@/shared";
 import "./styles/global.css";
 import "./styles/v2/tokens.css";
@@ -82,6 +83,12 @@ const DashboardApp: React.FC = () => {
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
+
+  // v1 screens still read `html.dark`; keep them on the v2 theme choice.
+  const resolvedTheme = useResolvedTheme();
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+  }, [resolvedTheme]);
 
   useEffect(() => {
     // Native profile is collected once at process start and cached for the session.

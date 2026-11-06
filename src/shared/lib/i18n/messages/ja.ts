@@ -112,4 +112,12 @@ export const ja: Messages = {
     "このフォルダーの写真がホームとアンビエント画面に表示されます。写真がない場合は標準の画像を表示します。",
   "onboarding.start": "はじめる",
   "onboarding.step": "{current} / {total}",
+  "home.remoteSoonTitle": "モバイルリモコンは準備中です",
+  "home.remoteSoonBody": "スマートフォンで novus を操作する機能を準備しています。",
+  "search.title": "検索",
+  "search.field": "サービス・ツール名",
+  "search.noResult": "一致する項目はありません。",
+  "search.web": "Google を開く",
+  "home.weather": "{city} · {condition} {temperature}°",
+  "home.calendar": "カレンダー",
 };

@@ -4,3 +4,4 @@ export * from "./settings-sheet";
 export * from "./in-app-player";
 export * from "./gallery";
 export * from "./finder";
+export * from "./home-v2";

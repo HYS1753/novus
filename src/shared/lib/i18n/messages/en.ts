@@ -112,4 +112,12 @@ export const en: Messages = {
     "Photos from this folder appear on Home and the ambient screen. If there are none, we'll show built-in artwork.",
   "onboarding.start": "Get started",
   "onboarding.step": "{current} of {total}",
+  "home.remoteSoonTitle": "Mobile remote is coming soon",
+  "home.remoteSoonBody": "We're building a way to control novus from your phone.",
+  "search.title": "Search",
+  "search.field": "Service or tool name",
+  "search.noResult": "Nothing matches.",
+  "search.web": "Open Google",
+  "home.weather": "{city} · {condition} {temperature}°",
+  "home.calendar": "Calendar",
 };

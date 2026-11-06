@@ -5,9 +5,11 @@ import { SubpageDock, useDockPosition } from "@/shared";
 
 interface FinderPageProps {
   onBackToDashboard: () => void;
+  /** Folder to open instead of the last visited one (e.g. Downloads from Home). */
+  initialPath?: string;
 }
 
-export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard }) => {
+export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard, initialPath }) => {
   const { dockPosition } = useDockPosition();
   const {
     locations,
@@ -28,7 +30,7 @@ export const FinderPage: React.FC<FinderPageProps> = ({ onBackToDashboard }) => 
     navigateUp,
     navigateBack,
     refresh,
-  } = useFileBrowser({ filterMode: "all" });
+  } = useFileBrowser({ filterMode: "all", initialPath });
 
   return (
     <div
