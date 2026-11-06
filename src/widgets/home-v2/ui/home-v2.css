@@ -731,29 +731,52 @@
   color: var(--nv-text-2);
 }
 
-/* ---------- Row 1: date on the left, the time large on the right ---------- */
+/* ---------- Row 1: date | time, one unit on a shared baseline ---------- */
 .nvt__glance {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--nv-space-5);
+  gap: var(--nv-space-6);
   padding-bottom: var(--nv-space-2);
+  min-width: 0;
 }
 
+.nvt__divider {
+  align-self: stretch;
+  width: 1px;
+  margin-block: var(--nv-space-3) var(--nv-space-1);
+  background: var(--nv-rule-strong);
+}
+
+/* The time is set in the date's own numeral type, a size down. */
 .nvt__glance .nvt__now {
+  display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: var(--nv-space-2);
+  align-items: flex-start;
+  gap: var(--nv-space-1);
   margin-top: 0;
-  text-align: right;
+  min-width: 0;
+}
+
+.nvt__period {
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
+  line-height: 1;
 }
 
 .nvt__glance .nvt__time {
-  /* Large, but never wider than the glance column leaves beside the date. */
-  font-size: min(calc(52px * var(--nv-scale)), 4.2vw);
-  font-weight: var(--nv-weight-semibold);
-  letter-spacing: -0.03em;
+  font-size: min(calc(84px * var(--nv-scale)), calc(var(--nvh-h, 912px) * 0.105), 6vw);
+  font-weight: var(--nv-weight-bold);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
   white-space: nowrap;
+}
+
+.nvt__glance .nvt__weather {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+  white-space: nowrap;
+  padding-bottom: var(--nv-space-1);
 }
 
 /* ---------- Row 2: services across the full width, two rows of six ---------- */

@@ -167,13 +167,50 @@
   stroke: currentColor;
 }
 
+/* The rail is sized from the glyph target, so it never clips a circle at any scale. */
+.nv-root.nv-bridge .in-app-dock--right,
+.nv-root.nv-bridge .in-app-dock--left {
+  width: calc(var(--nv-target-glyph) + 2 * var(--nv-space-4));
+  flex-shrink: 0;
+  gap: var(--nv-space-4);
+}
+
+.nv-root.nv-bridge .in-app-dock--bottom {
+  height: calc(var(--nv-target-glyph) + 2 * var(--nv-space-2));
+  flex-shrink: 0;
+  padding: var(--nv-space-2) var(--nv-space-5);
+}
+
+.nv-root.nv-bridge .in-app-dock__cluster {
+  gap: var(--nv-space-3) !important;
+}
+
+.nv-root.nv-bridge .in-app-dock__app-info {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  justify-content: center;
+  gap: var(--nv-space-4) !important;
+}
+
+/* One line, never broken mid-word ("Netfli / x"). */
 .nv-root.nv-bridge .in-app-dock__app-title {
+  font-family: var(--nv-font) !important;
   font-size: var(--nv-size-caption) !important;
+  font-weight: var(--nv-weight-semibold) !important;
+  letter-spacing: 0 !important;
   color: var(--nv-text-2) !important;
-  max-width: calc(var(--nv-target-glyph) + var(--nv-space-4)) !important;
+  max-width: 100% !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nv-root.nv-bridge .in-app-dock__time {
+  white-space: nowrap;
+  margin-top: var(--nv-space-1) !important;
   font-family: var(--nv-font-display);
   font-size: var(--nv-size-label) !important;
   font-weight: var(--nv-weight-semibold) !important;
@@ -185,9 +222,108 @@
   max-width: none !important;
 }
 
-/* Running-apps list inside the dock: state dots carry the live colour. */
+/* ---------- Multitasking in the rail: each running service as its own plate ---------- */
+.nv-root.nv-bridge .running-apps {
+  gap: var(--nv-space-3);
+  width: 100%;
+}
+
 .nv-root.nv-bridge .running-apps__label {
+  font-size: var(--nv-size-caption);
   color: var(--nv-text-3);
+  white-space: nowrap;
+}
+
+.nv-root.nv-bridge .running-apps__list {
+  gap: var(--nv-space-4);
+  align-items: center;
+  padding: var(--nv-space-2) var(--nv-space-1);
+}
+
+.nv-root.nv-bridge .running-apps__item {
+  position: relative;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.nv-root.nv-bridge .running-apps__item[data-active="true"] {
+  background: none;
+  box-shadow: none;
+}
+
+.nv-root.nv-bridge .running-apps__switch {
+  display: block;
+  width: var(--nv-target-glyph);
+  height: auto;
+  padding: 0;
+  border-radius: var(--nv-radius-content);
+  background: none;
+  overflow: visible;
+}
+
+.nv-root.nv-bridge .running-apps__art {
+  display: grid;
+  width: 100%;
+  border-radius: var(--nv-radius-content);
+}
+
+/* The service on screen carries the ink ring; the others are one press away. */
+.nv-root.nv-bridge .running-apps__item[data-active="true"] .running-apps__art {
+  outline: 2px solid var(--nv-text);
+  outline-offset: 2px;
+}
+
+.nv-root.nv-bridge .running-apps button:hover,
+.nv-root.nv-bridge .running-apps button:focus-visible {
+  background: none;
+  outline: none;
+}
+
+.nv-root.nv-bridge .running-apps__switch:focus-visible .running-apps__art {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nv-root.nv-bridge .running-apps__dot {
+  left: auto;
+  right: 4px;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--nv-live);
+  box-shadow: 0 0 0 2px var(--nv-ground);
+}
+
+/* Close sits on the plate's corner, a circle because it is an action. */
+.nv-root.nv-bridge .running-apps__close {
+  position: absolute;
+  top: calc(-1 * var(--nv-space-2));
+  right: calc(-1 * var(--nv-space-2));
+  width: calc(26px * var(--nv-scale));
+  height: calc(26px * var(--nv-scale));
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--nv-rule-strong);
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+}
+
+.nv-root.nv-bridge .running-apps__close::after {
+  /* A larger hit area than the visible circle. */
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.nv-root.nv-bridge .running-apps__close:hover,
+.nv-root.nv-bridge .running-apps__close:focus-visible {
+  background: var(--nv-text) !important;
+  color: var(--nv-ground);
+}
+
+.nv-root.nv-bridge .in-app-dock--bottom .running-apps__switch {
+  width: calc(var(--nv-target-glyph) * 1.2);
 }
 
 /* v1 builds some fills from `--tint-rgb`; give it the ramp's surface per theme. */
@@ -203,60 +339,6 @@
 
 .nv-root.nv-bridge[data-theme="dark"] {
   --tint-rgb: 21, 21, 24;
-}
-
-/* ---------- Streaming loader: the v2 world, not a floating card ---------- */
-.nv-root.nv-bridge .in-app-loader__backdrop {
-  background: var(--nv-ground);
-}
-
-.nv-root.nv-bridge .in-app-loader__card {
-  max-width: calc(520px * var(--nv-scale));
-  align-items: flex-start;
-  text-align: left;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.nv-root.nv-bridge .in-app-loader__icon-wrapper {
-  width: calc(120px * var(--nv-scale));
-  height: calc(68px * var(--nv-scale));
-  border-radius: var(--nv-radius-content);
-  background: var(--nv-surface);
-  border: 1px solid var(--nv-rule);
-  box-shadow: none;
-}
-
-.nv-root.nv-bridge .in-app-loader__meta {
-  align-items: flex-start;
-}
-
-.nv-root.nv-bridge .in-app-loader__title {
-  font-size: var(--nv-size-display);
-  font-weight: var(--nv-weight-heavy);
-  letter-spacing: var(--nv-track-display);
-  line-height: 1.05;
-}
-
-.nv-root.nv-bridge .in-app-loader__subtitle,
-.nv-root.nv-bridge .in-app-loader__fallback-desc {
-  font-size: var(--nv-size-body);
-  color: var(--nv-text-2);
-}
-
-.nv-root.nv-bridge .in-app-loader__progress {
-  max-width: none;
-}
-
-.nv-root.nv-bridge .in-app-loader__quick-row {
-  justify-content: flex-start;
-}
-
-.nv-root.nv-bridge .in-app-loader__fallback {
-  background: var(--nv-surface);
 }
 
 /* ---------- Gallery / Finder header: readable sizes and contrast ---------- */
@@ -306,24 +388,6 @@
   box-shadow: none !important;
 }
 
-/* Loader: one plate for the logo, no nested frame. */
-.nv-root.nv-bridge .in-app-loader__icon-wrapper {
-  width: calc(160px * var(--nv-scale));
-  height: calc(90px * var(--nv-scale));
-  padding: 0;
-  background: transparent;
-  border: 0;
-}
-
-.nv-root.nv-bridge .in-app-loader__logo-img {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  object-fit: cover;
-  border-radius: var(--nv-radius-content);
-}
-
 .nv-root.nv-bridge .glass-btn > span {
   display: inline-flex;
   align-items: center;
@@ -333,10 +397,4 @@
 /* Dock buttons stay circles (global actions) even though they reuse the button class. */
 .nv-root.nv-bridge .in-app-dock .in-app-dock__btn {
   border-radius: 50% !important;
-}
-
-/* Loader logo: the official mark contained whole inside one plate. */
-.nv-root.nv-bridge .in-app-loader__logo-img {
-  object-fit: contain;
-  object-position: center;
 }

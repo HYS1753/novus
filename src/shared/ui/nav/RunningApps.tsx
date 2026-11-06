@@ -1,6 +1,7 @@
 import { useI18n } from "@/shared/hooks/useI18n";
 import { useContext } from "react";
-import { getBundledBrandAssetUrl } from "@/shared/lib/brandAssets";
+import { NvBrandArt } from "@/shared/ui/v2/NvServicePlate";
+import { CloseIcon } from "@/shared/ui/icons";
 import { RunningAppsContext } from "@/shared/ui/nav/runningAppsContext";
 
 export function RunningApps() {
@@ -14,7 +15,6 @@ export function RunningApps() {
       </span>
       <div className="running-apps__list">
         {state.apps.map((app) => {
-          const icon = getBundledBrandAssetUrl(app.id);
           const active = state.activeId === app.id;
           return (
             <div className="running-apps__item" key={app.id} data-active={active}>
@@ -31,7 +31,7 @@ export function RunningApps() {
                 disabled={state.closingId === app.id}
                 onClick={() => state.onSelect(app.id)}
               >
-                {icon ? <img src={icon} alt="" /> : <span>{app.title.slice(0, 2)}</span>}
+                <NvBrandArt id={app.id} name={app.title} className="running-apps__art" />
                 <span className="running-apps__dot" aria-hidden="true" />
               </button>
               <button
@@ -42,7 +42,7 @@ export function RunningApps() {
                 disabled={state.closingId !== null}
                 onClick={() => state.onClose(app.id)}
               >
-                ×
+                <CloseIcon size={14} />
               </button>
             </div>
           );

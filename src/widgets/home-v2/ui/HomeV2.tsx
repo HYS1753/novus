@@ -85,6 +85,21 @@ export interface HomeV2Props {
   autoReturnMs?: number;
 }
 
+/** The time as large digits plus the locale's day-period marker ("오후", "PM") set apart. */
+function splitClock(locale: string, date: Date): { period: string; digits: string } {
+  const parts = new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).formatToParts(date);
+  const period = parts.find((part) => part.type === "dayPeriod")?.value ?? "";
+  const digits = parts
+    .filter((part) => part.type !== "dayPeriod")
+    .map((part) => part.value)
+    .join("")
+    .trim();
+  return { period, digits };
+}
+
 function dayOfYear(date: Date) {
   const start = Date.UTC(date.getFullYear(), 0, 1);
   const today = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
@@ -334,6 +349,7 @@ export const HomeV2: React.FC<HomeV2Props> = ({
     now,
   );
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(now);
+  const clock = splitClock(locale, now);
   const weatherLine = weather
     ? t("home.weather", {
         city: weather.city,
@@ -563,9 +579,15 @@ export const HomeV2: React.FC<HomeV2Props> = ({
                   </span>
                 </span>
               </div>
-              <div className="nvt__now">
-                <span className="nv-numeral nvt__time">{time(now)}</span>
-                {weatherLine && <span className="nvt__weather">{weatherLine}</span>}
+              <span className="nvt__divider" aria-hidden="true" />
+              <div className="nvt__now" aria-label={time(now)}>
+                <span className="nvt__period" aria-hidden="true">
+                  {clock.period}
+                </span>
+                <span className="nv-numeral nvt__time" aria-hidden="true">
+                  {clock.digits}
+                </span>
+                <span className="nvt__weather">{weatherLine ?? "\u00a0"}</span>
               </div>
             </div>
 

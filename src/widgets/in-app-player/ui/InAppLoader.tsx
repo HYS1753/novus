@@ -1,16 +1,7 @@
 import React from "react";
-import {
-  GlassProgress,
-  GlassButton,
-  ExternalLinkIcon,
-  RefreshIcon,
-  HomeIcon,
-  MotionIcon,
-  getBundledBrandAssetUrl,
-  getBuiltinBrandLogo,
-  useI18n,
-} from "@/shared";
+import { ExternalLinkIcon, HomeIcon, NvBrandArt, NvButton, RefreshIcon, useI18n } from "@/shared";
 import type { AppItem } from "@/entities";
+import "./in-app-loader.css";
 
 export interface InAppLoaderProps {
   app: AppItem;
@@ -21,6 +12,11 @@ export interface InAppLoaderProps {
   onClose: () => void;
 }
 
+/**
+ * The launch screen while a service connects: the service's own plate,
+ * its name, one status line, a quiet progress line, and the standalone
+ * escape. Centred on ground, the same world as today's page.
+ */
 export const InAppLoader: React.FC<InAppLoaderProps> = ({
   app,
   isLoading,
@@ -30,81 +26,48 @@ export const InAppLoader: React.FC<InAppLoaderProps> = ({
   onClose,
 }) => {
   const { t } = useI18n();
-  const bundledAsset = getBundledBrandAssetUrl(app.id);
-  const logoUrl = app.imageUrl || bundledAsset;
-  const BuiltinLogo = getBuiltinBrandLogo(app.id);
 
   return (
     <div
-      className={`in-app-loader ${isLoading ? "in-app-loader--active" : "in-app-loader--hidden"}`}
+      className={`in-app-loader nvl ${isLoading ? "in-app-loader--active" : "in-app-loader--hidden"}`}
       aria-hidden={!isLoading}
       aria-live="polite"
     >
-      <div className="in-app-loader__backdrop" />
+      <div className="nvl__stack">
+        <NvBrandArt id={app.id} name={app.title} className="nvl__art" />
 
-      <div className="in-app-loader__card">
-        {/* Brand Icon with ambient glow */}
-        <div
-          className="in-app-loader__icon-wrapper"
-          style={{
-            ["--app-glow" as string]: app.accentColor || "var(--color-primary)",
-          }}
-        >
-          <MotionIcon motion="breathe" active>
-            {logoUrl ? (
-              <img src={logoUrl} alt={app.title} className="in-app-loader__logo-img" />
-            ) : BuiltinLogo ? (
-              React.createElement(BuiltinLogo, { size: 48 })
-            ) : (
-              <span className="in-app-loader__logo-text">{app.title.slice(0, 2)}</span>
-            )}
-          </MotionIcon>
-        </div>
-
-        {/* Title & Status */}
-        <div className="in-app-loader__meta">
-          <h2 className="in-app-loader__title">{app.title}</h2>
-          <p className="in-app-loader__subtitle">
-            {t("loader.connecting")} ·{" "}
+        <div className="nvl__meta">
+          <h2 className="nvl__title">{app.title}</h2>
+          <p className="nvl__status">
             {showFallbackNotice ? t("loader.checking") : t("loader.linking")}
           </p>
         </div>
 
-        {/* Design Guide Linear Indeterminate Progress */}
-        <div className="in-app-loader__progress">
-          <GlassProgress tone="primary" />
+        <div className="nvl__progress" role="progressbar" aria-label={t("loader.connecting")}>
+          <span className="nvl__progress-bar" />
         </div>
 
-        {/* Quick Launch Button available immediately */}
-        <div className="in-app-loader__quick-row">
-          <GlassButton variant="primary" size="sm" onClick={onOpenExternal}>
-            <MotionIcon motion="nudge-right">
-              <ExternalLinkIcon size={16} />
-            </MotionIcon>
+        {showFallbackNotice && <p className="nvl__hint">{t("loader.drmHint")}</p>}
+
+        <div className="nvl__actions">
+          <NvButton
+            variant="primary"
+            icon={<ExternalLinkIcon size={18} />}
+            onClick={onOpenExternal}
+          >
             {t("loader.openStandalone")}
-          </GlassButton>
-        </div>
-
-        {/* Fallback Notice & Direct Options (shown if loading takes longer or is blocked) */}
-        {showFallbackNotice && (
-          <div className="in-app-loader__fallback">
-            <p className="in-app-loader__fallback-desc">{t("loader.drmHint")}</p>
-            <div className="in-app-loader__fallback-actions">
-              <GlassButton variant="secondary" size="sm" onClick={onReload}>
-                <MotionIcon motion="rotate">
-                  <RefreshIcon size={16} />
-                </MotionIcon>
+          </NvButton>
+          {showFallbackNotice && (
+            <>
+              <NvButton icon={<RefreshIcon size={18} />} onClick={onReload}>
                 {t("common.retry")}
-              </GlassButton>
-              <GlassButton variant="ghost" size="sm" onClick={onClose}>
-                <MotionIcon motion="pop">
-                  <HomeIcon size={16} />
-                </MotionIcon>
+              </NvButton>
+              <NvButton variant="quiet" icon={<HomeIcon size={18} />} onClick={onClose}>
                 {t("common.home")}
-              </GlassButton>
-            </div>
-          </div>
-        )}
+              </NvButton>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

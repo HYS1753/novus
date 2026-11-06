@@ -1,0 +1,98 @@
+/* ==========================================================================
+   Streaming launch screen (v2). Visibility (active/hidden) still comes from
+   the shared `.in-app-loader` rules; everything inside is v2.
+   ========================================================================== */
+
+.nv-root .in-app-loader.nvl {
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  transform: none;
+}
+
+.nvl__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-5);
+  width: min(calc(420px * var(--nv-scale)), 80%);
+  text-align: center;
+}
+
+/* The same plate as the home tile, at launch size. */
+.nvl__art.nv-plate__field {
+  width: calc(240px * var(--nv-scale));
+  border-radius: var(--nv-radius-content);
+}
+
+.nvl__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-2);
+}
+
+.nvl__title {
+  margin: 0;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.15;
+}
+
+.nvl__status,
+.nvl__hint {
+  margin: 0;
+  font-size: var(--nv-size-body);
+  color: var(--nv-text-2);
+}
+
+.nvl__hint {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+  max-width: 36em;
+}
+
+/* Indeterminate: a short ink segment sliding along a hairline. */
+.nvl__progress {
+  position: relative;
+  width: calc(240px * var(--nv-scale));
+  height: 2px;
+  overflow: hidden;
+  background: var(--nv-rule);
+}
+
+.nvl__progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 32%;
+  background: var(--nv-text);
+  animation: nvl-slide 1.4s var(--nv-ease-in-out) infinite;
+}
+
+.in-app-loader--hidden .nvl__progress-bar {
+  animation: none;
+}
+
+@keyframes nvl-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nvl__progress-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.4;
+  }
+}
+
+.nvl__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nv-space-3);
+}

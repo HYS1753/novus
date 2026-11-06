@@ -4,6 +4,7 @@ import { InAppLoader } from "./InAppLoader";
 import {
   useDockPosition,
   showStreamingPage,
+  markWebStreamingPageOpen,
   hideStreamingPage,
   updateStreamingPageBounds,
   reloadStreamingPage,
@@ -146,6 +147,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({
 
   useEffect(() => {
     if (!isTauri) {
+      markWebStreamingPageOpen(app.id);
       startFallbackTimer();
     }
     return () => {
@@ -153,7 +155,7 @@ export const InAppPlayer: React.FC<InAppPlayerProps> = ({
         clearTimeout(fallbackTimerRef.current);
       }
     };
-  }, [app.url, isTauri, startFallbackTimer]);
+  }, [app.id, app.url, isTauri, startFallbackTimer]);
 
   const handleIframeLoad = () => {
     if (fallbackTimerRef.current) {

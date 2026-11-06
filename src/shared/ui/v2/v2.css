@@ -307,9 +307,15 @@
   object-fit: cover;
 }
 
+/* Insets are positions, not padding: padding percentages resolve against the
+   width, which would make the art taller than its 16:9 field and push it down. */
 .nv-plate__art--contain {
+  position: absolute;
+  top: var(--art-top, 18%);
+  left: var(--art-x, 14%);
+  width: calc(100% - 2 * var(--art-x, 14%));
+  height: calc(100% - var(--art-top, 18%) - var(--art-bottom, 18%));
   object-fit: contain;
-  padding: 12% 14%;
 }
 
 .nv-plate__wordmark {
