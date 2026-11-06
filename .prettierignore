@@ -5,3 +5,10 @@ src-tauri/**
 pnpm-lock.yaml
 *.log
 .DS_Store
+
+# Vendored Impeccable design skill
+.claude/skills/impeccable
+.claude/agents/impeccable-*.md
+.impeccable/mocks
+.impeccable/questions
+.impeccable/surfaces

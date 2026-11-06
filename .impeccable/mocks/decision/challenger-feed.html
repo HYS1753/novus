@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Novus v2 — 한 화면 한 개</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1368px;height:912px;overflow:hidden;background:#000;color:#fff;font-family:"Noto Sans KR",system-ui,sans-serif}
+  .field{position:absolute;inset:0;background:radial-gradient(120% 90% at 70% 30%,#3A0A0C 0%,#140405 55%,#000 100%)}
+  .field .wm{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-weight:900;font-size:220px;letter-spacing:-.05em;color:#E50914}
+  .scrim{position:absolute;left:0;right:0;bottom:0;height:420px;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,0))}
+  .top{position:absolute;left:48px;right:48px;top:36px;display:flex;justify-content:space-between;align-items:center}
+  .top .logo{font-weight:900;font-size:24px}
+  .top .clock{text-align:right}
+  .top .clock b{font-size:40px;font-weight:700;display:block;line-height:1}
+  .top .clock span{font-size:15px;opacity:.8}
+  .cap{position:absolute;left:48px;bottom:56px;width:640px}
+  .cap .kick{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;opacity:.9}
+  .cap .kick::before{content:"";width:10px;height:10px;border-radius:50%;background:#E50914}
+  .cap h1{font-size:72px;font-weight:900;letter-spacing:-.03em;margin:8px 0 6px}
+  .cap p{font-size:20px;opacity:.85}
+  .cap .acts{display:flex;gap:12px;margin-top:24px}
+  .cap .acts a{height:64px;padding:0 28px;display:flex;align-items:center;font-size:20px;font-weight:700;border:2px solid #fff;color:#fff;text-decoration:none}
+  .cap .acts a.p{background:#fff;color:#000}
+  .rail{position:absolute;right:40px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:20px;align-items:center}
+  .rail a{width:72px;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
+  .rail a i{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;font-style:normal;font-size:24px}
+  .pager{position:absolute;right:140px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+  .pager span{width:6px;height:22px;background:rgba(255,255,255,.3)}
+  .pager span.on{background:#fff;height:44px}
+  .next{position:absolute;right:140px;bottom:56px;width:300px;height:96px;background:#0B2A6B;display:flex;align-items:center;gap:16px;padding:0 18px}
+  .next small{font-size:13px;opacity:.8;display:block}
+  .next b{font-size:22px}
+</style>
+</head>
+<body>
+<div class="field"><span class="wm">NETFLIX</span></div>
+<div class="scrim"></div>
+<div class="top"><span class="logo">novus</span><span class="clock"><b>20:41</b><span>11월 6일 금 · 서울 12°</span></span></div>
+<div class="pager"><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<nav class="rail">
+  <a><i>⌂</i>홈</a><a><i>⌕</i>검색</a><a><i>▦</i>갤러리</a><a><i>▤</i>파일</a><a><i>⚙</i>설정</a>
+</nav>
+<section class="cap">
+  <div class="kick">실행 중 · 세션 유지 · 12분 전 사용</div>
+  <h1>Netflix</h1>
+  <p>1 / 12 · 위아래로 넘기면 다음 서비스</p>
+  <div class="acts"><a class="p">▶ 이어서 보기</a><a>세션 종료</a></div>
+</section>
+<div class="next"><span><small>다음 · 아래로 넘기기</small><b>Disney+</b></span></div>
+</body>
+</html>

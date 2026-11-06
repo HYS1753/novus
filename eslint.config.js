@@ -6,7 +6,15 @@ import boundaries from "eslint-plugin-boundaries";
 
 export default tseslint.config(
   {
-    ignores: ["dist", "dist-ssr", "src-tauri/**", "node_modules", "*.config.js", "*.config.ts"],
+    ignores: [
+      "dist",
+      "dist-ssr",
+      "src-tauri/**",
+      "node_modules",
+      ".claude/**",
+      "*.config.js",
+      "*.config.ts",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

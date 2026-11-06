@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Novus v2 — 온에어 편성 그래픽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink-0:#06080F;--ink-1:#0B0F1A;--ink-2:#131927;--ink-3:#1E2638;--ink-5:#5A6378;--ink-7:#A9B0BF;--paper:#F4F1EA;--cue:#FFD400;--air:#E8322B}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1368px;height:912px;overflow:hidden;background:var(--ink-1);color:var(--paper);font-family:"Noto Sans KR",system-ui,sans-serif}
+  .num{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.01em}
+  header{position:absolute;inset:32px 40px auto 40px;display:flex;justify-content:space-between;align-items:flex-start}
+  .logo{font-weight:900;font-size:26px;letter-spacing:-.02em}
+  .logo b{display:inline-block;background:var(--paper);color:var(--ink-1);padding:0 8px;margin-right:6px}
+  .bug{display:flex;align-items:stretch;height:56px}
+  .bug .t{background:var(--paper);color:var(--ink-1);font-size:40px;padding:0 16px;display:flex;align-items:center}
+  .bug .d{background:var(--ink-3);padding:0 16px;display:flex;flex-direction:column;justify-content:center;font-size:15px;font-weight:700;line-height:1.3}
+  .bug .d span{color:var(--ink-7);font-weight:500}
+  .icons{display:flex;gap:8px;margin-left:12px}
+  .icons i{width:56px;height:56px;background:var(--ink-2);display:grid;place-items:center;font-style:normal;font-size:20px;color:var(--ink-7)}
+  main{position:absolute;left:40px;right:40px;top:120px;bottom:32px;display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr;gap:24px 24px}
+  .label{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:900;letter-spacing:.08em;margin-bottom:12px}
+  .label .tally{background:var(--air);color:#fff;padding:3px 8px;font-size:13px}
+  .label .rule{flex:1;height:2px;background:var(--ink-3)}
+  .onair{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+  .sess{position:relative;height:268px;display:flex;flex-direction:column;justify-content:flex-end}
+  .sess .field{position:absolute;inset:0 0 64px 0;display:grid;place-items:center}
+  .sess.nf .field{background:#141414}
+  .sess.yt .field{background:#F9F9F9}
+  .wm{font-weight:900;font-size:64px;letter-spacing:-.03em}
+  .nf .wm{color:#E50914}.yt .wm{color:#0F0F0F;font-size:54px}
+  .yt .wm::before{content:"";display:inline-block;width:64px;height:44px;background:#FF0000;border-radius:12px;margin-right:12px;vertical-align:-4px}
+  .lower{position:relative;height:64px;display:flex;align-items:stretch;background:var(--ink-3)}
+  .lower .ch{background:var(--paper);color:var(--ink-1);font-size:30px;padding:0 14px;display:flex;align-items:center}
+  .lower .txt{padding:0 16px;display:flex;flex-direction:column;justify-content:center}
+  .lower .txt strong{font-size:20px;font-weight:900}
+  .lower .txt span{font-size:14px;color:var(--ink-7);font-weight:500}
+  .lower .dot{margin-left:auto;align-self:center;margin-right:16px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:900;color:var(--air)}
+  .lower .dot::before{content:"";width:10px;height:10px;background:var(--air);border-radius:50%}
+  .focus .lower{background:var(--cue);color:var(--ink-1)}
+  .focus .lower .txt span{color:#3A3410}
+  .focus{outline:4px solid var(--cue);outline-offset:0}
+  .photo{grid-row:1 / span 2;grid-column:2;position:relative;display:flex;flex-direction:column;justify-content:flex-end}
+  .photo .img{position:absolute;inset:0 0 64px 0;background:linear-gradient(160deg,#F2B880 0%,#C4625A 38%,#4B3C6E 72%,#1C2340 100%)}
+  .photo .img em{position:absolute;top:12px;left:12px;font-style:normal;font-size:12px;background:rgba(6,8,15,.7);padding:2px 8px;color:var(--ink-7)}
+  .channels{grid-column:1;display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+  .plate{height:132px;display:flex;flex-direction:column}
+  .plate .f{flex:1;display:grid;place-items:center;font-weight:900;font-size:22px;letter-spacing:-.02em}
+  .plate .n{height:36px;display:flex;align-items:center;gap:8px;background:var(--ink-2);padding:0 10px;font-size:14px;font-weight:700}
+  .plate .n .num{font-size:20px;color:var(--ink-7)}
+  .plate.live .n::after{content:"";margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--air)}
+  .tools{grid-column:1 / span 2;display:grid;grid-template-columns:repeat(5,1fr) 24px repeat(2,1fr);gap:12px;align-items:start}
+  .tool{height:88px;background:var(--ink-2);display:flex;align-items:center;gap:14px;padding:0 18px;font-size:18px;font-weight:700}
+  .tool i{width:40px;height:40px;background:var(--ink-3);display:grid;place-items:center;font-style:normal;font-size:18px}
+  .tool small{display:block;font-size:13px;color:var(--ink-7);font-weight:500}
+  .sep{width:2px;height:88px;background:var(--ink-3);justify-self:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><b>N</b>novus</div>
+  <div class="bug">
+    <div class="t num">20:41</div>
+    <div class="d">11월 6일 금요일<span>서울 · 맑음 12°</span></div>
+    <div class="icons"><i>⌕</i><i>☾</i><i>⚙</i></div>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="label"><span class="tally">ON AIR</span>지금 이어보기 · 세션 2개 유지 중<span class="rule"></span></div>
+    <div class="onair">
+      <div class="sess nf focus">
+        <div class="field"><span class="wm">NETFLIX</span></div>
+        <div class="lower"><span class="ch num">01</span><span class="txt"><strong>Netflix</strong><span>세션 유지 · 12분 전 사용 · 확인 키로 복귀</span></span><span class="dot">실행 중</span></div>
+      </div>
+      <div class="sess yt">
+        <div class="field"><span class="wm">YouTube</span></div>
+        <div class="lower"><span class="ch num">02</span><span class="txt"><strong>YouTube</strong><span>세션 유지 · 1시간 전 사용</span></span><span class="dot">실행 중</span></div>
+      </div>
+    </div>
+  </section>
+  <section class="photo">
+    <div class="img"><em>사진 자리 · 갤러리에서 가져온 오늘의 사진(합성)</em></div>
+    <div class="lower"><span class="ch num">A</span><span class="txt"><strong>앰비언트 액자</strong><span>사진 폴더 · 10분 무조작 시 전체 화면</span></span></div>
+  </section>
+  <section class="channels-wrap" style="grid-column:1">
+    <div class="label">채널<span class="rule"></span></div>
+    <div class="channels">
+      <div class="plate live"><div class="f" style="background:#141414;color:#E50914">N</div><div class="n"><span class="num">01</span>Netflix</div></div>
+      <div class="plate live"><div class="f" style="background:#F9F9F9;color:#FF0000">▶</div><div class="n"><span class="num">02</span>YouTube</div></div>
+      <div class="plate"><div class="f" style="background:#0B2A6B;color:#fff">Disney+</div><div class="n"><span class="num">03</span>Disney+</div></div>
+      <div class="plate"><div class="f" style="background:#000;color:#FF153C">TVING</div><div class="n"><span class="num">04</span>티빙</div></div>
+      <div class="plate"><div class="f" style="background:#004FFF;color:#fff">wavve</div><div class="n"><span class="num">05</span>웨이브</div></div>
+      <div class="plate"><div class="f" style="background:#111;color:#FF0558">WATCHA</div><div class="n"><span class="num">06</span>왓챠</div></div>
+      <div class="plate"><div class="f" style="background:#000;color:#00AFFF">coupang</div><div class="n"><span class="num">07</span>쿠팡플레이</div></div>
+    </div>
+  </section>
+  <section class="tools">
+    <div class="tool"><i>▦</i><span>갤러리<small>사진 1,284장</small></span></div>
+    <div class="tool"><i>▤</i><span>파일 파인더<small>C:\ · D:\</small></span></div>
+    <div class="tool"><i>31</i><span>캘린더<small>Google</small></span></div>
+    <div class="tool"><i>◉</i><span>라디오<small>Radio Garden</small></span></div>
+    <div class="tool"><i>⌕</i><span>검색<small>Google</small></span></div>
+    <div class="sep"></div>
+    <div class="tool"><i>☾</i><span>앰비언트</span></div>
+    <div class="tool"><i>▯</i><span>모바일 리모컨</span></div>
+  </section>
+</main>
+</body>
+</html>

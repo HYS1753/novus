@@ -1,0 +1,276 @@
+{
+  "title": "Novus v2 비주얼 월드 선택",
+  "question": "요청하신 조합안(한 화면 + 오늘 한 장)을 맨 앞에 추가했습니다. 첫 화면 예시를 펼친 뒤 아래로 스크롤해 보세요. 이 카드를 고르거나 다른 카드를 고르면 됩니다.",
+  "options": [
+    {
+      "id": "steer-hybrid",
+      "kind": "grounded",
+      "kicker": "요청 조합안",
+      "label": "한 화면 + 오늘 한 장",
+      "lineage": "세로 피드의 풀블리드 첫 화면 + 벽걸이 달력의 '오늘 한 장'",
+      "thesis": "첫 화면은 하던 것 하나가 사진 위에 가득, 내리면 사진 띠 아래 오늘 날짜·달력·서비스·탐색기.",
+      "palette": [
+        "#000000",
+        "#0B0B0D",
+        "#FFFFFF",
+        "#E50914",
+        "#FF5A5F",
+        "#6E9BFF"
+      ],
+      "materials": [
+        "풀블리드 사진",
+        "하단 스크림",
+        "흰 글리프",
+        "무광 다크 달력 괘선"
+      ],
+      "viewport": "1화면: 사진 + 이어보기 캡션 + 우측 글리프 레일. 2화면: 사진 띠, 왼쪽 큰 날짜, 오른쪽 월 달력, 서비스 7개, 작은 탐색기 줄.",
+      "risk": "두 화면 사이를 스냅으로 오가므로, 서비스를 바로 열려면 한 번 내려야 함(숫자키 1–7과 레일로 보완).",
+      "html": ".impeccable/mocks/decision/hybrid.html",
+      "htmlFrame": "1368x912"
+    },
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "label": "온에어 편성 그래픽",
+      "kicker": "THE ROLL",
+      "lineage": "한국 방송 화면 그래픽: 채널 아이덴트, 현재/다음 편성 배너, 하단 자막 플레이트",
+      "thesis": "홈 화면을 지금 방송 중인 편성표처럼: 살아 있는 세션이 곧 '온에어'.",
+      "palette": [
+        "#0B0F1A",
+        "#F4F1EA",
+        "#FFD400",
+        "#E8322B",
+        "#1E2638"
+      ],
+      "materials": [
+        "단색 자막 플레이트",
+        "하드 엣지 바",
+        "화면 우상단 시계 버그"
+      ],
+      "viewport": "좌상단 온에어 배너에 실행 중 세션, 그 아래 01~07 번호 채널 플레이트, 도구 줄, 우상단 시계 버그.",
+      "risk": "노랑·빨강이 포커스와 실행 상태를 넘어 번지면 뉴스 채널처럼 시끄러워짐.",
+      "raised": [
+        {
+          "from": "challenger-exposure",
+          "raise": "중립색은 9단 고정 잉크 램프에만 스냅, 임의 회색 금지."
+        },
+        {
+          "from": "challenger-ticket",
+          "raise": "세션 종료는 조용히 사라지지 않고 '종료됨' 스탬프를 한 박자 보인 뒤 빠짐."
+        },
+        {
+          "from": "challenger-transit",
+          "raise": "라벨은 고정 크기, 포커스가 이웃 타일을 줄이지 않음."
+        },
+        {
+          "from": "challenger-folio",
+          "raise": "한 줄의 모든 플레이트는 같은 베이스라인·같은 스케일, 로고는 동일 규격 플레이트 안."
+        },
+        {
+          "from": "challenger-mono",
+          "raise": "노랑은 포커스에만, 빨강은 실행 중에만: 색은 상태를 말할 때만 씀."
+        }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html",
+      "htmlFrame": "1368x912"
+    },
+    {
+      "id": "model-pick",
+      "kind": "pick",
+      "label": "벽걸이 달력",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "한국 가정의 벽걸이 달력: 위는 사진, 아래는 큰 날짜 격자, 빨간 일요일",
+      "thesis": "홈은 '오늘 한 장': 오늘 사진과 큰 날짜, 그 아래 이어하기와 서비스.",
+      "palette": [
+        "#FBF8F1",
+        "#1C1A17",
+        "#D7262E",
+        "#2B5BA8",
+        "#16140F"
+      ],
+      "materials": [
+        "무광 종이",
+        "인쇄 사진 판",
+        "헤어라인 괘선"
+      ],
+      "viewport": "상단 절반 오늘 사진 판 + 큰 날짜 숫자, 하단은 달력 칸 리듬의 이어하기·서비스 격자.",
+      "risk": "가장 친숙한 선택이라 흔한 결과로 수렴하기 쉽고, 밤 거실에서 종이 바탕이 눈부실 수 있음.",
+      "html": ".impeccable/mocks/decision/model-pick.html",
+      "htmlFrame": "1368x912"
+    },
+    {
+      "id": "challenger-feed",
+      "kind": "challenger",
+      "catalogId": "pop-culture-shelf-vertical-video-feed-surface",
+      "label": "한 화면 한 개",
+      "verdict": "competitive",
+      "lineage": "세로 영상 피드: 한 항목이 화면 전체, 오른쪽 액션 레일",
+      "thesis": "포커스된 서비스나 사진 하나가 화면 전체를 차지하고, 다음은 한 번 넘기면.",
+      "palette": [
+        "#000000",
+        "#FFFFFF",
+        "#E50914",
+        "#113CCF"
+      ],
+      "materials": [
+        "풀블리드 미디어",
+        "하단 부드러운 스크림",
+        "흰 글리프"
+      ],
+      "viewport": "전체 화면 브랜드 필드 또는 사진, 좌하단 서비스명·세션 상태, 우측 글리프 레일.",
+      "case": "누구나 아는 문법이라 사용자 동일시는 이기지만, 12개 항목을 넘겨야 해서 실행 속도·명료성에서 짐.",
+      "risk": "바로 실행하려는 사람에게 넘기기를 강요하고, 런처라는 정체가 흐려짐.",
+      "html": ".impeccable/mocks/decision/challenger-feed.html",
+      "htmlFrame": "1368x912",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    },
+    {
+      "id": "challenger-exposure",
+      "kind": "challenger",
+      "catalogId": "operate-b-exposure-record-zone-sheets",
+      "label": "암실 노출 기록",
+      "verdict": "declined",
+      "lineage": "암실 인화 기록 카드와 존 램프",
+      "thesis": "겹친 반투명 시트와 11단 존 램프.",
+      "palette": [
+        "#1A1A1A",
+        "#8A8A8A",
+        "#E9E6DF",
+        "#C2187A"
+      ],
+      "materials": [
+        "트레이싱지",
+        "해칭"
+      ],
+      "viewport": "겹친 시트 위 해칭 영역.",
+      "case": "거실 사용자에게 낯설고, 겹친 반투명 시트는 블러 금지 제약과 충돌.",
+      "risk": "작업 화면이 암실 소품처럼 보임.",
+      "kept": "중립색을 고정 램프에만 스냅하는 규율.",
+      "hero": "https://impeccable.style/worlds/cards/operate-b-exposure-record-zone-sheets-hero.webp"
+    },
+    {
+      "id": "challenger-transit",
+      "kind": "challenger",
+      "catalogId": "wayfinding-cartography-signage-midnight-transit-diagram",
+      "label": "심야 노선도",
+      "verdict": "declined",
+      "lineage": "지하철 노선도 에나멜 벽화",
+      "thesis": "세션을 노선으로, 화면 전환을 환승으로.",
+      "palette": [
+        "#0E1A3A",
+        "#F3F1EA",
+        "#D7263D",
+        "#F2A900"
+      ],
+      "materials": [
+        "에나멜",
+        "45° 노선"
+      ],
+      "viewport": "노선도 위 서비스 역.",
+      "case": "실행·복귀라는 단순한 일을 지도 읽기로 바꿔 명료성에서 짐.",
+      "risk": "은유가 기능을 가림.",
+      "kept": "포커스가 이웃을 줄이지 않는 고정 크기 라벨.",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-midnight-transit-diagram-hero.webp"
+    },
+    {
+      "id": "challenger-ticket",
+      "kind": "challenger",
+      "catalogId": "vernacular-ephemera-jet-age-ticket-wallet",
+      "label": "항공권 지갑",
+      "verdict": "declined",
+      "lineage": "제트 시대 항공권 쿠폰북",
+      "thesis": "각 세션이 한 장의 쿠폰.",
+      "palette": [
+        "#14284B",
+        "#C8102E",
+        "#FFFFFF",
+        "#5B3A8C"
+      ],
+      "materials": [
+        "카본지",
+        "스탬프"
+      ],
+      "viewport": "쿠폰 스택.",
+      "case": "여행 서사가 미디어 허브와 맞지 않음.",
+      "risk": "종이 소품 코스튬.",
+      "kept": "아무것도 조용히 사라지지 않고 상태가 찍힌다는 규율.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp"
+    },
+    {
+      "id": "challenger-folio",
+      "kind": "challenger",
+      "catalogId": "editorial-sequence-montage-botanical-folio-season",
+      "label": "식물 도판첩",
+      "verdict": "declined",
+      "lineage": "계절별 식물 도판",
+      "thesis": "같은 스케일·같은 바탕의 연속 도판.",
+      "palette": [
+        "#F4EEDC",
+        "#5A4632",
+        "#2F6B3A",
+        "#B3261E"
+      ],
+      "materials": [
+        "크림 도판",
+        "세피아 괘선"
+      ],
+      "viewport": "다섯 도판이 한 줄.",
+      "case": "미디어 콘솔 동일시·명료성 모두 약함.",
+      "risk": "박물관 출판물처럼 보임.",
+      "kept": "한 줄의 모든 항목이 같은 베이스라인·스케일.",
+      "hero": "https://impeccable.style/worlds/cards/editorial-sequence-montage-botanical-folio-season-hero.webp"
+    },
+    {
+      "id": "challenger-mono",
+      "kind": "challenger",
+      "catalogId": "digital-design-canon-monochrome-product-marketing",
+      "label": "모노크롬 제품 마케팅",
+      "verdict": "declined",
+      "lineage": "소프트웨어 마케팅 페이지",
+      "thesis": "중립 스케일과 드문 강조색.",
+      "palette": [
+        "#0A0A0A",
+        "#F5F5F5",
+        "#3B82F6"
+      ],
+      "materials": [
+        "스크린샷",
+        "라디얼 그라운드"
+      ],
+      "viewport": "주장-증거 교차 섹션.",
+      "case": "설득용 페이지 문법이라 작업 화면에 맞지 않음.",
+      "risk": "회색 화면 + 강조색 하나 = 카테고리 기본값.",
+      "kept": "강조색은 의미가 있을 때만 드물게.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code"
+  },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "카테고리 표준",
+    "thesis": "TV 런처의 정석: 히어로 캐러셀과 타일 줄을 정석대로 완성도 있게.",
+    "palette": [
+      "#0F1115",
+      "#FFFFFF",
+      "#8AB4F8"
+    ],
+    "materials": [
+      "다크 그라운드",
+      "포커스 확대 타일"
+    ],
+    "viewport": "상단 히어로 배너, 그 아래 이어보기·앱·도구 타일 줄.",
+    "risk": "다른 TV 런처와 구별되지 않음.",
+    "html": ".impeccable/mocks/decision/canon.html",
+    "htmlFrame": "1368x912"
+  },
+  "steer": true
+}
