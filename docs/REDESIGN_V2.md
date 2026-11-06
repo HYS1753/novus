@@ -89,11 +89,11 @@ UI를 바꾼 페이즈는 추가로 `.claude/skills/impeccable/scripts/impeccabl
 
 ### P2. v2 핵심 컴포넌트 + 인프라
 
-- [ ] 컴포넌트: `ActionButton`(사각, primary/secondary), `GlyphButton`(원형), `GlyphRail`, `ServicePlate`(공식 로고 규격 플레이트 + 실행 중 점), `Caption`(스크림 위 캡션), `MonthCalendar`, `ListRow`, `Sheet`, `Toggle`, `Segmented`, `Toast`, `Dialog`, `EmptyState`
-- [ ] i18n 인프라 + 한국어 카탈로그(현재 문자열 이관), 영어 카탈로그로 긴 라벨 테스트
-- [ ] 방향키 로빙 포커스 (zone: 레일 / 캡션 동작 / 서비스 줄 / 탐색기 줄)
-- [ ] preferences: posture, language, onboardingDone, ambientFolder, ambientDelay
-- [ ] 세션 마지막 사용 시각 추적 (페이지 매니저 이벤트 기반, 프런트 저장 또는 Rust 커맨드 추가 시 `src/shared/api/tauri/` 래퍼)
+- [x] 컴포넌트: `ActionButton`(사각, primary/secondary), `GlyphButton`(원형), `GlyphRail`, `ServicePlate`(공식 로고 규격 플레이트 + 실행 중 점), `Caption`(스크림 위 캡션), `MonthCalendar`, `ListRow`, `Sheet`, `Toggle`, `Segmented`, `Toast`, `Dialog`, `EmptyState`
+- [x] i18n 인프라 + 한국어 카탈로그(현재 문자열 이관), 영어 카탈로그로 긴 라벨 테스트
+- [x] 방향키 로빙 포커스 (zone: 레일 / 캡션 동작 / 서비스 줄 / 탐색기 줄)
+- [x] preferences: posture, language, onboardingDone, ambientFolder, ambientDelay
+- [x] 세션 마지막 사용 시각 추적 (페이지 매니저 이벤트 기반, 프런트 저장 또는 Rust 커맨드 추가 시 `src/shared/api/tauri/` 래퍼)
 - impeccable: `/impeccable extract` 로 토큰·컴포넌트 정리, `/impeccable audit` (접근성·포커스)
 - Gate: 모든 컴포넌트가 가이드 페이지에 상태별로 올라가 있고, 키보드만으로 전부 조작 가능
 

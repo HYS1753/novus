@@ -3,3 +3,7 @@ export * from "./performance";
 export * from "./runtime";
 export * from "./brandAssets";
 export * from "./ambientArtwork";
+export * from "./preferences";
+export * from "./sessionActivity";
+export * from "./spatialNavigation";
+export * from "./i18n";

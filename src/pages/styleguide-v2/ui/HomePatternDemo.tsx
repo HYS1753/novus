@@ -16,7 +16,8 @@ import {
   SearchIcon,
   SettingsIcon,
   ThemeIcon,
-  useCurrentTime,
+  useNow,
+  useI18n,
   VolumeIcon,
 } from "@/shared";
 
@@ -29,11 +30,13 @@ const SERVICES = [
   { id: "netflix", name: "Netflix", live: true },
   { id: "youtube", name: "YouTube", live: true },
   { id: "disney", name: "Disney+" },
-  { id: "tving", name: "티빙" },
-  { id: "wavve", name: "웨이브" },
-  { id: "watcha", name: "왓챠" },
-  { id: "coupang", name: "쿠팡플레이" },
+  { id: "tving", name: "TVING" },
+  { id: "wavve", name: "Wavve" },
+  { id: "watcha", name: "Watcha" },
+  { id: "coupang", name: "Coupang Play" },
 ];
+/** Sample: Netflix was last on screen 12 minutes before the guide opened. */
+const SAMPLE_LAST_USED = Date.now() - 12 * 60_000;
 
 /**
  * The v2 home pattern at the reference device size (Surface Pro 4, 1368×912),
@@ -47,8 +50,9 @@ export const HomePatternDemo: React.FC = () => {
   const photoRef = useRef<HTMLImageElement>(null);
   const frameRef = useRef(0);
   const [scale, setScale] = useState(0.5);
-  const { time } = useCurrentTime();
-  const today = new Date();
+  const today = useNow();
+  const { t, locale, relativeTime, time: formatTime } = useI18n();
+  const time = formatTime(today);
   const artwork = getAmbientArtworkForDay(today);
 
   useEffect(() => {
@@ -78,15 +82,15 @@ export const HomePatternDemo: React.FC = () => {
   const goTo = (frame: 0 | 1) =>
     scrollerRef.current?.scrollTo({ top: frame * FRAME_H, behavior: "smooth" });
 
-  const dateLabel = new Intl.DateTimeFormat("ko-KR", {
+  const dateLabel = new Intl.DateTimeFormat(locale, {
     month: "long",
     day: "numeric",
     weekday: "long",
   }).format(today);
-  const monthLabel = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long" }).format(
+  const monthLabel = new Intl.DateTimeFormat(locale, { year: "numeric", month: "long" }).format(
     today,
   );
-  const weekdayLabel = new Intl.DateTimeFormat("ko-KR", { weekday: "long" }).format(today);
+  const weekdayLabel = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(today);
 
   return (
     <div ref={wrapRef} className="sg2-demo" style={{ height: FRAME_H * scale }}>
@@ -100,55 +104,76 @@ export const HomePatternDemo: React.FC = () => {
 
         <div ref={scrollerRef} className="nvh__scroller" onScroll={onScroll}>
           {/* Frame 1 — one thing, full frame */}
-          <section className="nvh__frame nvh__frame--hero nv-on-media" aria-label="이어서 보기">
+          <section
+            className="nvh__frame nvh__frame--hero nv-on-media"
+            aria-label={t("home.resume")}
+          >
             <div className="nvh__scrim" aria-hidden="true" />
             <header className="nvh__bar">
               <NovusLogo height={28} />
               <span className="nvh__clock">
                 <span className="nv-numeral nvh__time">{time}</span>
-                <span className="nvh__date">{dateLabel} · 서울 맑음 12°</span>
+                <span className="nvh__date">{dateLabel} · Seoul 12°</span>
               </span>
             </header>
 
             <div className="nvh__caption">
               <NvStatus tone="live" onMedia>
-                실행 중 · 세션 유지 · 12분 전 사용
+                {t("home.live")} · {t("home.sessionKept")} ·{" "}
+                {t("home.usedAgo", { time: relativeTime(SAMPLE_LAST_USED) })}
               </NvStatus>
               <h3 className="nvh__title">Netflix</h3>
-              <p className="nvh__sub">YouTube도 실행 중 · 확인 키로 바로 복귀</p>
+              <p className="nvh__sub">
+                {t("home.alsoRunning", { names: "YouTube" })} · {t("home.pressToResume")}
+              </p>
               <div className="nvh__actions">
                 <NvButton variant="primary" size="large" onMedia icon={<PlayIcon />}>
-                  이어서 보기
+                  {t("home.resume")}
                 </NvButton>
                 <NvButton size="large" onMedia>
-                  YouTube로 복귀
+                  {t("home.openService", { name: "YouTube" })}
                 </NvButton>
                 <NvButton size="large" onMedia>
-                  세션 종료
+                  {t("home.endSession")}
                 </NvButton>
               </div>
             </div>
 
-            <NvGlyphRail label="전역 동작" className="nvh__rail">
-              <NvGlyphButton onMedia icon={<SearchIcon />} label="검색" />
-              <NvGlyphButton onMedia icon={<ImageIcon />} label="갤러리" />
-              <NvGlyphButton onMedia icon={<FolderIcon />} label="파일" />
-              <NvGlyphButton onMedia icon={<RemoteIcon />} label="리모컨" />
-              <NvGlyphButton onMedia icon={<SettingsIcon />} label="설정" />
+            <NvGlyphRail label={t("nav.globalActions")} className="nvh__rail">
+              <NvGlyphButton onMedia icon={<SearchIcon />} label={t("common.search")} />
+              <NvGlyphButton onMedia icon={<ImageIcon />} label={t("nav.gallery")} />
+              <NvGlyphButton onMedia icon={<FolderIcon />} label={t("nav.files")} />
+              <NvGlyphButton onMedia icon={<RemoteIcon />} label={t("nav.remote")} />
+              <NvGlyphButton onMedia icon={<SettingsIcon />} label={t("common.settings")} />
             </NvGlyphRail>
 
             <button type="button" className="nvh__hint" onClick={() => goTo(1)}>
-              오늘 · 서비스
+              {t("home.todayHint")}
               <span aria-hidden="true" className="nvh__chev" />
             </button>
           </section>
 
           {/* Frame 2 — today's page under the folded photo band */}
-          <section className="nvh__frame nvh__frame--today" aria-label="오늘">
+          <section className="nvh__frame nvh__frame--today" aria-label={t("home.today")}>
             <div className="nvh__band nv-on-media">
-              <NvGlyphButton onMedia showLabel={false} icon={<SearchIcon />} label="검색" />
-              <NvGlyphButton onMedia showLabel={false} icon={<ThemeIcon />} label="테마" />
-              <NvGlyphButton onMedia showLabel={false} icon={<SettingsIcon />} label="설정" />
+              <NvGlyphButton
+                onMedia
+                showLabel={false}
+                icon={<SearchIcon />}
+                label={t("common.search")}
+              />
+              <NvGlyphButton
+                onMedia
+                showLabel={false}
+                icon={<ThemeIcon />}
+                label={t("nav.theme")}
+              />
+              <NvGlyphButton
+                onMedia
+                showLabel={false}
+                icon={<SettingsIcon />}
+                label={t("common.settings")}
+              />
             </div>
 
             <div className="nvh__sheet">
@@ -158,22 +183,22 @@ export const HomePatternDemo: React.FC = () => {
                 <span className="nvh__weekday">{weekdayLabel}</span>
                 <span className="nvh__meta">
                   <span className="nv-numeral nvh__daytime">{time}</span>
-                  <span>서울 · 맑음 12°</span>
+                  <span>Seoul · 12°</span>
                 </span>
               </div>
 
               <div className="nvh__cal">
                 <div className="nvh__cal-head">
-                  <span>이번 달</span>
-                  <NvButton variant="quiet">Google 캘린더 열기</NvButton>
+                  <span>{t("home.thisMonth")}</span>
+                  <NvButton variant="quiet">{t("home.openCalendar")}</NvButton>
                 </div>
-                <NvMonthCalendar date={today} locale="ko-KR" />
+                <NvMonthCalendar date={today} locale={locale} />
               </div>
 
               <div className="nvh__services">
                 <div className="nvh__label">
-                  <h4>서비스</h4>
-                  <span>실행 중 2 · 숫자키 1–7로 바로 열기</span>
+                  <h4>{t("home.services")}</h4>
+                  <span>{t("home.servicesHint", { count: 2, max: SERVICES.length })}</span>
                 </div>
                 <div className="nvh__plates">
                   {SERVICES.map((service, index) => (
@@ -183,25 +208,27 @@ export const HomePatternDemo: React.FC = () => {
                       name={service.name}
                       shortcut={index + 1}
                       state={service.live ? "live" : "idle"}
+                      liveLabel={t("home.live")}
+                      endedLabel={t("home.ended")}
                     />
                   ))}
                 </div>
               </div>
 
-              <nav className="nvh__files" aria-label="탐색기">
-                <span className="nvh__files-title">탐색기</span>
-                <NvButton icon={<ImageIcon />}>갤러리</NvButton>
-                <NvButton icon={<FolderIcon />}>다운로드</NvButton>
+              <nav className="nvh__files" aria-label={t("home.explorer")}>
+                <span className="nvh__files-title">{t("home.explorer")}</span>
+                <NvButton icon={<ImageIcon />}>{t("nav.gallery")}</NvButton>
+                <NvButton icon={<FolderIcon />}>{t("home.downloads")}</NvButton>
                 <NvButton icon={<FolderIcon />}>C:\</NvButton>
                 <NvButton icon={<FolderIcon />}>D:\</NvButton>
-                <NvButton icon={<SearchIcon />}>검색</NvButton>
-                <NvButton icon={<VolumeIcon />}>라디오</NvButton>
+                <NvButton icon={<SearchIcon />}>{t("common.search")}</NvButton>
+                <NvButton icon={<VolumeIcon />}>{t("home.radio")}</NvButton>
                 <span className="nvh__spacer" />
                 <NvButton variant="quiet" icon={<MoonIcon />}>
-                  앰비언트
+                  {t("home.ambient")}
                 </NvButton>
                 <NvButton variant="quiet" icon={<RemoteIcon />}>
-                  모바일 리모컨
+                  {t("home.mobileRemote")}
                 </NvButton>
               </nav>
             </div>

@@ -368,6 +368,13 @@
   margin-top: var(--nv-space-4);
 }
 
+.sg2-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--nv-space-6);
+  max-width: 960px;
+}
+
 .sg2-calendar {
   max-width: 640px;
 }

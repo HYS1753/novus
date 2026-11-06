@@ -1,5 +1,20 @@
 import React, { useState } from "react";
 import {
+  LANGUAGES,
+  NvDialog,
+  NvEmptyState,
+  NvListRow,
+  NvListSection,
+  NvRoot,
+  NvSheet,
+  NvSlider,
+  NvTextField,
+  NvToast,
+  NvToggle,
+  usePreference,
+  type LanguagePreference,
+  type PosturePreference,
+  type ThemePreference,
   CloseIcon,
   FolderIcon,
   getAmbientArtworkForDay,
@@ -21,9 +36,6 @@ import {
 import { HomePatternDemo } from "./HomePatternDemo";
 import "./styleguide-v2.css";
 
-type Theme = "system" | "light" | "dark";
-type Posture = "tablet" | "tv";
-
 const SECTIONS = [
   { id: "tone", label: "톤 & 매너" },
   { id: "home", label: "홈 패턴" },
@@ -31,6 +43,7 @@ const SECTIONS = [
   { id: "type", label: "타입" },
   { id: "shape", label: "형태 · 크기" },
   { id: "components", label: "컴포넌트" },
+  { id: "settings", label: "설정 패턴" },
   { id: "state", label: "포커스 · 상태" },
   { id: "motion", label: "모션" },
 ];
@@ -95,26 +108,33 @@ const MOTIONS = [
 ];
 
 export const StyleGuideV2Page: React.FC = () => {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [posture, setPosture] = useState<Posture>("tablet");
+  const [theme, setTheme] = usePreference("theme");
+  const [posture, setPosture] = usePreference("posture");
+  const [language, setLanguage] = usePreference("language");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [toggle, setToggle] = useState(true);
+  const [scrim, setScrim] = useState(35);
+  const [city, setCity] = useState("");
   const [plateState, setPlateState] = useState<"live" | "ended" | "idle">("live");
   const today = new Date();
   const artwork = getAmbientArtworkForDay(today);
 
   return (
-    <div
-      className="nv-root sg2"
-      data-theme={theme === "system" ? undefined : theme}
-      data-posture={posture}
-      lang="ko"
-    >
+    <NvRoot className="sg2">
       <header className="sg2-top">
         <div className="sg2-top__brand">
           <NovusLogo />
           <span className="sg2-top__title">디자인 가이드 v2</span>
         </div>
         <div className="sg2-top__controls">
-          <NvSegmented<Theme>
+          <NvSegmented<LanguagePreference>
+            label="언어"
+            value={language ?? "ko"}
+            onChange={setLanguage}
+            options={LANGUAGES.map((option) => ({ value: option.code, label: option.nativeName }))}
+          />
+          <NvSegmented<ThemePreference>
             label="테마"
             value={theme}
             onChange={setTheme}
@@ -124,7 +144,7 @@ export const StyleGuideV2Page: React.FC = () => {
               { value: "dark", label: "다크" },
             ]}
           />
-          <NvSegmented<Posture>
+          <NvSegmented<PosturePreference>
             label="보기 모드"
             value={posture}
             onChange={setPosture}
@@ -347,6 +367,93 @@ export const StyleGuideV2Page: React.FC = () => {
           </div>
         </section>
 
+        <section id="settings" className="sg2-section">
+          <h2>설정 패턴</h2>
+          <p className="sg2-desc">
+            설정은 오른쪽 시트에 목록 행으로 쌓습니다. 행 전체가 버튼이면 하위 화면으로 이동하고,
+            그렇지 않으면 오른쪽 컨트롤이 포커스를 받습니다.
+          </p>
+          <div className="sg2-settings">
+            <NvListSection title="화면">
+              <NvListRow
+                title="보기 모드"
+                description="거치해 두고 1–2m 거리에서 보기"
+                control={
+                  <NvSegmented<PosturePreference>
+                    label="보기 모드"
+                    value={posture}
+                    onChange={setPosture}
+                    options={[
+                      { value: "tablet", label: "태블릿형" },
+                      { value: "tv", label: "TV형" },
+                    ]}
+                  />
+                }
+              />
+              <NvListRow
+                title="사진 위 글자 배경"
+                description="사진 위 글자가 잘 보이도록 아래쪽을 어둡게 하는 정도"
+                control={
+                  <NvSlider
+                    label="사진 위 글자 배경"
+                    value={scrim}
+                    step={5}
+                    valueText={String(scrim)}
+                    onChange={setScrim}
+                  />
+                }
+              />
+              <NvListRow
+                title="전체 화면"
+                control={<NvToggle label="전체 화면" checked={toggle} onChange={setToggle} />}
+              />
+            </NvListSection>
+            <NvListSection title="홈">
+              <NvListRow
+                title="사진 폴더"
+                value="기본 사진 폴더"
+                onPress={() => setSheetOpen(true)}
+              />
+              <NvListRow title="날씨 지역" value="서울" onPress={() => setSheetOpen(true)} />
+            </NvListSection>
+          </div>
+
+          <h3>시트 · 대화상자 · 알림</h3>
+          <div className="sg2-row">
+            <NvButton onClick={() => setSheetOpen(true)}>시트 열기</NvButton>
+            <NvButton onClick={() => setDialogOpen(true)}>대화상자 열기</NvButton>
+            <NvToast
+              tone="attention"
+              message="업데이트 준비 완료"
+              action={<NvButton variant="quiet">설치</NvButton>}
+            />
+          </div>
+
+          <h3>입력 · 빈 상태</h3>
+          <div className="sg2-settings">
+            <NvTextField
+              label="날씨 지역"
+              placeholder="도시 이름"
+              hint="예: 서울, Tokyo, New York"
+              value={city}
+              onChange={setCity}
+              leading={<SearchIcon size={18} />}
+            />
+            <NvTextField
+              label="오류 예시"
+              value="Atlantis"
+              onChange={() => undefined}
+              error="찾은 도시가 없습니다. 다른 이름으로 검색하세요."
+            />
+          </div>
+          <NvEmptyState
+            icon={<FolderIcon />}
+            title="하위 폴더가 없습니다"
+            body="이 폴더를 그대로 쓰거나 위 폴더로 돌아가세요."
+            action={<NvButton>이 폴더 사용</NvButton>}
+          />
+        </section>
+
         <section id="state" className="sg2-section">
           <h2>포커스 · 상태</h2>
           <p className="sg2-desc">
@@ -394,6 +501,60 @@ export const StyleGuideV2Page: React.FC = () => {
           </p>
         </section>
       </main>
-    </div>
+
+      <NvSheet
+        open={sheetOpen}
+        title="날씨 지역"
+        onClose={() => setSheetOpen(false)}
+        closeLabel="닫기"
+        footer={
+          <>
+            <NvButton variant="quiet" onClick={() => setSheetOpen(false)}>
+              취소
+            </NvButton>
+            <NvButton variant="primary" onClick={() => setSheetOpen(false)}>
+              완료
+            </NvButton>
+          </>
+        }
+      >
+        <NvTextField
+          label="도시 이름"
+          placeholder="서울"
+          value={city}
+          onChange={setCity}
+          leading={<SearchIcon size={18} />}
+        />
+        <NvListSection>
+          <NvListRow
+            title="서울"
+            description="대한민국 · Asia/Seoul"
+            onPress={() => setSheetOpen(false)}
+          />
+          <NvListRow
+            title="서울특별시 강남구"
+            description="대한민국"
+            onPress={() => setSheetOpen(false)}
+          />
+        </NvListSection>
+      </NvSheet>
+
+      <NvDialog
+        open={dialogOpen}
+        title="Netflix 세션을 종료할까요?"
+        description="로그인은 유지되지만 보던 화면은 닫힙니다."
+        onClose={() => setDialogOpen(false)}
+        actions={
+          <>
+            <NvButton variant="quiet" onClick={() => setDialogOpen(false)}>
+              취소
+            </NvButton>
+            <NvButton variant="primary" onClick={() => setDialogOpen(false)}>
+              세션 종료
+            </NvButton>
+          </>
+        }
+      />
+    </NvRoot>
   );
 };

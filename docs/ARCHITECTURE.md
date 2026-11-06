@@ -181,6 +181,11 @@ v2는 v1 옆에 병행 구축되며 화면 단위로 교체됩니다. 진행 순
 - **보기 모드**: `data-posture="tablet"`(배율 1, 터치 48px) / `"tv"`(배율 1.25, 터치 64px). 모든 크기 토큰은 `--nv-scale`을 곱합니다.
 - **사진 위 크롬**: `.nv-on-media` 안에서는 테마와 무관하게 흰색. 유일한 반투명은 사진 하단 스크림(`--nv-scrim`)이며, 머티리얼 강도는 스크림 농도로만 반영됩니다. 블러는 쓰지 않습니다.
 - **컴포넌트**: `src/shared/ui/v2/` (`Nv*` 접두사). 원형 `NvGlyphButton` = 전역 동작, 사각 `NvButton`/`NvServicePlate` = 콘텐츠의 동작.
+- **`NvRoot`**: 모든 v2 화면의 루트. 저장된 테마·보기 모드·언어를 `data-theme`/`data-posture`/`lang`으로 적용하고, 시트·대화상자 포털(`data-nv-portal`)과 방향키 공간 탐색을 제공합니다.
+- **설정 저장소**: `src/shared/lib/preferences.ts` (`novus.v2.preferences` 한 레코드, localStorage 실패 시 메모리). 컴포넌트는 `usePreference(key)`로 읽고 씁니다. 키: `language`, `posture`, `theme`, `onboardingDone`, `ambientFolder`, `ambientDelayMinutes`, `weatherCity`.
+- **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
+- **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
+- **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
 - **기본 앰비언트 아트워크**: `src/assets/ambient/*.svg`, `getAmbientArtworkForDay()`가 날짜별로 하나를 고릅니다.
 - **v2 Style Guide**: DEV 브라우저에서 `/styleguide/v2`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 

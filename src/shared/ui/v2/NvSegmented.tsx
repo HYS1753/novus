@@ -13,7 +13,7 @@ export interface NvSegmentedProps<T extends string> {
   className?: string;
 }
 
-/** Single-choice group. Arrow keys move the choice, as a native radio group does. */
+/** Single-choice group. Left/right move the choice, as a native radio group does. */
 export function NvSegmented<T extends string>({
   label,
   options,
@@ -24,12 +24,8 @@ export function NvSegmented<T extends string>({
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
-    const step =
-      event.key === "ArrowRight" || event.key === "ArrowDown"
-        ? 1
-        : event.key === "ArrowLeft" || event.key === "ArrowUp"
-          ? -1
-          : 0;
+    // Left/right move the choice; up/down are left to spatial navigation.
+    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;
     event.preventDefault();
     const next = (index + step + options.length) % options.length;
