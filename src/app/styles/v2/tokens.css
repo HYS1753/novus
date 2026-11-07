@@ -1,0 +1,215 @@
+/* ==========================================================================
+   Novus v2 tokens — "밤의 액자, 낮의 한 장"
+   --------------------------------------------------------------------------
+   Scope: every v2 surface lives under `.nv-root`. v1 screens are untouched.
+
+   Axes (attributes on the `.nv-root` element)
+     data-theme    system (default, follows the OS) · light · dark
+     data-posture  tablet (default, handheld 30–50 cm) · tv (lean-back 1–2 m)
+
+   Colour strategy: Restrained. Novus draws no colour of its own; colour
+   comes from photos and official service plates. Neutrals snap to one
+   9-step ramp (n0–n8). Four semantic hues, each with one job only:
+     live       a streaming session is running
+     attention  something needs the user (error, update ready)
+     sun / sat  Sunday / Saturday on the calendar
+   ========================================================================== */
+
+.nv-root {
+  /* ---------- Neutral ramp: light ---------- */
+  --nv-n0: #ffffff;
+  --nv-n1: #f3f3f1;
+  --nv-n2: #e9e9e6;
+  --nv-n3: #dcdcd8;
+  --nv-n4: #c4c4bf;
+  --nv-n5: #9c9c97;
+  --nv-n6: #64645f;
+  --nv-n7: #3f3f3b;
+  --nv-n8: #111110;
+
+  --nv-live: #d70015;
+  --nv-attention: #a15c00;
+  --nv-sun: #c8102e;
+  --nv-sat: #1f5fd1;
+
+  color-scheme: light;
+
+  /* ---------- Roles (derived from the ramp; components use only these) ---------- */
+  --nv-ground: var(--nv-n1);
+  --nv-surface: var(--nv-n2);
+  --nv-surface-raised: var(--nv-n3);
+  --nv-rule: var(--nv-n3);
+  --nv-rule-strong: var(--nv-n4);
+  --nv-text: var(--nv-n8);
+  --nv-text-2: var(--nv-n7);
+  --nv-text-3: var(--nv-n6);
+  --nv-text-disabled: var(--nv-n5);
+  --nv-focus: var(--nv-n8);
+  --nv-inverse: var(--nv-n0);
+  --nv-inverse-text: var(--nv-n8);
+
+  /* Over photos and brand fields the chrome is always white, whatever the theme. */
+  --nv-on-media: #ffffff;
+  --nv-on-media-2: rgba(255, 255, 255, 0.78);
+  --nv-media-glyph-bg: rgba(0, 0, 0, 0.38);
+  --nv-media-glyph-edge: rgba(255, 255, 255, 0.28);
+  --nv-frame: #000000;
+
+  /* Scrim is the only translucency in v2. Material intensity (0–1, set on
+     <html>) deepens it; it never turns into blur. */
+  --nv-scrim-strength: calc(0.78 + var(--material-intensity, 0) * 0.17);
+  --nv-scrim: linear-gradient(
+    to top,
+    rgba(0, 0, 0, var(--nv-scrim-strength)) 0%,
+    rgba(0, 0, 0, calc(var(--nv-scrim-strength) * 0.55)) 38%,
+    rgba(0, 0, 0, 0) 100%
+  );
+
+  /* ---------- Type ---------- */
+  --nv-font:
+    "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Yu Gothic UI",
+    "Hiragino Sans", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --nv-font-display:
+    "Segoe UI Variable Display", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", "Yu Gothic UI",
+    "Hiragino Sans", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+
+  /* ---------- Scale ----------
+     Every size is authored for tablet posture on the 1368×912 reference
+     frame (Surface Pro 4) and multiplied by --nv-scale:
+       --nv-posture-scale  1 tablet · 1.25 TV
+       --nv-vscale         window height / 912, clamped (set by NvRoot)
+     Like a TV platform's density-independent units, the composition keeps its
+     proportions on any window; targets grow with it and never drop below 48px. */
+  --nv-posture-scale: 1;
+  --nv-scale: calc(var(--nv-posture-scale) * var(--nv-vscale, 1));
+  --nv-target: max(48px, calc(48px * var(--nv-vscale, 1)));
+  --nv-target-glyph: max(56px, calc(56px * var(--nv-vscale, 1)));
+
+  --nv-size-numeral: calc(192px * var(--nv-scale)); /* today's date */
+  --nv-size-clock: calc(36px * var(--nv-scale));
+  --nv-size-display: calc(64px * var(--nv-scale)); /* service name in the caption */
+  --nv-size-title: calc(28px * var(--nv-scale));
+  --nv-size-heading: calc(20px * var(--nv-scale));
+  --nv-size-body: calc(16px * var(--nv-scale));
+  --nv-size-label: calc(14px * var(--nv-scale));
+  --nv-size-caption: calc(12px * var(--nv-scale));
+
+  --nv-weight-regular: 400;
+  --nv-weight-medium: 500;
+  --nv-weight-semibold: 600;
+  --nv-weight-bold: 700;
+  --nv-weight-heavy: 800;
+
+  --nv-track-display: -0.035em;
+  --nv-track-numeral: -0.04em;
+
+  /* ---------- Space (8 px rhythm, scaled by posture) ---------- */
+  --nv-space-1: calc(4px * var(--nv-scale));
+  --nv-space-2: calc(8px * var(--nv-scale));
+  --nv-space-3: calc(12px * var(--nv-scale));
+  --nv-space-4: calc(16px * var(--nv-scale));
+  --nv-space-5: calc(24px * var(--nv-scale));
+  --nv-space-6: calc(32px * var(--nv-scale));
+  --nv-space-7: calc(48px * var(--nv-scale));
+  --nv-space-8: calc(64px * var(--nv-scale));
+  --nv-gutter: calc(40px * var(--nv-vscale, 1)); /* screen edge */
+
+  /* ---------- Shape ----------
+     Circle = a global action reachable from anywhere (the glyph rail).
+     Rectangle = content and the actions that belong to it. */
+  --nv-radius-content: 4px;
+  --nv-radius-action: 4px;
+  --nv-radius-glyph: 50%;
+  /* The toggle's track and thumb: the one rounded control. */
+  --nv-radius-pill: 999px;
+
+  /* ---------- Focus ---------- */
+  --nv-focus-width: 4px;
+  --nv-focus-offset: 3px;
+
+  /* ---------- Motion ----------
+     press  direct feedback, no travel
+     move   focus and state changes
+     fold   the photo fold and sheets — the one authored moment */
+  --nv-dur-press: 90ms;
+  --nv-dur-move: 200ms;
+  --nv-dur-fold: 420ms;
+  --nv-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --nv-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --nv-press-scale: 0.97;
+}
+
+/* ---------- Neutral ramp: dark (system preference) ---------- */
+@media (prefers-color-scheme: dark) {
+  .nv-root:not([data-theme="light"]) {
+    --nv-n0: #000000;
+    --nv-n1: #0a0a0c;
+    --nv-n2: #151518;
+    --nv-n3: #222227;
+    --nv-n4: #34343b;
+    --nv-n5: #5c5c66;
+    --nv-n6: #8e8e99;
+    --nv-n7: #bcbcc5;
+    --nv-n8: #ffffff;
+
+    --nv-live: #ff453a;
+    --nv-attention: #ffb340;
+    --nv-sun: #ff6b6b;
+    --nv-sat: #7aa7ff;
+
+    color-scheme: dark;
+  }
+}
+
+/* ---------- Neutral ramp: dark (pinned by the user) ---------- */
+.nv-root[data-theme="dark"] {
+  --nv-n0: #000000;
+  --nv-n1: #0a0a0c;
+  --nv-n2: #151518;
+  --nv-n3: #222227;
+  --nv-n4: #34343b;
+  --nv-n5: #5c5c66;
+  --nv-n6: #8e8e99;
+  --nv-n7: #bcbcc5;
+  --nv-n8: #ffffff;
+
+  --nv-live: #ff453a;
+  --nv-attention: #ffb340;
+  --nv-sun: #ff6b6b;
+  --nv-sat: #7aa7ff;
+
+  color-scheme: dark;
+}
+
+/* ---------- TV posture: lean-back, legible from 2 m ---------- */
+.nv-root[data-posture="tv"] {
+  --nv-posture-scale: 1.25;
+  --nv-target: max(64px, calc(64px * var(--nv-vscale, 1)));
+  --nv-target-glyph: max(72px, calc(72px * var(--nv-vscale, 1)));
+}
+
+/* ---------- Locale-first CJK faces ---------- */
+.nv-root :lang(ja) {
+  --nv-font:
+    "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Hiragino Sans", "Meiryo UI", system-ui,
+    sans-serif;
+  --nv-font-display:
+    "Segoe UI Variable Display", "Segoe UI", "Yu Gothic UI", "Hiragino Sans", system-ui, sans-serif;
+}
+
+.nv-root :lang(zh) {
+  --nv-font:
+    "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --nv-font-display:
+    "Segoe UI Variable Display", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui,
+    sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-root {
+    --nv-dur-press: 0.01ms;
+    --nv-dur-move: 0.01ms;
+    --nv-dur-fold: 0.01ms;
+    --nv-press-scale: 1;
+  }
+}

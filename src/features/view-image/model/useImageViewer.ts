@@ -53,6 +53,16 @@ export function useImageViewer({
     setDragOffset(0);
   }, []);
 
+  /** Jump to a loaded image (the filmstrip). */
+  const goToIndex = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= images.length) return;
+      setCurrentIndex(index);
+      setDragOffset(0);
+    },
+    [images.length],
+  );
+
   const goToNext = useCallback(() => {
     if (currentIndex < images.length && currentIndex < (totalCount ?? images.length) - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -68,18 +78,29 @@ export function useImageViewer({
 
   // Keyboard navigation
   useEffect(() => {
+    // Capture phase: the viewer answers before arrow-key spatial navigation.
+    // On the photo itself, left/right step and Escape closes. Inside the
+    // viewer's own controls the arrows move focus between them (spatial
+    // navigation, scoped to the viewer) and only Escape is taken here.
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         onClose();
-      } else if (e.key === "ArrowLeft") {
+        return;
+      }
+      const active = document.activeElement;
+      if (active instanceof Element && active.closest("[data-viewer-control]")) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
         goToPrev();
       } else if (e.key === "ArrowRight") {
+        e.preventDefault();
         goToNext();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [goToPrev, goToNext, onClose]);
 
   // Pointer / Touch gestures
@@ -145,6 +166,7 @@ export function useImageViewer({
     goToPrev,
     goToNext,
     goToFirst,
+    goToIndex,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

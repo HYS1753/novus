@@ -1,0 +1,1405 @@
+/* ==========================================================================
+   Novus v2 components. Tokens: src/app/styles/v2/tokens.css
+   Only transform and opacity animate; every surface is opaque.
+   ========================================================================== */
+
+/* ---------- Button (rectangle: action of the content it sits on) ---------- */
+.nv-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-5);
+  border: 2px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--nv-dur-press) var(--nv-ease-out),
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    border-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-button--large {
+  min-height: calc(var(--nv-target) + var(--nv-space-2));
+  padding: 0 var(--nv-space-6);
+  font-size: var(--nv-size-heading);
+}
+
+.nv-button:hover {
+  border-color: var(--nv-text-3);
+}
+
+.nv-button:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.nv-button--primary {
+  background: var(--nv-text);
+  border-color: var(--nv-text);
+  color: var(--nv-ground);
+}
+
+.nv-button--primary:hover {
+  border-color: var(--nv-text);
+}
+
+.nv-button--quiet {
+  border-color: transparent;
+  color: var(--nv-text-2);
+}
+
+.nv-button--quiet:hover {
+  border-color: transparent;
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.nv-button:disabled {
+  border-color: var(--nv-rule);
+  background: transparent;
+  color: var(--nv-text-disabled);
+  cursor: default;
+  transform: none;
+}
+
+.nv-button--primary:disabled {
+  background: var(--nv-surface-raised);
+  border-color: var(--nv-surface-raised);
+}
+
+.nv-button.nv-on-media {
+  border-color: var(--nv-on-media-2);
+  color: var(--nv-on-media);
+}
+
+.nv-button--primary.nv-on-media {
+  background: var(--nv-on-media);
+  border-color: var(--nv-on-media);
+  color: #000000;
+}
+
+.nv-button__icon {
+  display: inline-flex;
+}
+
+.nv-button__icon svg {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+/* ---------- Glyph (circle: global action) ---------- */
+.nv-glyph {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  cursor: pointer;
+  border-radius: var(--nv-radius-content);
+}
+
+.nv-glyph__circle {
+  display: grid;
+  place-items: center;
+  width: var(--nv-target-glyph);
+  height: var(--nv-target-glyph);
+  border-radius: var(--nv-radius-glyph);
+  background: var(--nv-surface);
+  border: 1px solid var(--nv-rule);
+  transition:
+    transform var(--nv-dur-press) var(--nv-ease-out),
+    background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-glyph__circle svg {
+  width: calc(22px * var(--nv-scale));
+  height: calc(22px * var(--nv-scale));
+}
+
+.nv-glyph:hover .nv-glyph__circle {
+  background: var(--nv-surface-raised);
+}
+
+.nv-glyph:active .nv-glyph__circle {
+  transform: scale(var(--nv-press-scale));
+}
+
+.nv-glyph:focus-visible {
+  outline: none;
+}
+
+.nv-glyph:focus-visible .nv-glyph__circle {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nv-glyph--media {
+  color: var(--nv-on-media);
+}
+
+.nv-glyph--media .nv-glyph__circle {
+  background: var(--nv-media-glyph-bg);
+  border-color: var(--nv-media-glyph-edge);
+}
+
+.nv-glyph--media:hover .nv-glyph__circle {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.nv-glyph--media:focus-visible .nv-glyph__circle {
+  outline-color: var(--nv-on-media);
+}
+
+.nv-glyph__label {
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.2;
+  max-width: calc(var(--nv-target-glyph) + var(--nv-space-5));
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.nv-rail {
+  display: flex;
+  gap: var(--nv-space-4);
+}
+
+.nv-rail--vertical {
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---------- Service plate (rectangle: content) ---------- */
+.nv-plate {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  overflow: hidden;
+}
+
+.nv-plate__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font-family: var(--nv-font);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+.nv-plate__main:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.nv-plate__main:focus-visible {
+  outline-offset: calc(var(--nv-focus-offset) * -1 - var(--nv-focus-width));
+}
+
+/* Row layout: art left at full height, facts right. */
+.nv-plate--row .nv-plate__main {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.nv-plate--row .nv-plate__field {
+  flex: none;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.nv-plate--row .nv-plate__bar {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--nv-space-1);
+  padding: 0 var(--nv-space-3);
+}
+
+.nv-plate--row .nv-plate__name {
+  font-size: var(--nv-size-body);
+}
+
+.nv-plate__close {
+  position: absolute;
+  top: var(--nv-space-2);
+  right: var(--nv-space-2);
+  display: grid;
+  place-items: center;
+  width: calc(32px * var(--nv-scale));
+  height: calc(32px * var(--nv-scale));
+  padding: 0;
+  border: 1px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-ground);
+  color: var(--nv-text-2);
+  cursor: pointer;
+}
+
+.nv-plate__close:hover {
+  color: var(--nv-text);
+  border-color: var(--nv-text-3);
+}
+
+/* The close target grows to the full touch size without changing the visual. */
+.nv-plate__close::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--nv-target) - 32px * var(--nv-scale)) / -2);
+}
+
+.nv-plate__bar {
+  container-type: inline-size;
+}
+
+/* Narrow plates keep the name whole and reduce the state to its dot. */
+@container (max-width: 170px) {
+  .nv-plate__bar .nv-status__text {
+    display: none;
+  }
+}
+
+.nv-plate__field {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.nv-plate__art {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* The brand ground shows until the art is decoded; no half-drawn logos. */
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-plate__art[data-loaded] {
+  opacity: 1;
+}
+
+.nv-plate__art--cover {
+  object-fit: cover;
+}
+
+/* Insets are positions, not padding: padding percentages resolve against the
+   width, which would make the art taller than its 16:9 field and push it down. */
+.nv-plate__art--contain {
+  position: absolute;
+  top: var(--art-top, 18%);
+  left: var(--art-x, 14%);
+  width: calc(100% - 2 * var(--art-x, 14%));
+  height: calc(100% - var(--art-top, 18%) - var(--art-bottom, 18%));
+  object-fit: contain;
+}
+
+.nv-plate__wordmark {
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-heavy);
+  letter-spacing: -0.02em;
+  color: var(--nv-text);
+}
+
+.nv-plate__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nv-space-2);
+  min-height: calc(36px * var(--nv-scale));
+  padding: 0 var(--nv-space-3);
+}
+
+.nv-plate__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+}
+
+.nv-plate__key {
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.nv-plate--ended .nv-plate__field {
+  opacity: 0.45;
+}
+
+/* ---------- Status ---------- */
+.nv-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  flex: none;
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--nv-text-2);
+}
+
+.nv-status::before {
+  content: "";
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.nv-status--live {
+  color: var(--nv-live);
+}
+
+.nv-status--attention {
+  color: var(--nv-attention);
+}
+
+.nv-status--ended {
+  color: var(--nv-text-3);
+}
+
+.nv-status--ended::before {
+  background: transparent;
+  border: 2px solid currentColor;
+}
+
+.nv-status--neutral::before {
+  display: none;
+}
+
+.nv-status--media {
+  color: var(--nv-on-media);
+}
+
+.nv-status--media.nv-status--live::before {
+  background: var(--nv-live);
+}
+
+/* ---------- Segmented (single choice) ---------- */
+/* Segmented: one ink thumb slides under the labels; it can be dragged. */
+.nv-segmented {
+  position: relative;
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  border-radius: calc(var(--nv-radius-action) + 3px);
+  background: var(--nv-surface);
+  border: 1px solid var(--nv-rule);
+  /* Horizontal drags belong to the control; vertical ones still scroll the page. */
+  touch-action: pan-y;
+}
+
+.nv-segmented__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-text);
+  pointer-events: none;
+  transition:
+    transform 240ms var(--nv-ease-out),
+    width 240ms var(--nv-ease-out),
+    scale var(--nv-dur-press) var(--nv-ease-out);
+}
+
+/* Held: the thumb tightens a touch, as if picked up. */
+.nv-segmented[data-pressed] .nv-segmented__thumb {
+  scale: 0.96;
+}
+
+.nv-segmented__option {
+  position: relative;
+  z-index: 1;
+  min-width: var(--nv-target);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-4);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-segmented__option:hover {
+  color: var(--nv-text);
+}
+
+.nv-segmented__option.is-checked {
+  color: var(--nv-ground);
+}
+
+.nv-segmented__option:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-segmented__thumb {
+    transition: none;
+  }
+}
+
+/* ---------- Month calendar ---------- */
+.nv-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.nv-calendar th {
+  padding: 0 0 var(--nv-space-2) var(--nv-space-3);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+  text-align: left;
+}
+
+.nv-calendar td {
+  height: calc(52px * var(--nv-scale));
+  padding: var(--nv-space-2) var(--nv-space-3);
+  border-top: 1px solid var(--nv-rule);
+  vertical-align: top;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-medium);
+  letter-spacing: 0;
+}
+
+.nv-calendar td span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.9em;
+  height: 1.9em;
+  margin: -0.3em 0 0 -0.45em;
+  border-radius: 50%;
+}
+
+.nv-calendar .nv-calendar--sun {
+  color: var(--nv-sun);
+}
+
+.nv-calendar .nv-calendar--sat {
+  color: var(--nv-sat);
+}
+
+.nv-calendar td.is-outside {
+  color: var(--nv-text-disabled);
+}
+
+.nv-calendar td.is-today span {
+  background: var(--nv-text);
+  color: var(--nv-ground);
+  font-weight: var(--nv-weight-heavy);
+}
+
+/* Icons inherit the chrome colour: Novus chrome never carries its own hue. */
+.nv-glyph svg[stroke]:not([stroke="none"]),
+.nv-glyph svg [stroke]:not([stroke="none"]),
+.nv-button svg[stroke]:not([stroke="none"]),
+.nv-button svg [stroke]:not([stroke="none"]) {
+  stroke: currentColor;
+}
+
+.nv-glyph svg [fill]:not([fill="none"]),
+.nv-button svg [fill]:not([fill="none"]) {
+  fill: currentColor;
+}
+
+/* ---------- Toggle ---------- */
+/* A round switch (pill track, circular thumb). The thumb stretches while
+   pressed and settles on release, as on a phone. */
+.nv-toggle {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: max(var(--nv-target), calc(52px * var(--nv-scale)));
+  height: var(--nv-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-pill);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Keep the visual switch compact inside a full-size touch target. */
+.nv-toggle__track {
+  position: relative;
+  width: calc(52px * var(--nv-scale));
+  height: calc(32px * var(--nv-scale));
+  border-radius: inherit;
+  background: var(--nv-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--nv-rule-strong);
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    box-shadow var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-toggle__thumb {
+  position: absolute;
+  top: calc(3px * var(--nv-scale));
+  left: calc(3px * var(--nv-scale));
+  width: calc(26px * var(--nv-scale));
+  height: calc(26px * var(--nv-scale));
+  border-radius: var(--nv-radius-pill);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  transition:
+    transform var(--nv-dur-move) var(--nv-ease-out),
+    width var(--nv-dur-press) var(--nv-ease-out),
+    background-color var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-toggle:active .nv-toggle__thumb {
+  width: calc(32px * var(--nv-scale));
+}
+
+.nv-toggle.is-on .nv-toggle__track {
+  background: var(--nv-text);
+  box-shadow: none;
+}
+
+.nv-toggle.is-on .nv-toggle__thumb {
+  background: var(--nv-ground);
+  transform: translateX(calc(20px * var(--nv-scale)));
+}
+
+/* Pressed while on, the wider thumb grows toward the left so it stays inside. */
+.nv-toggle.is-on:active .nv-toggle__thumb {
+  transform: translateX(calc(14px * var(--nv-scale)));
+}
+
+.nv-toggle:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nv-toggle:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---------- Slider ---------- */
+.nv-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-width: calc(200px * var(--nv-scale));
+}
+
+.nv-slider input {
+  flex: 1;
+  height: var(--nv-target);
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.nv-slider input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--nv-radius-content);
+  background: linear-gradient(
+    to right,
+    var(--nv-text) var(--nv-slider-fill),
+    var(--nv-rule-strong) var(--nv-slider-fill)
+  );
+}
+
+.nv-slider input::-webkit-slider-thumb {
+  width: calc(24px * var(--nv-scale));
+  height: calc(24px * var(--nv-scale));
+  margin-top: calc(3px - 12px * var(--nv-scale));
+  border: 3px solid var(--nv-ground);
+  border-radius: 50%;
+  background: var(--nv-text);
+  appearance: none;
+}
+
+.nv-slider input::-moz-range-track {
+  height: 6px;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-rule-strong);
+}
+
+.nv-slider input::-moz-range-progress {
+  height: 6px;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-text);
+}
+
+.nv-slider input::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--nv-ground);
+  border-radius: 50%;
+  background: var(--nv-text);
+}
+
+.nv-slider__value {
+  min-width: 3ch;
+  text-align: right;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+}
+
+/* ---------- Text field ---------- */
+.nv-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-2);
+}
+
+.nv-field__label {
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+}
+
+.nv-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-4);
+  border: 2px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface);
+}
+
+.nv-field__control:focus-within {
+  border-color: var(--nv-text);
+}
+
+.nv-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-body);
+  user-select: text;
+}
+
+.nv-field input::placeholder {
+  color: var(--nv-text-3);
+}
+
+.nv-field__leading {
+  display: inline-flex;
+  color: var(--nv-text-3);
+}
+
+.nv-field__hint {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+}
+
+.nv-field__error {
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-attention);
+}
+
+.nv-field.has-error .nv-field__control {
+  border-color: var(--nv-attention);
+}
+
+/* ---------- List rows ---------- */
+.nv-list-section + .nv-list-section {
+  margin-top: var(--nv-space-6);
+}
+
+.nv-list-section__title {
+  margin-bottom: var(--nv-space-2);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+}
+
+.nv-list-section__rows {
+  border-top: 1px solid var(--nv-rule);
+}
+
+.nv-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-4);
+  width: 100%;
+  min-height: calc(var(--nv-target) + var(--nv-space-4));
+  padding: var(--nv-space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--nv-rule);
+  background: none;
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  text-align: left;
+}
+
+.nv-row--stacked {
+  flex-wrap: wrap;
+}
+
+.nv-row--stacked .nv-row__control {
+  flex-basis: 100%;
+}
+
+.nv-row--button {
+  padding-right: var(--nv-space-2);
+  padding-left: var(--nv-space-2);
+  margin: 0 calc(var(--nv-space-2) * -1);
+  width: calc(100% + var(--nv-space-4));
+  border-radius: var(--nv-radius-action);
+  cursor: pointer;
+}
+
+.nv-row--button:hover {
+  background: var(--nv-surface);
+}
+
+.nv-row__icon {
+  display: inline-flex;
+  color: var(--nv-text-2);
+}
+
+.nv-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nv-row__title {
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.nv-row__desc {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+}
+
+.nv-row__value {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-2);
+}
+
+.nv-row__chev {
+  display: inline-flex;
+  color: var(--nv-text-3);
+}
+
+.nv-row__control {
+  display: inline-flex;
+  flex: none;
+}
+
+/* ---------- Overlays ---------- */
+.nv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+}
+
+.nv-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  animation: nv-fade var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-overlay--sheet {
+  justify-content: flex-end;
+}
+
+.nv-overlay--dialog {
+  align-items: center;
+  justify-content: center;
+  padding: var(--nv-gutter);
+}
+
+.nv-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(calc(480px * var(--nv-scale)), 100%);
+  height: 100%;
+  background: var(--nv-ground);
+  border-left: 1px solid var(--nv-rule);
+  color: var(--nv-text);
+  animation: nv-sheet-in var(--nv-dur-fold) var(--nv-ease-out);
+}
+
+.nv-sheet__head {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  padding: var(--nv-space-4) var(--nv-space-5);
+  border-bottom: 1px solid var(--nv-rule);
+}
+
+.nv-sheet__title {
+  flex: 1;
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.nv-sheet__icon {
+  display: grid;
+  place-items: center;
+  width: var(--nv-target);
+  height: var(--nv-target);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: none;
+  color: var(--nv-text);
+  cursor: pointer;
+}
+
+.nv-sheet__icon:hover {
+  background: var(--nv-surface);
+}
+
+.nv-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--nv-space-5);
+}
+
+.nv-sheet__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nv-space-3);
+  padding: var(--nv-space-4) var(--nv-space-5);
+  border-top: 1px solid var(--nv-rule);
+}
+
+.nv-dialog {
+  position: relative;
+  width: min(calc(520px * var(--nv-scale)), 100%);
+  padding: var(--nv-space-6);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-ground);
+  border: 1px solid var(--nv-rule);
+  color: var(--nv-text);
+  animation: nv-dialog-in var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-dialog__title {
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+.nv-dialog__desc {
+  margin-top: var(--nv-space-2);
+  color: var(--nv-text-2);
+}
+
+.nv-dialog__body {
+  margin-top: var(--nv-space-5);
+}
+
+.nv-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nv-space-3);
+  margin-top: var(--nv-space-6);
+}
+
+@keyframes nv-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes nv-sheet-in {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+
+@keyframes nv-dialog-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Toast / empty / caption ---------- */
+.nv-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-4);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-3) 0 var(--nv-space-5);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+}
+
+.nv-toast .nv-status {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text);
+}
+
+.nv-toast .nv-status--attention::before {
+  background: var(--nv-attention);
+}
+
+.nv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-2);
+  padding: var(--nv-space-7) var(--nv-space-5);
+  text-align: center;
+}
+
+.nv-empty__icon {
+  display: inline-flex;
+  margin-bottom: var(--nv-space-2);
+  color: var(--nv-text-3);
+}
+
+.nv-empty__icon svg {
+  width: calc(40px * var(--nv-scale));
+  height: calc(40px * var(--nv-scale));
+}
+
+.nv-empty__title {
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.nv-empty__body {
+  max-width: 44ch;
+  color: var(--nv-text-2);
+}
+
+.nv-empty__action {
+  margin-top: var(--nv-space-4);
+}
+
+.nv-caption {
+  color: var(--nv-on-media);
+}
+
+.nv-caption__title {
+  margin: 0 0 var(--nv-space-3);
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-display);
+  font-weight: var(--nv-weight-heavy);
+  letter-spacing: var(--nv-track-display);
+  line-height: 1.02;
+  overflow-wrap: anywhere;
+}
+
+.nv-caption__status {
+  margin-bottom: var(--nv-space-1);
+}
+
+.nv-caption__status .nv-status {
+  font-size: var(--nv-size-body);
+}
+
+.nv-caption__sub {
+  font-size: var(--nv-size-body);
+  color: var(--nv-on-media-2);
+}
+
+.nv-caption__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nv-space-3);
+  margin-top: var(--nv-space-5);
+}
+
+.nv-glyph__hint {
+  display: block;
+  font-size: 0.85em;
+  font-weight: var(--nv-weight-medium);
+  opacity: 0.75;
+}
+
+.nv-glyph--muted .nv-glyph__circle {
+  opacity: 0.6;
+}
+
+/* ---------- Menu (NvMenu) ---------- */
+.nv-menu {
+  position: relative;
+}
+
+.nv-menu__panel {
+  position: absolute;
+  top: calc(100% + var(--nv-space-2));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: calc(240px * var(--nv-scale));
+  max-width: min(calc(420px * var(--nv-scale)), 80vw);
+  padding: var(--nv-space-2);
+  border: 1px solid var(--nv-rule);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface-raised);
+  animation: nv-menu-in var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-menu__panel--start {
+  left: 0;
+}
+
+.nv-menu__panel--end {
+  right: 0;
+}
+
+@keyframes nv-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.nv-menu__label {
+  padding: var(--nv-space-2) var(--nv-space-3) var(--nv-space-1);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.nv-menu__rule {
+  height: 1px;
+  margin: var(--nv-space-2) var(--nv-space-3);
+  background: var(--nv-rule);
+}
+
+.nv-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-height: var(--nv-target);
+  padding: var(--nv-space-2) var(--nv-space-3);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nv-menu__item:hover,
+.nv-menu__item:focus-visible {
+  background: var(--nv-surface);
+  outline: none;
+}
+
+.nv-menu__item:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
+}
+
+/* The chosen entry carries a check at the end. */
+.nv-menu__item[aria-checked="true"]::after {
+  content: "";
+  flex: none;
+  width: 0.35em;
+  height: 0.7em;
+  margin: -0.2em 0.2em 0 auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.nv-menu__icon {
+  display: grid;
+  place-items: center;
+  color: var(--nv-text-2);
+}
+
+.nv-menu__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nv-menu__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+}
+
+/* ---------- Media thumbnail (NvMediaThumb) ---------- */
+.nv-thumb {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.nv-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.nv-thumb__img[data-loaded] {
+  opacity: 1;
+}
+
+.nv-thumb--video {
+  display: grid;
+  place-items: center;
+  background: var(--nv-surface-raised);
+}
+
+.nv-thumb__play {
+  display: grid;
+  place-items: center;
+  width: calc(44px * var(--nv-scale));
+  height: calc(44px * var(--nv-scale));
+  padding-left: 3px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+}
+
+.nv-thumb__ext {
+  position: absolute;
+  left: var(--nv-space-2);
+  bottom: var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-menu__panel {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Icon motion (iconMotion.ts): each action's icon moves like its function,
+   once, when its button is hovered, focused, or pressed. Transform only.
+   ========================================================================== */
+[data-motion] {
+  display: inline-grid;
+  place-items: center;
+}
+
+[data-motion] > svg,
+[data-motion] svg {
+  transform-origin: 50% 50%;
+}
+
+:is(button, a):is(:hover, :focus-visible, :active) [data-motion] svg {
+  animation: var(--nvm-anim, none) 560ms var(--nv-ease-out) both;
+}
+
+[data-motion="seek"] {
+  --nvm-anim: nvm-seek;
+}
+[data-motion="gear"] {
+  --nvm-anim: nvm-gear;
+}
+[data-motion="sway"] {
+  --nvm-anim: nvm-sway;
+}
+[data-motion="spin"] {
+  --nvm-anim: nvm-spin;
+}
+[data-motion="bounce"] {
+  --nvm-anim: nvm-bounce;
+}
+[data-motion="back"] {
+  --nvm-anim: nvm-back;
+}
+[data-motion="forward"] {
+  --nvm-anim: nvm-forward;
+}
+[data-motion="up"] {
+  --nvm-anim: nvm-up;
+}
+[data-motion="turn"] {
+  --nvm-anim: nvm-turn;
+}
+[data-motion="lift"] {
+  --nvm-anim: nvm-lift;
+}
+[data-motion="pop"] {
+  --nvm-anim: nvm-pop;
+}
+[data-motion="wiggle"] {
+  --nvm-anim: nvm-wiggle;
+}
+[data-motion="expand"] {
+  --nvm-anim: nvm-expand;
+}
+[data-motion="out"] {
+  --nvm-anim: nvm-out;
+}
+
+/* The magnifier looks around. */
+@keyframes nvm-seek {
+  30% {
+    transform: rotate(-16deg) scale(1.1);
+  }
+  65% {
+    transform: rotate(8deg) scale(1.05);
+  }
+}
+
+/* The gear turns one tooth-step (it looks the same after 90°). */
+@keyframes nvm-gear {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+/* Sun/moon sway, like a dial being turned. */
+@keyframes nvm-sway {
+  35% {
+    transform: rotate(-28deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(10deg);
+  }
+}
+
+/* Refresh goes round once. */
+@keyframes nvm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nvm-bounce {
+  35% {
+    transform: translateY(-4px);
+  }
+  65% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes nvm-back {
+  40% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes nvm-forward {
+  40% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes nvm-up {
+  40% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Close turns a quarter (an × looks the same after 90°). */
+@keyframes nvm-turn {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+/* The folder lifts open a little. */
+@keyframes nvm-lift {
+  40% {
+    transform: translateY(-3px) rotate(-6deg);
+  }
+}
+
+@keyframes nvm-pop {
+  35% {
+    transform: scale(1.18);
+  }
+  70% {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes nvm-wiggle {
+  20% {
+    transform: rotate(12deg);
+  }
+  45% {
+    transform: rotate(-10deg);
+  }
+  70% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes nvm-expand {
+  40% {
+    transform: scale(1.2);
+  }
+}
+
+/* Open-elsewhere pokes out toward its arrow. */
+@keyframes nvm-out {
+  40% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(button, a):is(:hover, :focus-visible, :active) [data-motion] svg {
+    animation: none;
+  }
+}

@@ -1,0 +1,164 @@
+/* ==========================================================================
+   Streaming launch screen (v2). Visibility (active/hidden) still comes from
+   the shared `.in-app-loader` rules; everything inside is v2.
+   ========================================================================== */
+
+.nv-root .in-app-loader.nvl {
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  transform: none;
+}
+
+.nvl__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nv-space-5);
+  width: min(calc(420px * var(--nv-scale)), 80%);
+  text-align: center;
+}
+
+/* The same plate as the home tile, at launch size, over a soft bloom of its art. */
+.nvl__media {
+  position: relative;
+  width: calc(240px * var(--nv-scale));
+  margin-bottom: var(--nv-space-3);
+}
+
+.nvl__art.nv-plate__field {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-radius: var(--nv-radius-content);
+  animation: nvl-breathe 2.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+/* The bloom: the service's accent as a radial light behind the plate. No
+   filter (a blur re-renders on the HD 515); only opacity and scale animate. */
+.nvl__glow {
+  position: absolute;
+  inset: -45% -25%;
+  z-index: 0;
+  background: radial-gradient(closest-side, currentColor, transparent);
+  opacity: 0.55;
+  transform: scale(1.12);
+  animation: nvl-bloom 2.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+/* A soft band of light drifting across the plate: the progress itself. */
+.nvl__sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  pointer-events: none;
+}
+
+.nvl__sheen::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  animation: nvl-sheen 2.2s var(--nv-ease-in-out) infinite;
+}
+
+.in-app-loader--hidden .nvl__art,
+.in-app-loader--hidden .nvl__glow,
+.in-app-loader--hidden .nvl__sheen::before {
+  animation: none;
+}
+
+@keyframes nvl-breathe {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes nvl-bloom {
+  from {
+    opacity: var(--nvl-bloom-min, 0.35);
+    transform: scale(1.04);
+  }
+  to {
+    opacity: var(--nvl-bloom-max, 0.75);
+    transform: scale(1.22);
+  }
+}
+
+@keyframes nvl-sheen {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nvl__art,
+  .nvl__glow,
+  .nvl__sheen::before {
+    animation: none;
+  }
+}
+
+.nvl__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-2);
+}
+
+.nvl__title {
+  margin: 0;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.15;
+}
+
+.nvl__status,
+.nvl__hint {
+  margin: 0;
+  font-size: var(--nv-size-body);
+  color: var(--nv-text-2);
+}
+
+.nvl__hint {
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+  max-width: 36em;
+}
+
+.nvl__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nv-space-3);
+}
+
+/* On a light ground a dark plate's bloom reads as a shadow; keep it a whisper. */
+@media (prefers-color-scheme: light) {
+  .nv-root:not([data-theme="dark"]) .nvl__glow {
+    --nvl-bloom-min: 0.15;
+    --nvl-bloom-max: 0.35;
+  }
+}
+
+.nv-root[data-theme="light"] .nvl__glow {
+  --nvl-bloom-min: 0.15;
+  --nvl-bloom-max: 0.35;
+}

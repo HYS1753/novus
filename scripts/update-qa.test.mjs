@@ -5,7 +5,30 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Buffer } from "node:buffer";
 import { once } from "node:events";
-import { createQaServer } from "./update-qa.mjs";
+import { createQaServer, validateNextQaTarget } from "./update-qa.mjs";
+
+test("continued migration QA rejects production identity, missing builds and non-increasing versions", () => {
+  const session = {
+    identifier: "com.novus.hub.qa",
+    origin: "http://127.0.0.1:19077",
+    target: "0.2.9",
+    installers: { target: { name: "novus-qa_0.2.9_x64-setup.exe" } },
+  };
+  assert.doesNotThrow(() => validateNextQaTarget(session, "0.2.10"));
+  for (const version of [
+    "0.2.8",
+    "0.2.9",
+    "0.02.10",
+    "v0.3.0",
+    "0.3.0-beta",
+    "1.0.65536",
+    "../0.3.0",
+  ])
+    assert.throws(() => validateNextQaTarget(session, version));
+  assert.throws(() => validateNextQaTarget({ ...session, identifier: "com.novus.hub" }, "0.3.0"));
+  assert.throws(() => validateNextQaTarget({ ...session, origin: "https://github.com" }, "0.3.0"));
+  assert.throws(() => validateNextQaTarget({ ...session, installers: {} }, "0.3.0"));
+});
 
 async function fixture(t) {
   const directory = mkdtempSync(join(tmpdir(), "novus-qa-http-"));

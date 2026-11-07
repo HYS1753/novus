@@ -3,3 +3,7 @@ export * from "./browse-files";
 export * from "./view-image";
 export * from "./play-video";
 export * from "@/features/update-app";
+export * from "./weather";
+export * from "./ambient";
+export * from "./pick-folder";
+export * from "./browse-media";

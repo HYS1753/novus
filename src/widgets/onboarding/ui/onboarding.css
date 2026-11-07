@@ -1,0 +1,208 @@
+/* ==========================================================================
+   First-run onboarding — one photo frame, one decision per step
+   ========================================================================== */
+
+.nvo {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--nv-frame);
+  color: var(--nv-on-media);
+}
+
+.nvo__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nvo__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, var(--nv-scrim-strength)) 0%,
+    rgba(0, 0, 0, calc(var(--nv-scrim-strength) * 0.6)) 45%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.nvo__bar {
+  position: absolute;
+  top: var(--nv-space-6);
+  left: var(--nv-gutter);
+  right: var(--nv-gutter);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nvo__step {
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-on-media-2);
+}
+
+.nvo__panel {
+  position: absolute;
+  left: var(--nv-gutter);
+  bottom: calc(var(--nv-space-8) + var(--nv-space-3));
+  width: min(calc(720px * var(--nv-scale)), calc(100% - 2 * var(--nv-gutter)));
+  animation: nvo-step var(--nv-dur-fold) var(--nv-ease-out);
+}
+
+.nvo__title {
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-display);
+  font-weight: var(--nv-weight-heavy);
+  letter-spacing: var(--nv-track-display);
+  line-height: 1.05;
+}
+
+.nvo__body {
+  max-width: 52ch;
+  margin-top: var(--nv-space-3);
+  font-size: var(--nv-size-heading);
+  line-height: 1.5;
+  color: var(--nv-on-media-2);
+}
+
+.nvo__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nv-space-3);
+  max-width: calc(520px * var(--nv-scale));
+  margin-top: var(--nv-space-6);
+}
+
+.nvo__postures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--nv-space-4);
+  margin-top: var(--nv-space-6);
+}
+
+.nvo__posture {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--nv-space-2);
+  padding: var(--nv-space-5);
+  border: 2px solid var(--nv-on-media-2);
+  border-radius: var(--nv-radius-content);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--nv-on-media);
+  font-family: var(--nv-font);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-press) var(--nv-ease-out);
+}
+
+.nvo__posture:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+.nvo__posture strong {
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+.nvo__posture span:last-child {
+  font-size: var(--nv-size-label);
+  color: var(--nv-on-media-2);
+}
+
+.nvo__posture.is-checked {
+  border-color: var(--nv-on-media);
+  background: var(--nv-on-media);
+  color: #000000;
+}
+
+.nvo__posture.is-checked span:last-child {
+  color: #3a3a3a;
+}
+
+/* Device silhouettes: a hand-held slab and a stood-up screen. */
+.nvo__glyph {
+  display: block;
+  margin-bottom: var(--nv-space-2);
+  border: 3px solid currentColor;
+  border-radius: var(--nv-radius-content);
+}
+
+.nvo__glyph--tablet {
+  width: 44px;
+  height: 30px;
+}
+
+.nvo__glyph--tv {
+  position: relative;
+  width: 60px;
+  height: 36px;
+}
+
+.nvo__glyph--tv::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -11px;
+  width: 22px;
+  height: 3px;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+
+.nvo__folder {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  margin-top: var(--nv-space-6);
+  padding: var(--nv-space-3) var(--nv-space-3) var(--nv-space-3) var(--nv-space-4);
+  border-radius: var(--nv-radius-content);
+  background: rgba(0, 0, 0, 0.4);
+  font-size: var(--nv-size-body);
+}
+
+.nvo__folder span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nvo__actions {
+  display: flex;
+  gap: var(--nv-space-3);
+  margin-top: var(--nv-space-7);
+}
+
+@keyframes nvo-step {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ==========================================================================
+   Posture preview placement; the preview itself lives in
+   posture-preview.css.
+   ========================================================================== */
+
+.nvo__preview {
+  position: absolute;
+  right: var(--nv-gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(560px, 40vw);
+}
+
+@media (max-width: 1100px) {
+  .nvo__preview {
+    display: none;
+  }
+}

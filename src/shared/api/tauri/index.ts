@@ -4,3 +4,4 @@ export * from "./mediaFs";
 export * from "./embeddedVideo";
 export * from "./deviceProfile";
 export * from "./updater";
+export * from "./autostart";

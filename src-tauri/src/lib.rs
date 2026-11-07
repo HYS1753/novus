@@ -11,7 +11,8 @@ use commands::embedded_player::{
     request_embedded_video_overlay_action, update_embedded_video_bounds, EmbeddedPlayerState,
 };
 use commands::media_fs::{
-    get_media_page, get_system_locations, open_file_in_os, scan_directory, MediaPageState,
+    get_folder_summaries, get_media_page, get_media_timeline, get_system_locations,
+    open_file_in_os, scan_directory, MediaPageState,
 };
 use commands::player::play_video_native;
 use commands::system::{
@@ -39,6 +40,11 @@ pub fn run() {
         .manage(EmbeddedPlayerState::default())
         .manage(DeviceProfile::detect())
         .plugin(tauri_plugin_opener::init())
+        // Launch at login (Settings › 부팅 시 자동 시작). macOS uses a LaunchAgent.
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(updater::UpdaterState::default());
     #[cfg(windows)]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
@@ -77,6 +83,8 @@ pub fn run() {
             get_system_locations,
             scan_directory,
             get_media_page,
+            get_media_timeline,
+            get_folder_summaries,
             open_file_in_os,
             get_image_thumbnail,
             cleanup_thumbnail_cache,

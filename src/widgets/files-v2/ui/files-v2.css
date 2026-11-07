@@ -1,0 +1,552 @@
+/* ==========================================================================
+   Files v2. Benchmarked on iPadOS Files and the Windows 11 tablet Explorer;
+   the same grammar as the gallery: one calm bar, the folder as the title,
+   quiet text actions, 4px rectangles for content, the ink ring for focus.
+   ========================================================================== */
+
+.fs {
+  --fs-row: calc(56px * var(--nv-scale));
+  --fs-tile-min: calc(168px * var(--nv-scale));
+  --fs-label: calc(56px * var(--nv-scale));
+  --fs-gap: calc(12px * var(--nv-scale));
+  --fs-columns: calc(44px * var(--nv-scale)) minmax(0, 1fr) calc(120px * var(--nv-scale))
+    calc(104px * var(--nv-scale)) calc(150px * var(--nv-scale)) calc(24px * var(--nv-scale));
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(228px * var(--nv-scale)) minmax(0, 1fr);
+  height: 100%;
+  min-width: 0;
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+}
+
+/* Read by the component for row, tile, and label sizes (CSS owns the numbers). */
+.fs__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--fs-gap);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.fs__probe > span {
+  position: absolute;
+}
+
+.fs__probe-row {
+  height: var(--fs-row);
+}
+
+.fs__probe-tile {
+  width: var(--fs-tile-min);
+}
+
+.fs__probe-label {
+  height: var(--fs-label);
+}
+
+/* ---------- Sidebar ---------- */
+.fs-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--nv-space-5) var(--nv-space-3) var(--nv-space-5) var(--nv-gutter);
+  border-right: 1px solid var(--nv-rule);
+}
+
+.fs-side__label {
+  padding: var(--nv-space-4) var(--nv-space-3) var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.fs-side__label:first-child {
+  padding-top: 0;
+}
+
+.fs-side__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-3);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fs-side__item:hover {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.fs-side__item[aria-current] {
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.fs-side__item:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
+}
+
+.fs-side__icon {
+  display: grid;
+  flex: none;
+  color: var(--nv-text-3);
+}
+
+.fs-side__item[aria-current] .fs-side__icon {
+  color: var(--nv-text);
+}
+
+.fs-side__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Main ---------- */
+.fs-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.fs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nv-space-4);
+  padding: var(--nv-space-5) var(--nv-gutter) var(--nv-space-3);
+}
+
+.fs-head__title {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-3);
+  min-width: 0;
+}
+
+.fs-head__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fs-head__name {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+  line-height: 1.2;
+}
+
+.fs-head__counts {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+  white-space: nowrap;
+}
+
+.fs-head__tools {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--nv-space-2);
+}
+
+.fs-tool {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  min-width: var(--nv-target);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fs-tool--labelled {
+  padding: 0 var(--nv-space-3);
+}
+
+.fs-tool:hover:not(:disabled),
+.fs-tool[aria-expanded="true"] {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.fs-tool:disabled {
+  color: var(--nv-text-disabled);
+  cursor: default;
+}
+
+.fs-tool:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.fs-search {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  width: min(calc(300px * var(--nv-scale)), 26vw);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-1) 0 var(--nv-space-3);
+  border: 2px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface);
+  color: var(--nv-text-3);
+}
+
+.fs-search:focus-within {
+  border-color: var(--nv-text);
+}
+
+.fs-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+}
+
+.fs-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.fs-search__clear {
+  display: grid;
+  place-items: center;
+  width: calc(var(--nv-target) - 12px);
+  height: calc(var(--nv-target) - 12px);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  cursor: pointer;
+}
+
+.fs-search__clear:hover {
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+}
+
+.fs-search__clear:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+/* ---------- Crumbs ---------- */
+.fs-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nv-space-1);
+  padding: 0 var(--nv-gutter) var(--nv-space-3);
+}
+
+.fs-crumbs__item {
+  min-height: calc(var(--nv-target) - 8px);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+.fs-crumbs__item:hover {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.fs-crumbs__item:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.fs-crumbs__item[aria-current="page"] {
+  color: var(--nv-text);
+}
+
+.fs-crumbs__sep {
+  display: grid;
+  color: var(--nv-text-disabled);
+}
+
+/* ---------- Body ---------- */
+.fs-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--nv-gutter) var(--nv-space-7);
+}
+
+.fs-body[data-layout="grid"] {
+  padding-top: var(--nv-space-3);
+}
+
+/* List: a details view whose columns collapse on a narrow window. */
+.fs-columns,
+.fs-row {
+  display: grid;
+  grid-template-columns: var(--fs-columns);
+  align-items: center;
+  gap: var(--nv-space-3);
+}
+
+.fs-columns {
+  margin: 0 var(--nv-gutter);
+  padding: 0 var(--nv-space-3) var(--nv-space-2);
+  border-bottom: 1px solid var(--nv-rule);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+}
+
+.fs-list,
+.fs-grid {
+  position: relative;
+}
+
+.fs-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--fs-row);
+  padding: 0 var(--nv-space-3);
+  border: 0;
+  border-bottom: 1px solid var(--nv-rule);
+  border-radius: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fs-row:hover {
+  background: var(--nv-surface);
+}
+
+.fs-row:active {
+  background: var(--nv-surface-raised);
+}
+
+.fs-row:focus-visible {
+  z-index: 1;
+  border-radius: var(--nv-radius-content);
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
+}
+
+.fs-row__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(40px * var(--nv-scale));
+  height: calc(40px * var(--nv-scale));
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  color: var(--nv-text-2);
+}
+
+.fs-row__icon[data-kind="folder"] {
+  color: var(--nv-text);
+}
+
+.fs-row__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--nv-weight-semibold);
+}
+
+.fs-row__type,
+.fs-row__size,
+.fs-row__date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-label);
+  color: var(--nv-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-row__chev {
+  display: grid;
+  color: var(--nv-text-disabled);
+}
+
+@media (max-width: 1100px) {
+  .fs {
+    --fs-columns: calc(44px * var(--nv-scale)) minmax(0, 1fr) calc(96px * var(--nv-scale))
+      calc(24px * var(--nv-scale));
+  }
+
+  .fs-columns > :nth-child(3),
+  .fs-columns > :nth-child(5),
+  .fs-row__type,
+  .fs-row__date {
+    display: none;
+  }
+}
+
+/* Icon view */
+.fs-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fs-tile__face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  margin-bottom: var(--nv-space-2);
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  color: var(--nv-text-3);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.fs-tile__face[data-kind="folder"] {
+  color: var(--nv-text-2);
+}
+
+.fs-tile:hover .fs-tile__face {
+  transform: scale(1.02);
+}
+
+.fs-tile:active .fs-tile__face {
+  transform: scale(var(--nv-press-scale));
+}
+
+.fs-tile:focus-visible {
+  outline: none;
+}
+
+.fs-tile:focus-visible .fs-tile__face {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.fs-tile__ext {
+  position: absolute;
+  left: var(--nv-space-2);
+  bottom: var(--nv-space-2);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text-3);
+}
+
+.fs-tile__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.fs-tile__meta {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Loading ---------- */
+.fs-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fs-skeleton span {
+  height: var(--fs-row);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  animation: fs-pulse 1.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+@keyframes fs-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-skeleton span {
+    animation: none;
+  }
+
+  .fs-tile__face {
+    transition: none;
+  }
+}
+
+/* Notice after opening a file in another app: bottom centre, over the list. */
+.fs-toast {
+  position: absolute;
+  bottom: var(--nv-space-5);
+  left: 50%;
+  z-index: 10;
+  transform: translateX(-50%);
+  animation: fs-toast-in var(--nv-dur-move) var(--nv-ease-out);
+}
+
+@keyframes fs-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}

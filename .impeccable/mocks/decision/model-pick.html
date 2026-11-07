@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Novus v2 — 벽걸이 달력</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#FBF8F1;--paper-2:#F1ECE1;--rule:#D9D2C3;--ink:#1C1A17;--ink-2:#5E5950;--sun:#D7262E;--sat:#2B5BA8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1368px;height:912px;overflow:hidden;background:var(--paper);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif}
+  .top{position:absolute;left:40px;right:40px;top:32px;height:470px;display:grid;grid-template-columns:1fr 380px;gap:32px}
+  .plate{position:relative;background:linear-gradient(170deg,#9BC1D6 0%,#E9D8B4 46%,#C98B5E 72%,#5D4A3B 100%)}
+  .plate em{position:absolute;left:14px;bottom:14px;font-style:normal;font-size:13px;background:var(--paper);padding:3px 10px;color:var(--ink-2)}
+  .plate .brand{position:absolute;left:16px;top:14px;font-weight:900;font-size:22px;color:var(--paper);letter-spacing:-.02em}
+  .date{display:flex;flex-direction:column}
+  .date .m{font-size:20px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:8px}
+  .date .m span{font-size:16px;color:var(--ink-2);font-weight:500}
+  .date .big{font-family:"Noto Serif KR",serif;font-weight:900;font-size:220px;line-height:.9;letter-spacing:-.04em;margin-top:8px}
+  .date .dow{font-size:28px;font-weight:700;margin-top:6px}
+  .date .time{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+  .date .time b{font-size:52px;font-weight:700;letter-spacing:-.02em}
+  .date .time span{font-size:16px;color:var(--ink-2);text-align:right;line-height:1.4}
+  .week{position:absolute;left:40px;right:40px;top:526px;display:grid;grid-template-columns:repeat(7,1fr);border-top:2px solid var(--ink)}
+  .week div{height:34px;display:flex;align-items:center;font-size:14px;font-weight:700;padding-left:10px;border-right:1px solid var(--rule)}
+  .week div:last-child{border-right:0}
+  .week .s{color:var(--sun)}.week .t{color:var(--sat)}
+  .week .today{background:var(--ink);color:var(--paper)}
+  .grid{position:absolute;left:40px;right:40px;top:560px;display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--rule)}
+  .cell{height:150px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px;display:flex;flex-direction:column;gap:8px}
+  .cell:nth-child(7n){border-right:0}
+  .cell .k{font-size:13px;font-weight:700;color:var(--ink-2);display:flex;justify-content:space-between}
+  .cell .logo{flex:1;display:grid;place-items:center;font-weight:900;font-size:22px;letter-spacing:-.02em}
+  .cell .note{font-size:13px;font-weight:700;color:var(--sun);display:flex;align-items:center;gap:6px}
+  .cell .note::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sun)}
+  .cell.focus{outline:4px solid var(--ink);outline-offset:-4px;background:var(--paper-2)}
+  .tools{position:absolute;left:40px;right:40px;bottom:28px;display:flex;gap:12px;align-items:center}
+  .tools a{height:56px;padding:0 20px;border:2px solid var(--ink);display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:var(--ink);text-decoration:none}
+  .tools .sp{flex:1}
+  .tools a.q{border-color:var(--rule);color:var(--ink-2)}
+</style>
+</head>
+<body>
+<section class="top">
+  <div class="plate"><span class="brand">novus</span><em>오늘의 사진 · 사진 폴더에서(합성)</em></div>
+  <div class="date">
+    <div class="m">2026년 11월<span>입동 하루 전</span></div>
+    <div class="big">6</div>
+    <div class="dow">금요일</div>
+    <div class="time"><b>20:41</b><span>서울 · 맑음 12°<br>다음 알림 없음</span></div>
+  </div>
+</section>
+<div class="week">
+  <div class="s">일 1</div><div>월 2</div><div>화 3</div><div>수 4</div><div>목 5</div><div class="today">금 6 · 오늘</div><div class="t">토 7</div>
+</div>
+<section class="grid">
+  <div class="cell focus"><div class="k">Netflix<span>01</span></div><div class="logo" style="color:#E50914">NETFLIX</div><div class="note">이어보기 · 12분 전</div></div>
+  <div class="cell"><div class="k">YouTube<span>02</span></div><div class="logo" style="color:#FF0000">▶ YouTube</div><div class="note">이어보기 · 1시간 전</div></div>
+  <div class="cell"><div class="k">Disney+<span>03</span></div><div class="logo" style="color:#113CCF">Disney+</div></div>
+  <div class="cell"><div class="k">티빙<span>04</span></div><div class="logo" style="color:#FF153C">TVING</div></div>
+  <div class="cell"><div class="k">웨이브<span>05</span></div><div class="logo" style="color:#004FFF">wavve</div></div>
+  <div class="cell"><div class="k">왓챠<span>06</span></div><div class="logo" style="color:#FF0558">WATCHA</div></div>
+  <div class="cell"><div class="k">쿠팡플레이<span>07</span></div><div class="logo" style="color:#00AFFF">coupang play</div></div>
+</section>
+<nav class="tools">
+  <a>▦ 갤러리</a><a>▤ 파일 파인더</a><a>31 캘린더</a><a>◉ 라디오</a><a>⌕ 검색</a>
+  <span class="sp"></span>
+  <a class="q">☾ 앰비언트</a><a class="q">▯ 리모컨</a><a class="q">⚙ 설정</a>
+</nav>
+</body>
+</html>

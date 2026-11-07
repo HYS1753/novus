@@ -1,0 +1,600 @@
+/* ==========================================================================
+   Posture preview — a miniature of the real Novus screens playing a short
+   storyboard. Device screens are size containers, so the miniature UI is
+   authored in cqw and scales exactly with its frame. Motion is transform
+   and opacity (plus the room light's colour on the TV, which is one layer).
+   ========================================================================== */
+
+.ppv {
+  margin: 0;
+  font-family: var(--nv-font-display);
+}
+
+.ppv__stage {
+  position: relative;
+  aspect-ratio: 560 / 380;
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: #121117;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.ppv__caption {
+  margin-top: var(--nv-space-3);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-on-media-2);
+}
+
+/* ---------- Scenes crossfade when the mode changes ---------- */
+.ppv-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.03);
+  transition:
+    opacity 520ms var(--nv-ease-out),
+    transform 900ms var(--nv-ease-out);
+  pointer-events: none;
+}
+
+.ppv-scene[data-active] {
+  opacity: 1;
+  transform: none;
+}
+
+.ppv-chip {
+  position: absolute;
+  top: 5%;
+  left: 4%;
+  z-index: 3;
+  padding: 0.35em 0.8em;
+  border-radius: var(--nv-radius-content);
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  font-size: var(--nv-size-caption);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================= TV ================= */
+.ppv-scene--tv {
+  background: linear-gradient(180deg, #24212c 0%, #19171f 70%);
+}
+
+/* The room takes the focused service's light (colour = currentColor). */
+.ppv-room__glow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: -6%;
+  height: 92%;
+  background: radial-gradient(closest-side, currentColor, transparent 78%);
+  opacity: 0.42;
+  transition: color 900ms var(--nv-ease-out);
+}
+
+.ppv-room__floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24%;
+  background: linear-gradient(180deg, #121016, #0b0a0e);
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ppv-room__floor::before {
+  /* The screen's light pooled on the floor. */
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 0;
+  height: 60%;
+  background: radial-gradient(closest-side, currentColor, transparent);
+  opacity: 0.16;
+}
+
+.ppv-tv {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  width: 64%;
+  transform: translateX(-50%);
+}
+
+.ppv-tv__screen {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+  border: 0.55cqw solid #050506;
+  border-radius: 6px;
+  background: #000000;
+  box-shadow:
+    0 0 0 1px #2c2a33,
+    0 26px 50px rgba(0, 0, 0, 0.55);
+}
+
+.ppv-tv__stand {
+  display: block;
+  width: 84%;
+  height: 0.9em;
+  margin: 7% auto 0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3a3542, #25212b);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* The remote: a slim object near the viewer, its keys light as they are used. */
+.ppv-remote {
+  position: absolute;
+  left: 7%;
+  bottom: -14%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9%;
+  width: 9.5%;
+  aspect-ratio: 1 / 3.4;
+  padding: 1.6% 0;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #4a4a52, #1f1f24 70%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 18px 30px rgba(0, 0, 0, 0.6);
+  transform: rotate(-14deg);
+}
+
+.ppv-remote__pad {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #121215;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ppv-remote__key--right {
+  position: absolute;
+  right: 9%;
+  top: 50%;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-50%);
+  transition:
+    background-color 160ms var(--nv-ease-out),
+    box-shadow 160ms var(--nv-ease-out);
+}
+
+.ppv-remote__ok {
+  width: 42%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #2a2a30;
+  transition:
+    background-color 160ms var(--nv-ease-out),
+    transform 160ms var(--nv-ease-out);
+}
+
+.ppv-remote__btn {
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #121215;
+  transition: background-color 160ms var(--nv-ease-out);
+}
+
+.ppv-remote__key--right[data-on] {
+  background: #ffffff;
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.6);
+}
+
+.ppv-remote__ok[data-on] {
+  background: #ffffff;
+  transform: scale(0.9);
+}
+
+.ppv-remote__btn[data-on] {
+  background: #5c5c66;
+}
+
+/* ================= Tablet ================= */
+.ppv-scene--tablet {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 196, 150, 0.16), transparent 34%),
+    radial-gradient(circle at 86% 82%, rgba(150, 120, 200, 0.14), transparent 40%),
+    linear-gradient(160deg, #2a2431, #121016);
+}
+
+.ppv-tablet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72%;
+  padding: 1.6%;
+  border-radius: 16px;
+  background: #0b0b0c;
+  box-shadow:
+    0 0 0 1px #2c2c31,
+    0 34px 60px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -46%) perspective(900px) rotateX(9deg) rotateZ(-2.5deg);
+  animation: ppv-hold 6s var(--nv-ease-in-out) infinite;
+}
+
+.ppv-tablet__screen {
+  position: relative;
+  aspect-ratio: 3 / 2; /* Surface Pro 4 */
+  overflow: hidden;
+  container-type: inline-size;
+  border-radius: 6px;
+  background: #0a0a0c;
+}
+
+@keyframes ppv-hold {
+  0%,
+  100% {
+    transform: translate(-50%, -46%) perspective(900px) rotateX(9deg) rotateZ(-2.5deg);
+  }
+  50% {
+    transform: translate(-50%, -48%) perspective(900px) rotateX(7deg) rotateZ(-1.5deg);
+  }
+}
+
+/* ================= Miniature UI (cqw = 1% of the device screen) ================= */
+.ppv-ui {
+  position: absolute;
+  inset: 0;
+  color: #ffffff;
+  --nv-logo-color: #ffffff;
+}
+
+.ppv-ui__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ppv-ui__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 38%, rgba(0, 0, 0, 0.78));
+}
+
+.ppv-ui--frame .ppv-ui__logo {
+  position: absolute;
+  top: 4cqw;
+  left: 4.5cqw;
+}
+
+.ppv-ui__clock {
+  position: absolute;
+  top: 3.6cqw;
+  right: 4.5cqw;
+  font-size: 3.6cqw;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ppv-ui__caption {
+  position: absolute;
+  left: 4.5cqw;
+  bottom: 21cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.4cqw;
+}
+
+.ppv-ui__title {
+  font-size: 7cqw;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  animation: ppv-rise 420ms var(--nv-ease-out);
+}
+
+.ppv-ui__resume {
+  padding: 0.8cqw 1.8cqw;
+  border-radius: 0.5cqw;
+  background: #ffffff;
+  color: #111110;
+  font-size: 2.2cqw;
+  font-weight: 700;
+}
+
+@keyframes ppv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.2cqw);
+  }
+}
+
+.ppv-ui__row {
+  position: absolute;
+  left: 4.5cqw;
+  right: 4.5cqw;
+  bottom: 4.5cqw;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1.8cqw;
+}
+
+.ppv-ui__plate,
+.ppv-ui__tile {
+  position: relative;
+  display: block;
+  border-radius: 0.6cqw;
+  transition:
+    transform 260ms var(--nv-ease-out),
+    outline-color 160ms var(--nv-ease-out);
+  outline: 0.45cqw solid transparent;
+  outline-offset: 0.4cqw;
+}
+
+.ppv-ui__plate .nv-plate__field,
+.ppv-ui__tile .nv-plate__field {
+  display: grid;
+  width: 100%;
+  border-radius: 0.6cqw;
+}
+
+/* Focus: the real home's lift and ink ring, on the plate itself. */
+.ppv-ui__plate[data-focus] {
+  transform: scale(1.1);
+  outline-color: #ffffff;
+  z-index: 1;
+}
+
+.ppv-ui__plate[data-press],
+.ppv-ui__tile[data-press] {
+  transform: scale(0.94);
+  transition-duration: 120ms;
+}
+
+/* Today's page, tablet density */
+.ppv-ui--today {
+  display: flex;
+  flex-direction: column;
+}
+
+.ppv-ui__band {
+  position: relative;
+  flex: none;
+  height: 11cqw;
+  overflow: hidden;
+}
+
+.ppv-ui__band .ppv-ui__photo {
+  object-position: center 58%;
+}
+
+.ppv-ui__band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, #0a0a0c);
+}
+
+.ppv-ui--today .ppv-ui__logo {
+  position: absolute;
+  top: 3.2cqw;
+  left: 4cqw;
+  z-index: 1;
+}
+
+.ppv-ui__glyphs {
+  position: absolute;
+  top: 2.4cqw;
+  right: 4cqw;
+  z-index: 1;
+  display: flex;
+  gap: 1.2cqw;
+}
+
+.ppv-ui__glyphs i {
+  width: 4.6cqw;
+  height: 4.6cqw;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 0 0 0.2cqw rgba(255, 255, 255, 0.35);
+}
+
+.ppv-ui__glance {
+  display: flex;
+  align-items: flex-end;
+  gap: 2cqw;
+  padding: 3.4cqw 4cqw 0;
+}
+
+.ppv-ui__day {
+  font-size: 12cqw;
+  font-weight: 700;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+}
+
+.ppv-ui__weekday {
+  padding-bottom: 0.4cqw;
+  font-size: 3cqw;
+  font-weight: 700;
+  color: #bcbcc5;
+}
+
+.ppv-ui__rule {
+  align-self: stretch;
+  width: 1px;
+  margin: 1cqw 1cqw 0.4cqw;
+  background: #34343b;
+}
+
+.ppv-ui__time {
+  font-size: 7.6cqw;
+  font-weight: 700;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ppv-ui__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2.2cqw 1.8cqw;
+  padding: 4cqw 4cqw 0;
+}
+
+.ppv-ui__tile--slot {
+  aspect-ratio: 16 / 9;
+  box-shadow: inset 0 0 0 0.2cqw #34343b;
+}
+
+/* Touch: a soft fingertip that arrives, presses, and lifts away. */
+.ppv-touch {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 7cqw;
+  height: 7cqw;
+  margin: -3.5cqw 0 0 -3.5cqw;
+  border-radius: 50%;
+  /* Reads on light and dark plates alike: a white core inside a dark halo. */
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    inset 0 0 0 0.3cqw #ffffff,
+    0 0 0 0.35cqw rgba(0, 0, 0, 0.35),
+    0 1cqw 3cqw rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translate(26cqw, 16cqw);
+  transition:
+    opacity 280ms var(--nv-ease-out),
+    transform 0s linear 280ms;
+}
+
+.ppv-touch[data-state="arrive"] {
+  opacity: 1;
+  transform: translate(0, 0);
+  transition:
+    opacity 240ms var(--nv-ease-out),
+    transform 900ms var(--nv-ease-out);
+}
+
+.ppv-touch[data-state="press"] {
+  opacity: 1;
+  transform: translate(0, 0) scale(0.78);
+  transition: transform 140ms var(--nv-ease-out);
+}
+
+.ppv-touch[data-state="press"]::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.3cqw rgba(255, 255, 255, 0.8);
+  animation: ppv-ripple 700ms var(--nv-ease-out) forwards;
+}
+
+@keyframes ppv-ripple {
+  from {
+    opacity: 1;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+/* ================= Miniature launch screen ================= */
+.ppv-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3.4cqw;
+  background: #0a0a0c;
+  opacity: 0;
+  transform: scale(1.04);
+  transition:
+    opacity 380ms var(--nv-ease-out),
+    transform 520ms var(--nv-ease-out);
+}
+
+.ppv-loader[data-open] {
+  opacity: 1;
+  transform: none;
+}
+
+.ppv-loader__media {
+  position: relative;
+  width: 34cqw;
+}
+
+.ppv-loader__media .nv-plate__field {
+  display: grid;
+  width: 100%;
+  border-radius: 0.6cqw;
+}
+
+.ppv-loader__art.nv-plate__field {
+  position: relative;
+  z-index: 1;
+}
+
+.ppv-loader__glow {
+  position: absolute;
+  inset: -45% -25%;
+  background: radial-gradient(closest-side, currentColor, transparent);
+  opacity: 0.5;
+  transform: scale(1.15);
+}
+
+.ppv-loader[data-open] .ppv-loader__glow {
+  animation: ppv-bloom 1.1s var(--nv-ease-in-out) infinite alternate;
+}
+
+@keyframes ppv-bloom {
+  from {
+    opacity: 0.4;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 0.62;
+    transform: scale(1.26);
+  }
+}
+
+.ppv-loader__title {
+  font-size: 3.6cqw;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ================= Reduced motion: a still frame ================= */
+@media (prefers-reduced-motion: reduce) {
+  .ppv-scene,
+  .ppv-ui__plate,
+  .ppv-ui__tile,
+  .ppv-room__glow,
+  .ppv-loader,
+  .ppv-touch {
+    transition: none;
+  }
+
+  .ppv-tablet,
+  .ppv-ui__title,
+  .ppv-loader__glow {
+    animation: none;
+  }
+}

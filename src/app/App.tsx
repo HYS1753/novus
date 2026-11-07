@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { DashboardPage, StyleGuidePage } from "@/pages";
+import { DashboardPage, StyleGuideV2Page } from "@/pages";
 import {
   getDeviceProfile,
   isStyleGuidePath,
@@ -8,9 +8,14 @@ import {
   toggleFullscreen,
   WINDOW_MODE_ERROR,
   listenDisplayError,
+  useI18n,
+  usePreference,
+  NvRoot,
 } from "@/shared";
-import "./styles/global.css";
-import { InAppVideoModal } from "@/widgets";
+import "./styles/v2/app.css";
+import "./styles/v2/tokens.css";
+import "./styles/v2/base.css";
+import { InAppVideoModal, Onboarding } from "@/widgets";
 import type { FileItem } from "@/entities";
 import { requestEmbeddedVideoOverlayAction } from "@/shared";
 import { useUpdateLifecycle } from "@/features";
@@ -21,6 +26,7 @@ const overlay = (
 if (overlay) document.documentElement.classList.add("video-overlay-window");
 
 export const App: React.FC = () => {
+  const { t } = useI18n();
   const [modeError, setModeError] = useState<string | null>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -50,16 +56,20 @@ export const App: React.FC = () => {
       {modeError && (
         <div className="window-mode-error" role="alert">
           {modeError}
-          <button onClick={() => setModeError(null)}>닫기</button>
+          <button onClick={() => setModeError(null)}>{t("common.close")}</button>
         </div>
       )}
       {overlay ? (
-        <InAppVideoModal
-          video={overlay.video}
-          overlaySessionId={overlay.sessionId}
-          onClose={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "close")}
-          onExit={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "exit")}
-        />
+        // The overlay window draws only the controls over mpv; NvRoot gives them
+        // the v2 tokens and stays transparent (video-player.css).
+        <NvRoot spatialNavigation={false}>
+          <InAppVideoModal
+            video={overlay.video}
+            overlaySessionId={overlay.sessionId}
+            onClose={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "close")}
+            onExit={() => void requestEmbeddedVideoOverlayAction(overlay.sessionId, "exit")}
+          />
+        </NvRoot>
       ) : (
         <DashboardApp />
       )}
@@ -67,11 +77,16 @@ export const App: React.FC = () => {
   );
 };
 
+/** The design guide is a dev-browser-only route (`/styleguide`). */
+function readStyleGuideRoute(): boolean {
+  return isStyleGuideRouteEnabled() && isStyleGuidePath();
+}
+
 const DashboardApp: React.FC = () => {
   useUpdateLifecycle();
-  const [showStyleGuide, setShowStyleGuide] = useState(
-    () => isStyleGuideRouteEnabled() && isStyleGuidePath(),
-  );
+  const [styleGuide, setStyleGuide] = useState(() => readStyleGuideRoute());
+  const [onboardingDone] = usePreference("onboardingDone");
+  const showOnboarding = !styleGuide && !onboardingDone;
 
   // Resolves the persisted material intensity and applies it to <html>.
   useMaterialIntensity();
@@ -84,15 +99,24 @@ const DashboardApp: React.FC = () => {
   useEffect(() => {
     if (!isStyleGuideRouteEnabled()) return;
 
-    const sync = () => setShowStyleGuide(isStyleGuidePath());
+    const sync = () => setStyleGuide(readStyleGuideRoute());
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
 
   return (
     <>
-      <div className="app-ambient" aria-hidden="true" />
-      <div className="app-shell">{showStyleGuide ? <StyleGuidePage /> : <DashboardPage />}</div>
+      <div className="app-shell">
+        {showOnboarding ? (
+          <NvRoot postureOverride="tablet">
+            <Onboarding />
+          </NvRoot>
+        ) : styleGuide ? (
+          <StyleGuideV2Page />
+        ) : (
+          <DashboardPage />
+        )}
+      </div>
     </>
   );
 };

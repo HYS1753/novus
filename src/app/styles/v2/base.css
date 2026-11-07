@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Novus v2 base — browser surfaces themed from the ramp
+   ========================================================================== */
+
+.nv-root {
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-body);
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--nv-text);
+  accent-color: var(--nv-text);
+}
+
+.nv-root ::selection {
+  background: var(--nv-text);
+  color: var(--nv-ground);
+}
+
+.nv-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nv-rule-strong) transparent;
+}
+
+.nv-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.nv-root ::-webkit-scrollbar-thumb {
+  background: var(--nv-rule-strong);
+  border-radius: 4px;
+}
+
+.nv-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* One focus language everywhere: a solid ring that never resizes neighbours. */
+.nv-root :focus {
+  outline: none;
+}
+
+.nv-root :focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.nv-root .nv-on-media :focus-visible,
+.nv-root .nv-on-media:focus-visible {
+  outline-color: var(--nv-on-media);
+}
+
+.nv-root :where(h1, h2, h3, h4) {
+  text-wrap: balance;
+}
+
+.nv-root .nv-numeral {
+  font-family: var(--nv-font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--nv-track-numeral);
+}
+
+.nv-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.nv-root .nv-on-media {
+  --nv-logo-color: var(--nv-on-media);
+}
+
+/* A v2 root that only provides tokens and the overlay portal, without a box. */
+.nv-root.nv-contents {
+  display: contents;
+}
+
+/* ==========================================================================
+   Touch-first: nothing on screen is selectable text, nothing shows a
+   long-press callout, and images do not drag. Fields stay editable.
+   (WebKit — the macOS webview — needs the prefixed property.)
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img {
+  -webkit-user-drag: none;
+}

@@ -1,0 +1,991 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T00:00:00",
+  "title": "Design System: Novus",
+  "source": {
+    "tokens": "src/app/styles/v2/tokens.css",
+    "base": "src/app/styles/v2/base.css",
+    "bridge": "src/app/styles/v2/bridge.css",
+    "components": "src/shared/ui/v2/",
+    "styleguide": "/styleguide (src/pages/styleguide-v2/)",
+    "scope": ".nv-root"
+  },
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink (light)",
+        "cssVar": "--nv-text",
+        "rampStep": "n8",
+        "theme": "light",
+        "purpose": "Text, primary fill, checked state, today's circle, focus ring.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "ink-dark": {
+        "role": "primary",
+        "displayName": "Ink (dark)",
+        "cssVar": "--nv-text",
+        "rampStep": "n8",
+        "theme": "dark",
+        "purpose": "Text, primary fill, checked state, today's circle, focus ring.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground (light)",
+        "cssVar": "--nv-ground",
+        "rampStep": "n1",
+        "theme": "light",
+        "purpose": "Page, sheet, dialog, today's page background.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "ground-dark": {
+        "role": "neutral",
+        "displayName": "Ground (dark)",
+        "cssVar": "--nv-ground",
+        "rampStep": "n1",
+        "theme": "dark",
+        "purpose": "Page, sheet, dialog, today's page background.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface (light)",
+        "cssVar": "--nv-surface",
+        "rampStep": "n2",
+        "theme": "light",
+        "purpose": "Plates, glyph circles, fields, quiet hover.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Surface (dark)",
+        "cssVar": "--nv-surface",
+        "rampStep": "n2",
+        "theme": "dark",
+        "purpose": "Plates, glyph circles, fields, quiet hover.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Surface Raised (light)",
+        "cssVar": "--nv-surface-raised",
+        "rampStep": "n3",
+        "theme": "light",
+        "purpose": "Toasts, glyph hover, disabled primary.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "surface-raised-dark": {
+        "role": "neutral",
+        "displayName": "Surface Raised (dark)",
+        "cssVar": "--nv-surface-raised",
+        "rampStep": "n3",
+        "theme": "dark",
+        "purpose": "Toasts, glyph hover, disabled primary.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule (light)",
+        "cssVar": "--nv-rule",
+        "rampStep": "n3",
+        "theme": "light",
+        "purpose": "1px hairlines: rows, calendar weeks, sheet sections.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "rule-dark": {
+        "role": "neutral",
+        "displayName": "Rule (dark)",
+        "cssVar": "--nv-rule",
+        "rampStep": "n3",
+        "theme": "dark",
+        "purpose": "1px hairlines: rows, calendar weeks, sheet sections.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Rule Strong (light)",
+        "cssVar": "--nv-rule-strong",
+        "rampStep": "n4",
+        "theme": "light",
+        "purpose": "2px control borders, slider and progress track.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "rule-strong-dark": {
+        "role": "neutral",
+        "displayName": "Rule Strong (dark)",
+        "cssVar": "--nv-rule-strong",
+        "rampStep": "n4",
+        "theme": "dark",
+        "purpose": "2px control borders, slider and progress track.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Text 2 (light)",
+        "cssVar": "--nv-text-2",
+        "rampStep": "n7",
+        "theme": "light",
+        "purpose": "Secondary copy, quiet buttons.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "text-2-dark": {
+        "role": "neutral",
+        "displayName": "Text 2 (dark)",
+        "cssVar": "--nv-text-2",
+        "rampStep": "n7",
+        "theme": "dark",
+        "purpose": "Secondary copy, quiet buttons.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "text-3": {
+        "role": "neutral",
+        "displayName": "Text 3 (light)",
+        "cssVar": "--nv-text-3",
+        "rampStep": "n6",
+        "theme": "light",
+        "purpose": "Hints, section labels, shortcut keys.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "text-3-dark": {
+        "role": "neutral",
+        "displayName": "Text 3 (dark)",
+        "cssVar": "--nv-text-3",
+        "rampStep": "n6",
+        "theme": "dark",
+        "purpose": "Hints, section labels, shortcut keys.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "text-disabled": {
+        "role": "neutral",
+        "displayName": "Text Disabled (light)",
+        "cssVar": "--nv-text-disabled",
+        "rampStep": "n5",
+        "theme": "light",
+        "purpose": "Disabled controls, outside-month days.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "text-disabled-dark": {
+        "role": "neutral",
+        "displayName": "Text Disabled (dark)",
+        "cssVar": "--nv-text-disabled",
+        "rampStep": "n5",
+        "theme": "dark",
+        "purpose": "Disabled controls, outside-month days.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "inverse": {
+        "role": "neutral",
+        "displayName": "Inverse (light)",
+        "cssVar": "--nv-inverse",
+        "rampStep": "n0",
+        "theme": "light",
+        "purpose": "The opposite pole of the ramp.",
+        "tonalRamp": [
+          "#111110",
+          "#3f3f3b",
+          "#64645f",
+          "#9c9c97",
+          "#c4c4bf",
+          "#dcdcd8",
+          "#e9e9e6",
+          "#f3f3f1"
+        ]
+      },
+      "inverse-dark": {
+        "role": "neutral",
+        "displayName": "Inverse (dark)",
+        "cssVar": "--nv-inverse",
+        "rampStep": "n0",
+        "theme": "dark",
+        "purpose": "The opposite pole of the ramp.",
+        "tonalRamp": [
+          "#0a0a0c",
+          "#151518",
+          "#222227",
+          "#34343b",
+          "#5c5c66",
+          "#8e8e99",
+          "#bcbcc5",
+          "#ffffff"
+        ]
+      },
+      "live": {
+        "role": "semantic",
+        "displayName": "Live Red (light)",
+        "cssVar": "--nv-live",
+        "theme": "light",
+        "purpose": "A streaming session is running. Status dot and label only.",
+        "tonalRamp": ["#d70015", "#ff453a"]
+      },
+      "live-dark": {
+        "role": "semantic",
+        "displayName": "Live Red (dark)",
+        "cssVar": "--nv-live",
+        "theme": "dark",
+        "purpose": "A streaming session is running. Status dot and label only.",
+        "tonalRamp": ["#d70015", "#ff453a"]
+      },
+      "attention": {
+        "role": "semantic",
+        "displayName": "Attention Amber (light)",
+        "cssVar": "--nv-attention",
+        "theme": "light",
+        "purpose": "The user is needed: error, failed load, update ready.",
+        "tonalRamp": ["#a15c00", "#ffb340"]
+      },
+      "attention-dark": {
+        "role": "semantic",
+        "displayName": "Attention Amber (dark)",
+        "cssVar": "--nv-attention",
+        "theme": "dark",
+        "purpose": "The user is needed: error, failed load, update ready.",
+        "tonalRamp": ["#a15c00", "#ffb340"]
+      },
+      "sun": {
+        "role": "semantic",
+        "displayName": "Sunday Red (light)",
+        "cssVar": "--nv-sun",
+        "theme": "light",
+        "purpose": "Sunday dates on the month calendar only.",
+        "tonalRamp": ["#c8102e", "#ff6b6b"]
+      },
+      "sun-dark": {
+        "role": "semantic",
+        "displayName": "Sunday Red (dark)",
+        "cssVar": "--nv-sun",
+        "theme": "dark",
+        "purpose": "Sunday dates on the month calendar only.",
+        "tonalRamp": ["#c8102e", "#ff6b6b"]
+      },
+      "sat": {
+        "role": "semantic",
+        "displayName": "Saturday Blue (light)",
+        "cssVar": "--nv-sat",
+        "theme": "light",
+        "purpose": "Saturday dates on the month calendar only.",
+        "tonalRamp": ["#1f5fd1", "#7aa7ff"]
+      },
+      "sat-dark": {
+        "role": "semantic",
+        "displayName": "Saturday Blue (dark)",
+        "cssVar": "--nv-sat",
+        "theme": "dark",
+        "purpose": "Saturday dates on the month calendar only.",
+        "tonalRamp": ["#1f5fd1", "#7aa7ff"]
+      },
+      "frame": {
+        "role": "media",
+        "displayName": "Frame Black",
+        "cssVar": "--nv-frame",
+        "theme": "both",
+        "purpose": "Behind every photo; home and onboarding background."
+      },
+      "on-media": {
+        "role": "media",
+        "displayName": "On Media",
+        "cssVar": "--nv-on-media",
+        "theme": "both",
+        "purpose": "All chrome over a photo, both themes."
+      },
+      "on-media-2": {
+        "role": "media",
+        "displayName": "On Media 2",
+        "cssVar": "--nv-on-media-2",
+        "theme": "both",
+        "purpose": "Secondary chrome over a photo."
+      },
+      "media-glyph-bg": {
+        "role": "media",
+        "displayName": "Media Glyph Fill",
+        "cssVar": "--nv-media-glyph-bg",
+        "theme": "both",
+        "purpose": "Glyph circle fill over a photo; hover rgba(0,0,0,0.55)."
+      },
+      "media-glyph-edge": {
+        "role": "media",
+        "displayName": "Media Glyph Edge",
+        "cssVar": "--nv-media-glyph-edge",
+        "theme": "both",
+        "purpose": "Glyph circle edge over a photo."
+      }
+    },
+    "typographyMeta": {
+      "numeral": {
+        "displayName": "Numeral",
+        "cssVar": "--nv-size-numeral",
+        "purpose": "Today's date on today's page; capped at 23.5% of frame height."
+      },
+      "display": {
+        "displayName": "Display",
+        "cssVar": "--nv-size-display",
+        "purpose": "Caption title over the photo, onboarding title, loader title, ambient clock."
+      },
+      "clock": {
+        "displayName": "Clock",
+        "cssVar": "--nv-size-clock",
+        "purpose": "Frame clock and today's time."
+      },
+      "title": {
+        "displayName": "Title",
+        "cssVar": "--nv-size-title",
+        "purpose": "Sheet and dialog titles, the weekday."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "cssVar": "--nv-size-heading",
+        "purpose": "Section heads, empty-state titles, large buttons."
+      },
+      "body": {
+        "displayName": "Body",
+        "cssVar": "--nv-size-body",
+        "purpose": "Reading text, row titles, field input, caption state and context lines."
+      },
+      "label": {
+        "displayName": "Label",
+        "cssVar": "--nv-size-label",
+        "purpose": "Buttons, plate names, segmented options, field labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "cssVar": "--nv-size-caption",
+        "purpose": "Status labels, glyph labels, calendar heads, hints."
+      }
+    },
+    "themes": {
+      "light": {
+        "ramp": {
+          "n0": "#ffffff",
+          "n1": "#f3f3f1",
+          "n2": "#e9e9e6",
+          "n3": "#dcdcd8",
+          "n4": "#c4c4bf",
+          "n5": "#9c9c97",
+          "n6": "#64645f",
+          "n7": "#3f3f3b",
+          "n8": "#111110"
+        },
+        "live": "#d70015",
+        "attention": "#a15c00",
+        "sun": "#c8102e",
+        "sat": "#1f5fd1",
+        "colorScheme": "light"
+      },
+      "dark": {
+        "ramp": {
+          "n0": "#000000",
+          "n1": "#0a0a0c",
+          "n2": "#151518",
+          "n3": "#222227",
+          "n4": "#34343b",
+          "n5": "#5c5c66",
+          "n6": "#8e8e99",
+          "n7": "#bcbcc5",
+          "n8": "#ffffff"
+        },
+        "live": "#ff453a",
+        "attention": "#ffb340",
+        "sun": "#ff6b6b",
+        "sat": "#7aa7ff",
+        "colorScheme": "dark"
+      },
+      "roles": {
+        "ground": "n1",
+        "surface": "n2",
+        "surface-raised": "n3",
+        "rule": "n3",
+        "rule-strong": "n4",
+        "text": "n8",
+        "text-2": "n7",
+        "text-3": "n6",
+        "text-disabled": "n5",
+        "focus": "n8",
+        "inverse": "n0",
+        "inverse-text": "n8"
+      },
+      "selection": "[data-theme] on .nv-root: absent = follows prefers-color-scheme; 'light' or 'dark' pins it."
+    },
+    "postures": {
+      "tablet": {
+        "scale": 1,
+        "target": "48px",
+        "targetGlyph": "56px",
+        "viewing": "handheld 30-50 cm",
+        "sizes": {
+          "numeral": "192px",
+          "clock": "36px",
+          "display": "64px",
+          "title": "28px",
+          "heading": "20px",
+          "body": "16px",
+          "label": "14px",
+          "caption": "12px"
+        },
+        "space": {
+          "space-1": "4px",
+          "space-2": "8px",
+          "space-3": "12px",
+          "space-4": "16px",
+          "space-5": "24px",
+          "space-6": "32px",
+          "space-7": "48px",
+          "space-8": "64px",
+          "gutter": "40px"
+        }
+      },
+      "tv": {
+        "scale": 1.25,
+        "target": "64px",
+        "targetGlyph": "72px",
+        "viewing": "lean-back 1-2 m",
+        "sizes": {
+          "numeral": "240px",
+          "clock": "45px",
+          "display": "80px",
+          "title": "35px",
+          "heading": "25px",
+          "body": "20px",
+          "label": "17.5px",
+          "caption": "15px"
+        },
+        "space": {
+          "space-1": "5px",
+          "space-2": "10px",
+          "space-3": "15px",
+          "space-4": "20px",
+          "space-5": "30px",
+          "space-6": "40px",
+          "space-7": "60px",
+          "space-8": "80px",
+          "gutter": "50px"
+        }
+      },
+      "selection": "[data-posture] on .nv-root: 'tablet' (default) or 'tv'. Sizes and space multiply by --nv-scale; targets are set per posture, not scaled."
+    },
+    "fontStacks": {
+      "text": "\"Segoe UI Variable Text\", \"Segoe UI\", \"Malgun Gothic\", \"Apple SD Gothic Neo\", \"Yu Gothic UI\", \"Hiragino Sans\", \"Microsoft YaHei UI\", \"PingFang SC\", system-ui, sans-serif",
+      "display": "\"Segoe UI Variable Display\", \"Segoe UI\", \"Malgun Gothic\", \"Apple SD Gothic Neo\", \"Yu Gothic UI\", \"Hiragino Sans\", \"Microsoft YaHei UI\", \"PingFang SC\", system-ui, sans-serif",
+      "text-ja": "\"Segoe UI Variable Text\", \"Segoe UI\", \"Yu Gothic UI\", \"Hiragino Sans\", \"Meiryo UI\", system-ui, sans-serif",
+      "text-zh": "\"Segoe UI Variable Text\", \"Segoe UI\", \"Microsoft YaHei UI\", \"PingFang SC\", system-ui, sans-serif",
+      "webFonts": "none"
+    },
+    "fontWeights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "heavy": 800
+    },
+    "tracking": {
+      "display": "-0.035em",
+      "numeral": "-0.04em"
+    },
+    "shape": {
+      "content": "4px",
+      "action": "4px",
+      "glyph": "50%",
+      "segmentedTrack": "7px",
+      "toggleTrack": "999px",
+      "rule": "Circle = a global action reachable from anywhere (glyph rail, dock). Rectangle = content and the actions that belong to it."
+    },
+    "focus": {
+      "width": "4px",
+      "offset": "3px",
+      "style": "solid outline",
+      "color": "--nv-focus (n8 ink)",
+      "onMedia": "#ffffff",
+      "trigger": ":focus-visible",
+      "glyph": "ring wraps the circle, not the label"
+    },
+    "shadows": [
+      {
+        "name": "clock-lift",
+        "value": "text-shadow: 0 1px 12px rgba(0,0,0,0.35)",
+        "purpose": "Frame clock legibility over bright photos."
+      },
+      {
+        "name": "bridge-raised",
+        "value": "0 12px 32px rgba(0,0,0,0.32)",
+        "purpose": "v1 floating menus inside the bridge only."
+      },
+      {
+        "name": "bridge-floating",
+        "value": "0 16px 40px rgba(0,0,0,0.4)",
+        "purpose": "v1 floating menus inside the bridge only."
+      }
+    ],
+    "scrims": [
+      {
+        "name": "photo-scrim",
+        "value": "linear-gradient(to top, rgba(0,0,0,S) 0%, rgba(0,0,0,S*0.55) 38%, rgba(0,0,0,0) 100%), S = 0.78 + material-intensity*0.17",
+        "purpose": "Bottom 44% of frame one; stops below the focal light."
+      },
+      {
+        "name": "top-scrim",
+        "value": "linear-gradient(to bottom, rgba(0,0,0,0.38), rgba(0,0,0,0)) over 160px",
+        "purpose": "Behind wordmark and clock."
+      },
+      {
+        "name": "ambient-corner",
+        "value": "radial-gradient(ellipse at 100% 100%, rgba(0,0,0,0.55), rgba(0,0,0,0) 70%)",
+        "purpose": "Behind the ambient clock."
+      },
+      {
+        "name": "band-fade",
+        "value": "linear-gradient(to bottom, transparent, var(--nv-ground)) over 60% of the band",
+        "purpose": "Folded photo melts into today's page."
+      },
+      {
+        "name": "overlay-backdrop",
+        "value": "rgba(0,0,0,0.6)",
+        "purpose": "Behind sheets and dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "dur-press",
+        "value": "90ms",
+        "purpose": "Direct press feedback, no travel."
+      },
+      {
+        "name": "dur-move",
+        "value": "200ms",
+        "purpose": "Focus, colour, toggle and state changes; dialog entrance."
+      },
+      {
+        "name": "dur-fold",
+        "value": "420ms",
+        "purpose": "The photo fold, sheets, ambient fade, onboarding steps."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default curve for every transition."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "Indeterminate progress only."
+      },
+      {
+        "name": "press-scale",
+        "value": "0.97",
+        "purpose": "Scale on :active for buttons, glyphs, plates, posture cards."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "durations 0.01ms, press-scale 1",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "photo": {
+      "bandRatio": 0.193,
+      "fold": "On snap to today's page the photo translates up (translate3d, transform only, one rAF per scroll) until it becomes the band, centred on the focal strip.",
+      "focalPoint": {
+        "default": 0.5,
+        "bundled": {
+          "dawn-sea": 0.58,
+          "misty-lake": 0.55,
+          "ridges": 0.5
+        },
+        "rule": "Every photo carries a vertical focal point (0 top, 1 bottom); the band shows that strip and the scrim stops below it."
+      },
+      "ambient": {
+        "delayMinutesDefault": 10,
+        "rotateMinMs": 60000,
+        "wakeHintFadeMs": 6000,
+        "bundledArtwork": "src/assets/ambient/*.jpg, 1600x1000, generated by scripts/design/generate-ambient-art.py"
+      }
+    },
+    "caption": {
+      "order": [
+        "title (display)",
+        "state line (status, body)",
+        "context line (on-media-2, body)",
+        "actions"
+      ],
+      "eyebrow": "none",
+      "examples": {
+        "running": {
+          "title": "Netflix",
+          "state": "실행 중",
+          "context": "확인 키로 바로 복귀",
+          "actions": ["이어서 보기", "{name} 열기", "세션 종료"]
+        },
+        "ended": {
+          "state": "마지막 사용 · {time}",
+          "context": "세션이 끝났어요 · 다시 열면 첫 화면부터"
+        },
+        "idle": {
+          "title": "좋은 저녁이에요",
+          "context": "서비스를 고르면 여기서 이어서 볼 수 있어요"
+        }
+      }
+    },
+    "bridge": {
+      "scope": ".nv-root.nv-bridge",
+      "covers": ["gallery", "finder", "viewer", "video", "streaming dock", "streaming loader"],
+      "map": {
+        "--color-primary": "--nv-text",
+        "--color-accent": "--nv-text",
+        "--color-success": "--nv-text",
+        "--color-warning": "--nv-attention",
+        "--color-danger": "--nv-attention",
+        "--color-background": "--nv-ground",
+        "--color-surface": "--nv-surface",
+        "--color-surface-elevated": "--nv-surface-raised",
+        "--color-border": "--nv-rule-strong",
+        "--color-divider": "--nv-rule",
+        "--glass-bg": "--nv-surface",
+        "--material-blur-*": "0px",
+        "--radius-*": "--nv-radius-content (4px)",
+        "--touch-target-min": "--nv-target",
+        "--focus-ring": "0 0 0 var(--nv-focus-width) var(--nv-focus)"
+      },
+      "enforced": "backdrop-filter: none !important on every bridged element",
+      "dock": "Glyph rail of --nv-target-glyph circles on ground with a 1px rule; home is the one filled ink circle.",
+      "loader": "No floating card; the official mark contained whole in one 160x90 plate (x scale); display-size title, left-aligned on ground."
+    },
+    "breakpoints": [
+      {
+        "name": "plate-narrow",
+        "value": "170px (container query on the plate bar)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action per context, e.g. 이어서 보기. Dark theme values.",
+      "html": "<button class=\"ds-btn-primary\">이어서 보기</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:4px;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:transform 90ms cubic-bezier(0.16,1,0.3,1),background-color 200ms cubic-bezier(0.16,1,0.3,1),border-color 200ms cubic-bezier(0.16,1,0.3,1);background:#ffffff;color:#0a0a0c;border:2px solid #ffffff;} .ds-btn-primary:active{transform:scale(0.97);} .ds-btn-primary:focus-visible{outline:4px solid #ffffff;outline-offset:3px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bordered rectangle for content actions such as 세션 종료.",
+      "html": "<button class=\"ds-btn-secondary\">세션 종료</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:4px;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:transform 90ms cubic-bezier(0.16,1,0.3,1),background-color 200ms cubic-bezier(0.16,1,0.3,1),border-color 200ms cubic-bezier(0.16,1,0.3,1);background:transparent;color:#ffffff;border:2px solid #34343b;} .ds-btn-secondary:hover{border-color:#8e8e99;} .ds-btn-secondary:active{transform:scale(0.97);} .ds-btn-secondary:focus-visible{outline:4px solid #ffffff;outline-offset:3px;}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Borderless action in rows like the files shortcuts.",
+      "html": "<button class=\"ds-btn-quiet\">앰비언트</button>",
+      "css": ".ds-btn-quiet{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:4px;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:transform 90ms cubic-bezier(0.16,1,0.3,1),background-color 200ms cubic-bezier(0.16,1,0.3,1),border-color 200ms cubic-bezier(0.16,1,0.3,1);background:transparent;color:#bcbcc5;border:2px solid transparent;} .ds-btn-quiet:hover{background:#151518;color:#ffffff;} .ds-btn-quiet:focus-visible{outline:4px solid #ffffff;outline-offset:3px;}"
+    },
+    {
+      "name": "Glyph (global action)",
+      "kind": "custom",
+      "refersTo": "glyph",
+      "description": "Circle = an action reachable from anywhere. Lives in the glyph rail.",
+      "html": "<button class=\"ds-glyph\"><span class=\"ds-glyph__circle\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-3.5-3.5\"/></svg></span><span class=\"ds-glyph__label\">검색</span></button>",
+      "css": ".ds-glyph{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:0;border:0;background:none;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;cursor:pointer;} .ds-glyph__circle{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:#151518;border:1px solid #222227;transition:transform 90ms cubic-bezier(0.16,1,0.3,1),background-color 200ms cubic-bezier(0.16,1,0.3,1);} .ds-glyph:hover .ds-glyph__circle{background:#222227;} .ds-glyph:active .ds-glyph__circle{transform:scale(0.97);} .ds-glyph:focus-visible{outline:none;} .ds-glyph:focus-visible .ds-glyph__circle{outline:4px solid #ffffff;outline-offset:3px;} .ds-glyph__label{font-size:12px;font-weight:700;line-height:1.2;}"
+    },
+    {
+      "name": "Service Plate",
+      "kind": "card",
+      "refersTo": "service-plate",
+      "description": "Rectangle = content. Official brand field on its own ground, name bar with state or shortcut.",
+      "html": "<button class=\"ds-plate\"><span class=\"ds-plate__field\"><span class=\"ds-plate__mark\">NETFLIX</span></span><span class=\"ds-plate__bar\"><span class=\"ds-plate__name\">Netflix</span><span class=\"ds-status\">실행 중</span></span></button>",
+      "css": ".ds-plate{display:flex;flex-direction:column;width:180px;padding:0;border:0;border-radius:4px;background:#151518;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;text-align:left;overflow:hidden;cursor:pointer;transition:transform 90ms cubic-bezier(0.16,1,0.3,1);} .ds-plate:active{transform:scale(0.97);} .ds-plate:focus-visible{outline:4px solid #ffffff;outline-offset:3px;} .ds-plate__field{display:grid;place-items:center;aspect-ratio:16/9;background:#000000;} .ds-plate__mark{color:#e50914;font-weight:800;letter-spacing:0.02em;} .ds-plate__bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:0 12px;} .ds-plate__name{font-size:14px;font-weight:700;} .ds-status{display:inline-flex;align-items:center;gap:0.45em;font-size:12px;font-weight:700;color:#ff453a;} .ds-status::before{content:'';width:0.62em;height:0.62em;border-radius:50%;background:currentColor;}"
+    },
+    {
+      "name": "Frame Caption",
+      "kind": "custom",
+      "refersTo": "caption",
+      "description": "Title first, then state line, then one context line, then actions. No eyebrow.",
+      "html": "<div class=\"ds-caption\"><h2 class=\"ds-caption__title\">Netflix</h2><p class=\"ds-caption__status\">실행 중</p><p class=\"ds-caption__sub\">확인 키로 바로 복귀</p><div class=\"ds-caption__actions\"><button class=\"ds-caption__primary\">이어서 보기</button><button class=\"ds-caption__secondary\">세션 종료</button></div></div>",
+      "css": ".ds-caption{padding:48px;background:linear-gradient(to top,rgba(0,0,0,0.78),rgba(0,0,0,0.43) 38%,rgba(0,0,0,0) 100%),#3f3768;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;} .ds-caption__title{margin:0 0 12px;font-family:'Segoe UI Variable Display','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:64px;font-weight:800;letter-spacing:-0.035em;line-height:1.02;} .ds-caption__status{display:inline-flex;align-items:center;gap:0.45em;margin:0 0 4px;font-size:16px;font-weight:700;} .ds-caption__status::before{content:'';width:0.62em;height:0.62em;border-radius:50%;background:#ff453a;} .ds-caption__sub{margin:0;font-size:16px;color:rgba(255,255,255,0.78);} .ds-caption__actions{display:flex;gap:12px;margin-top:24px;} .ds-caption__primary,.ds-caption__secondary{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:4px;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:transform 90ms cubic-bezier(0.16,1,0.3,1),background-color 200ms cubic-bezier(0.16,1,0.3,1),border-color 200ms cubic-bezier(0.16,1,0.3,1);} .ds-caption__primary{background:#ffffff;color:#000000;border:2px solid #ffffff;} .ds-caption__secondary{background:transparent;color:#ffffff;border:2px solid rgba(255,255,255,0.78);} .ds-caption__primary:focus-visible,.ds-caption__secondary:focus-visible{outline:4px solid #ffffff;outline-offset:3px;}"
+    },
+    {
+      "name": "Segmented",
+      "kind": "chip",
+      "refersTo": "segmented-option-checked",
+      "description": "Single choice, e.g. theme or posture in Settings.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\"><button class=\"ds-seg__opt\">시스템</button><button class=\"ds-seg__opt is-checked\">다크</button><button class=\"ds-seg__opt\">라이트</button></div>",
+      "css": ".ds-seg{display:inline-flex;padding:3px;gap:3px;border-radius:7px;background:#151518;border:1px solid #222227;} .ds-seg__opt{min-height:40px;padding:0 16px;border:0;border-radius:4px;background:transparent;color:#bcbcc5;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background-color 200ms cubic-bezier(0.16,1,0.3,1),color 200ms cubic-bezier(0.16,1,0.3,1);} .ds-seg__opt:hover{color:#ffffff;} .ds-seg__opt.is-checked{background:#ffffff;color:#0a0a0c;} .ds-seg__opt:focus-visible{outline:4px solid #ffffff;outline-offset:3px;}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "text-field",
+      "description": "Labelled field; the border turns ink on focus, amber on error.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">도시 이름</span><span class=\"ds-field__control\"><input placeholder=\"예: 서울, Tokyo, New York\"></span></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;color:#ffffff;} .ds-field__label{font-size:14px;font-weight:700;} .ds-field__control{display:flex;align-items:center;min-height:48px;padding:0 16px;border:2px solid #34343b;border-radius:4px;background:#151518;} .ds-field__control:focus-within{border-color:#ffffff;} .ds-field input{flex:1;border:0;outline:none;background:transparent;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:16px;} .ds-field input::placeholder{color:#8e8e99;}"
+    },
+    {
+      "name": "List Row",
+      "kind": "nav",
+      "refersTo": "list-row",
+      "description": "Settings row: title, description, value, chevron; 1px rule beneath.",
+      "html": "<button class=\"ds-row\"><span class=\"ds-row__text\"><span class=\"ds-row__title\">보기 모드</span><span class=\"ds-row__desc\">거치해 두고 1–2m 거리에서 보기</span></span><span class=\"ds-row__value\">TV형</span><span class=\"ds-row__chev\">›</span></button>",
+      "css": ".ds-row{display:flex;align-items:center;gap:16px;width:100%;min-height:64px;padding:12px 8px;border:0;border-bottom:1px solid #222227;border-radius:4px;background:none;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;text-align:left;cursor:pointer;} .ds-row:hover{background:#151518;} .ds-row:focus-visible{outline:4px solid #ffffff;outline-offset:3px;} .ds-row__text{display:flex;flex:1;flex-direction:column;gap:2px;} .ds-row__title{font-size:16px;font-weight:600;} .ds-row__desc{font-size:14px;color:#8e8e99;} .ds-row__value{font-size:14px;color:#bcbcc5;} .ds-row__chev{color:#8e8e99;font-size:20px;}"
+    },
+    {
+      "name": "Album Card",
+      "kind": "card",
+      "refersTo": "gallery-album",
+      "description": "Rectangle = content. A folder as an album: 4:3 cover (newest photo), name, count. Focus rings the cover.",
+      "html": "<button class=\"ds-album\"><span class=\"ds-album__cover\"></span><span class=\"ds-album__name\">여행</span><span class=\"ds-album__meta\">213개 · 하위 폴더 있음</span></button>",
+      "css": ".ds-album{display:flex;flex-direction:column;gap:4px;width:200px;padding:0;border:0;background:transparent;color:#ffffff;font-family:'Segoe UI Variable Text','Segoe UI','Malgun Gothic',system-ui,sans-serif;text-align:left;cursor:pointer;} .ds-album__cover{display:block;aspect-ratio:4/3;margin-bottom:8px;border-radius:4px;background:linear-gradient(180deg,#5b4a7a,#e9906a 70%,#2b2333);transition:transform 200ms cubic-bezier(0.16,1,0.3,1);} .ds-album:hover .ds-album__cover{transform:scale(1.02);} .ds-album:focus-visible{outline:none;} .ds-album:focus-visible .ds-album__cover{outline:4px solid #ffffff;outline-offset:3px;} .ds-album__name{font-size:16px;font-weight:600;} .ds-album__meta{font-size:12px;color:#8e8e99;}"
+    },
+    {
+      "name": "Justified Tile",
+      "kind": "card",
+      "refersTo": "gallery-tile",
+      "description": "A photo at its own aspect in a justified row; 4px, surface until the picture decodes; the focus ring sits inside (tight gaps).",
+      "html": "<div class=\"ds-row\"><button class=\"ds-tile\" style=\"flex:1.5\"></button><button class=\"ds-tile\" style=\"flex:0.67\"></button><button class=\"ds-tile\" style=\"flex:1.78\"></button></div>",
+      "css": ".ds-row{display:flex;gap:4px;width:420px;height:120px;} .ds-tile{padding:0;border:0;border-radius:4px;background:linear-gradient(180deg,#3d4f5c,#7f9a96);cursor:pointer;} .ds-tile:focus-visible{outline:4px solid #ffffff;outline-offset:-4px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night Frame, the Day Page",
+    "overview": "Novus v2 is a photo frame that happens to run a media console. The home opens as one full-bleed photograph with a single caption on it: whatever is still running, at display size, with one press to resume. One snap down folds that same photo up into a band, and under it sits today's page: the date as a huge numeral, the month calendar, the seven service plates, and a row of file shortcuts. Left alone for the ambient delay (10 minutes by default), the frame drops its chrome and keeps only the photo, the clock, and the date.\n\nEverything Novus draws itself is neutral, opaque, and still. The ground is a near-black ramp at night and a warm off-white by day; type is ink on ground or white over the photo. Colour arrives only from the photograph and from the official brand plates of the streaming services. Four semantic hues exist, and each has exactly one job. Depth comes from the photo and its scrim, not from glass or shadows; the only animated properties are transform and opacity, so the Surface Pro 4's HD 515 never has to repaint a blurred layer.\n\nThe system runs on two axes set on the `NvRoot` element: theme (`system`, `light`, `dark`) and posture (`tablet` for the hand at 30–50 cm, `tv` for the sofa at 1–2 m). Posture multiplies every type size and space by a scale and swaps touch targets to fixed larger values. Every v2 surface lives under `.nv-root`; the v1 screens that still exist (gallery, finder, viewer, video, streaming dock) are pulled into the same world by the bridge.",
+    "keyCharacteristics": [
+      "One frame, then one page: a full-bleed photo with one caption, folding into a band over today's page.",
+      "No colour of its own: ink, ground, and a 9-step neutral ramp; four semantic hues with one job each.",
+      "Circle is a global action; rectangle is content and the actions that belong to it.",
+      "Opaque everywhere. The photo scrim is the only translucency, and it never becomes blur.",
+      "System faces only (Segoe UI Variable first, then locale CJK faces); no web fonts.",
+      "Two postures, one layout: sizes scale by 1 (tablet) or 1.25 (TV); targets are set per posture."
+    ],
+    "rules": [
+      {
+        "name": "The No Hue Of Its Own Rule",
+        "body": "Novus chrome never carries a hue. Icons inherit `currentColor`, the v1 \"primary\" is remapped to ink, and colour on screen comes only from the photo and the official service plates.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Job Rule",
+        "body": "Each semantic hue has exactly one job: live = a running session, attention = the user is needed, sun and sat = weekend dates on the calendar. A hue that appears anywhere else is a defect.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Over Photo Rule",
+        "body": "Over a photograph, chrome is white (#ffffff, secondary at 78%) whatever the theme; the focus ring turns white there too.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "Nothing sits above a title. No kicker, no small uppercase category line: the caption starts with its display title, and section titles are plain headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The System Face Rule",
+        "body": "Novus ships no web font. Every face is already on the device; the fallback chain exists so Korean, Japanese, and Chinese each get their own native face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Posture Rule",
+        "body": "One layout serves both postures. Posture changes the scale (1 or 1.25) and the targets (48/56 or 64/72), and moves the rail within thumb reach in tablet posture; it never forks the composition.",
+        "section": "layout"
+      },
+      {
+        "name": "The Opaque Rule",
+        "body": "No `backdrop-filter`, no glass, no frosting. Material intensity (0–100) deepens the scrim; it never turns into blur.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Scrim-Only Gradient Rule",
+        "body": "Gradients exist only as scrims over a photo (and as the slider's fill). No decorative gradient on chrome.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Circle Means Global Rule",
+        "body": "A circle is an action reachable from anywhere (search, gallery, files, remote, settings, home). A rectangle is content, or an action that belongs to the content it sits on (이어서 보기, 세션 종료). If a control only acts on the thing beside it, it is a rectangle.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Focal Point Rule",
+        "body": "Every photo carries a vertical focal point (0 = top, 1 = bottom). The folded band shows that strip, and the bottom scrim stops below it. Bundled artwork records it explicitly (dawn-sea 0.58, misty-lake 0.55, ridges 0.5); user photos default to 0.5. Artwork made for Novus keeps its brightest point (the sun) inside that strip and draws it last so it stays the brightest value in the frame.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do build every v2 surface inside `NvRoot` and use only the role tokens (ground, surface, rule, text, focus), never raw ramp steps or hex.",
+      "Do make a control a circle only when it is a global action reachable from anywhere; everything else is a 4px rectangle.",
+      "Do order every photo caption as title, then state line, then one context line, then actions.",
+      "Do give every photo a vertical focal point and keep the scrim and the folded band honest to it.",
+      "Do author sizes for tablet posture and multiply by `--nv-scale`; set touch targets per posture (48/56px tablet, 64/72px TV).",
+      "Do animate only transform and opacity, with the press, move, and fold tokens, and honour reduced motion.",
+      "Do show the 4px ink focus ring (white on media), offset 3px, on every focusable element.",
+      "Do let service brands appear on their own ground with their official assets."
+    ],
+    "donts": [
+      "Don't use `backdrop-filter`, blur, or glass anywhere; deepen the scrim instead.",
+      "Don't load web fonts; use the system face chain.",
+      "Don't add a decorative accent colour, tint, or gradient to Novus chrome; the four semantic hues keep their one job.",
+      "Don't put an eyebrow, kicker, or small category label above a title.",
+      "Don't give v2 components a box-shadow; depth comes from the photo and the plane order.",
+      "Don't make a content action round or a global action square.",
+      "Don't scrim over the photo's focal light; the sun keeps its value."
+    ]
+  }
+}

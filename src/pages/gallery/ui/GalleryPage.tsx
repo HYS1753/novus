@@ -1,113 +1,101 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { FileItem } from "@/entities";
-import { useFileBrowser } from "@/features";
-import { GalleryGrid, FullscreenImageViewer, InAppVideoModal } from "@/widgets";
-import { SubpageDock, useDockPosition } from "@/shared";
+import { PAGE_SIZE, useGallery, type MediaCollection } from "@/features";
+import { GalleryV2, InAppVideoModal, PhotoViewer } from "@/widgets";
+import { SubpageDock, useDockPosition, useI18n } from "@/shared";
 
 interface GalleryPageProps {
   onBackToDashboard: () => void;
 }
 
-export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) => {
-  const { dockPosition } = useDockPosition();
-  const {
-    locations,
-    currentPath,
-    parentPath,
-    breadcrumbs,
-    canGoBack,
-    items,
-    totalCount,
-    imageCount,
-    videoCount,
-    hasMore,
-    isLoadingMore,
-    loadMoreError,
-    loadMore,
-    isLoading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    sortField,
-    setSortField,
-    sortOrder,
-    setSortOrder,
-    navigateTo,
-    navigateUp,
-    navigateBack,
-    refresh,
-  } = useFileBrowser({ filterMode: "media" });
+/**
+ * The viewer pages through one contiguous loaded run of the collection,
+ * starting where the run began when it opened (so the list only grows at
+ * its end and indices stay stable). After a scrubber jump the run starts at
+ * that page, not at the top of the library.
+ */
+type ViewerSource = { which: "library" | "folder"; path: string; runStart: number };
 
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+export const GalleryPage: React.FC<GalleryPageProps> = ({ onBackToDashboard }) => {
+  const { t } = useI18n();
+  const { dockPosition } = useDockPosition();
+  const gallery = useGallery();
+  const [viewer, setViewer] = useState<ViewerSource | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<FileItem | null>(null);
 
-  const imageItems = items.filter((item) => item.media_type === "image");
+  const source: MediaCollection | null = viewer
+    ? viewer.which === "library"
+      ? gallery.library
+      : gallery.folderView
+    : null;
+
+  const runStart = viewer?.runStart ?? 0;
+  let runEnd = runStart;
+  if (source) while (runEnd < source.items.length && source.items[runEnd]) runEnd++;
+  const viewerImages = useMemo(
+    () =>
+      source
+        ? source.items
+            .slice(runStart, runEnd)
+            .filter((item): item is FileItem => item?.media_type === "image")
+        : [],
+    // `revision` stands for pages landing in the shared items array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [source, source?.revision, runStart, runEnd],
+  );
+  const viewerIndex = viewer
+    ? Math.max(
+        0,
+        viewerImages.findIndex((item) => item.path === viewer.path),
+      )
+    : 0;
+  const imagesAfterRun = source
+    ? source.items.slice(runEnd).some((item) => item === undefined || item.media_type === "image")
+    : false;
+
+  const openImage = (collection: MediaCollection, index: number) => {
+    const item = collection.items[index];
+    if (!item) return;
+    let start = index;
+    while (start > 0 && collection.items[start - 1]) start--;
+    setViewer({
+      which: collection === gallery.library ? "library" : "folder",
+      path: item.path,
+      runStart: start,
+    });
+  };
 
   return (
-    <div
-      className={`in-app-player in-app-player--dock-${dockPosition} w-full h-full flex overflow-hidden text-white`}
-      style={{ backgroundColor: "var(--color-background, #080a0f)" }}
-    >
-      {/* Main Viewport Container */}
-      <div className="in-app-player__viewport flex-1 flex flex-col h-full overflow-hidden">
-        <GalleryGrid
-          key={currentPath}
-          items={items}
-          totalCount={totalCount}
-          imageCount={imageCount}
-          videoCount={videoCount}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-          loadMoreError={loadMoreError}
-          onLoadMore={loadMore}
-          locations={locations}
-          breadcrumbs={breadcrumbs}
-          parentPath={parentPath}
-          isLoading={isLoading}
-          error={error}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          sortField={sortField}
-          onSortFieldChange={setSortField}
-          sortOrder={sortOrder}
-          onToggleSortOrder={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          onNavigateTo={navigateTo}
-          onNavigateUp={navigateUp}
-          onSelectImage={(index) => setSelectedImageIndex(index)}
-          onSelectVideo={(video) => setSelectedVideo(video)}
-        />
+    <div className={`in-app-player in-app-player--dock-${dockPosition}`}>
+      <div className="in-app-player__viewport">
+        <GalleryV2 state={gallery} onOpenImage={openImage} onOpenVideo={setSelectedVideo} />
       </div>
 
-      {/* Standard Subpage Tablet System Dock */}
       <SubpageDock
-        title="미디어 갤러리"
+        title={t("nav.gallery")}
         dockPosition={dockPosition}
         onHome={onBackToDashboard}
         onBack={() => {
-          if (selectedImageIndex !== null) setSelectedImageIndex(null);
+          if (viewer) setViewer(null);
           else if (selectedVideo) setSelectedVideo(null);
-          else if (canGoBack) navigateBack();
-          else onBackToDashboard();
+          else if (!gallery.folderBack()) onBackToDashboard();
         }}
-        backLabel={canGoBack ? "이전 폴더로 이동" : "대시보드 홈으로 이동"}
-        onReload={refresh}
+        backLabel={gallery.canFolderBack ? t("dock.backFolder") : t("dock.home")}
+        onReload={gallery.reload}
       />
 
-      {/* Lightbox / Fullscreen Image Viewer Modal */}
-      {selectedImageIndex !== null && (
-        <FullscreenImageViewer
-          images={imageItems}
-          initialIndex={selectedImageIndex}
-          totalImageCount={imageCount}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-          loadMoreError={loadMoreError}
-          onNeedMore={loadMore}
-          onClose={() => setSelectedImageIndex(null)}
+      {viewer && source && viewerImages.length > 0 && (
+        <PhotoViewer
+          images={viewerImages}
+          initialIndex={viewerIndex}
+          totalImageCount={imagesAfterRun ? viewerImages.length + 1 : viewerImages.length}
+          hasMore={imagesAfterRun}
+          displayTotal={runStart === 0 ? source.imageCount : undefined}
+          onNeedMore={() => source.ensureRange(runEnd, runEnd + PAGE_SIZE)}
+          onClose={() => setViewer(null)}
         />
       )}
 
-      {/* In-App Video Player Modal */}
       {selectedVideo && (
         <InAppVideoModal
           key={selectedVideo.path}

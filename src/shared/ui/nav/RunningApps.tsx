@@ -1,47 +1,57 @@
+import { useI18n } from "@/shared/hooks/useI18n";
 import { useContext } from "react";
-import { getBundledBrandAssetUrl } from "@/shared/lib/brandAssets";
+import { NvBrandArt } from "@/shared/ui/v2/NvServicePlate";
+import { CloseIcon } from "@/shared/ui/icons";
 import { RunningAppsContext } from "@/shared/ui/nav/runningAppsContext";
 
+/**
+ * Multitasking on the rail: each running service as its own 16:9 plate.
+ * The one on screen is at full strength with a pill beside it; the others
+ * are dimmed and one press away. A round × on each plate ends that session.
+ */
 export function RunningApps() {
+  const { t } = useI18n();
   const state = useContext(RunningAppsContext);
-  if (!state || state.apps.length === 0) return null;
+  if (!state || state.apps.length === 0) return <div className="nvd__run nvd__run--empty" />;
   return (
-    <nav className="running-apps" aria-label="실행 중인 앱">
-      <span className="running-apps__label">실행 중 {state.apps.length}</span>
-      <div className="running-apps__list">
+    <nav className="nvd__run" aria-label={t("running.label")}>
+      <span className="nvd__run-label">{t("running.count", { count: state.apps.length })}</span>
+      <ul className="nvd__run-list">
         {state.apps.map((app) => {
-          const icon = getBundledBrandAssetUrl(app.id);
           const active = state.activeId === app.id;
           return (
-            <div className="running-apps__item" key={app.id} data-active={active}>
+            <li className="nvd__run-item" key={app.id} data-active={active || undefined}>
               <button
                 type="button"
-                className="running-apps__switch"
-                aria-label={`${app.title} ${active ? "현재 앱" : "백그라운드 실행 중, 열기"}`}
+                className="nvd__run-switch"
+                aria-label={
+                  active
+                    ? t("running.current", { name: app.title })
+                    : t("running.background", { name: app.title })
+                }
                 aria-current={active ? "page" : undefined}
                 title={app.title}
                 disabled={state.closingId === app.id}
                 onClick={() => state.onSelect(app.id)}
               >
-                {icon ? <img src={icon} alt="" /> : <span>{app.title.slice(0, 2)}</span>}
-                <span className="running-apps__dot" aria-hidden="true" />
+                <NvBrandArt id={app.id} name={app.title} className="nvd__run-art" />
               </button>
               <button
                 type="button"
-                className="running-apps__close"
-                aria-label={`${app.title} 닫기`}
-                title={`${app.title} 닫기`}
+                className="nvd__run-close"
+                aria-label={t("running.close", { name: app.title })}
+                title={t("running.close", { name: app.title })}
                 disabled={state.closingId !== null}
                 onClick={() => state.onClose(app.id)}
               >
-                ×
+                <CloseIcon size={12} />
               </button>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
       {state.error && (
-        <span role="alert" className="running-apps__error">
+        <span role="alert" className="nvd__run-error">
           {state.error}
         </span>
       )}

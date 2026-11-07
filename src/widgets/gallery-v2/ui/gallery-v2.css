@@ -1,0 +1,647 @@
+/* ==========================================================================
+   Gallery v2 (tablet posture). Benchmarked on Google Photos / Apple Photos:
+   one calm bar (location as title, three views, search, sort), then the
+   library edge to edge in justified rows. Sizes scale with --nv-scale.
+   ========================================================================== */
+
+.gv {
+  --gv-density: 1;
+  --gv-row: calc(176px * var(--nv-scale) * var(--gv-density));
+  --gv-heading: calc(60px * var(--nv-scale));
+  --gv-gap: max(2px, calc(4px * var(--nv-scale)));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--nv-ground);
+  color: var(--nv-text);
+  font-family: var(--nv-font);
+}
+
+/* Read by the grid for its row height and gap (CSS owns the numbers). */
+.gv__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--gv-gap);
+  height: var(--gv-row);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gv__probe-heading {
+  position: absolute;
+  height: var(--gv-heading);
+}
+
+/* ---------- Bar ---------- */
+.gv-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--nv-space-4);
+  padding: var(--nv-space-5) var(--nv-gutter) var(--nv-space-4);
+  border-bottom: 1px solid var(--nv-rule);
+}
+
+.gv-head__title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* Pulled left so the text, not the hover plate, lines up with the gutter. */
+.gv-head__title > .nv-menu {
+  max-width: calc(100% + var(--nv-space-2));
+  margin-left: calc(-1 * var(--nv-space-2));
+}
+
+.gv-head__location {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  max-width: 100%;
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text);
+  cursor: pointer;
+}
+
+.gv-head__location:hover {
+  background: var(--nv-surface);
+}
+
+.gv-head__location:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-head__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+/* The same chevron as the home's hints, pointing down: "this opens". */
+.gv-head__chev {
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  margin-top: -0.2em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  color: var(--nv-text-3);
+}
+
+.gv-head__counts {
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+  white-space: nowrap;
+}
+
+.gv-head__tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--nv-space-2);
+}
+
+.gv-head__tools[hidden] {
+  display: none;
+}
+
+.gv-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nv-space-2);
+  min-width: var(--nv-target);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gv-tool--labelled {
+  padding: 0 var(--nv-space-3);
+}
+
+.gv-tool:hover,
+.gv-tool[aria-expanded="true"] {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.gv-tool:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-search {
+  display: flex;
+  align-items: center;
+  gap: var(--nv-space-2);
+  width: min(calc(320px * var(--nv-scale)), 28vw);
+  height: var(--nv-target);
+  padding: 0 var(--nv-space-1) 0 var(--nv-space-3);
+  border: 2px solid var(--nv-rule-strong);
+  border-radius: var(--nv-radius-action);
+  background: var(--nv-surface);
+  color: var(--nv-text-3);
+}
+
+.gv-search:focus-within {
+  border-color: var(--nv-text);
+}
+
+.gv-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  font-size: var(--nv-size-body);
+}
+
+.gv-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.gv-search__clear {
+  display: grid;
+  place-items: center;
+  width: calc(var(--nv-target) - 12px);
+  height: calc(var(--nv-target) - 12px);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  cursor: pointer;
+}
+
+.gv-search__clear:hover,
+.gv-search__clear:focus-visible {
+  background: var(--nv-surface-raised);
+  color: var(--nv-text);
+}
+
+.gv-search__clear:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+/* ---------- Body ---------- */
+.gv__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The grid anchors its own scroll position when rows re-layout. */
+  overflow-anchor: none;
+  /* Vertical panning stays native; two-finger pinch is the gallery's density gesture. */
+  touch-action: pan-y;
+  padding: var(--nv-space-4) var(--nv-gutter) var(--nv-space-7);
+}
+
+.gv-section {
+  margin: var(--nv-space-6) 0 var(--nv-space-3);
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-2);
+}
+
+/* ---------- Justified grid ---------- */
+.gv-grid {
+  position: relative;
+  width: 100%;
+}
+
+.gv-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gv-tile:disabled {
+  cursor: default;
+}
+
+.gv-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+  pointer-events: none;
+}
+
+.gv-tile:hover::after {
+  opacity: 0.06;
+}
+
+.gv-tile:active::after {
+  opacity: 0.12;
+}
+
+/* Gaps are tight, so the ring sits inside the tile. */
+.gv-tile:focus-visible {
+  z-index: 1;
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: calc(-1 * var(--nv-focus-width));
+}
+
+/* Month headings sit on the grid's own coordinates (virtualized with the rows). */
+.gv-grid__heading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--nv-space-3);
+  margin: 0;
+  padding-bottom: var(--nv-space-3);
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-heading);
+  font-weight: var(--nv-weight-bold);
+  color: var(--nv-text);
+}
+
+.gv-grid__meta {
+  font-family: var(--nv-font);
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-semibold);
+  color: var(--nv-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Date scrubber ---------- */
+.gv-scrub {
+  position: absolute;
+  top: calc(var(--nv-target) * 2 + var(--nv-space-6));
+  right: 0;
+  bottom: var(--nv-space-4);
+  z-index: 5;
+  width: calc(var(--nv-gutter) - 4px);
+  min-width: 28px;
+  touch-action: none;
+  cursor: ns-resize;
+}
+
+/* Moved by transform from script; the visible bar grows with scaleX only. */
+.gv-scrub__thumb {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  width: 10px;
+  height: 44px;
+  will-change: transform;
+}
+
+.gv-scrub__bar {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-text-3);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transform-origin: right center;
+  transition:
+    opacity var(--nv-dur-move) var(--nv-ease-out),
+    transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.gv-scrub[data-active] .gv-scrub__bar {
+  opacity: 1;
+}
+
+.gv-scrub:hover .gv-scrub__bar,
+.gv-scrub:active .gv-scrub__bar {
+  transform: none;
+  background: var(--nv-text);
+}
+
+.gv-scrub__bubble {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--nv-space-3));
+  padding: var(--nv-space-2) var(--nv-space-3);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-text);
+  color: var(--nv-ground);
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-bold);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.gv-scrub__year {
+  position: absolute;
+  right: 20px;
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--nv-text-3);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--nv-dur-move) var(--nv-ease-out);
+  pointer-events: none;
+}
+
+.gv-scrub[data-active] .gv-scrub__year {
+  opacity: 1;
+}
+
+/* ---------- Loading ---------- */
+.gv-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gv-gap);
+}
+
+.gv-skeleton span {
+  flex-basis: calc(var(--gv-row) * 1.1);
+  height: var(--gv-row);
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  animation: gv-pulse 1.4s var(--nv-ease-in-out) infinite alternate;
+}
+
+@keyframes gv-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- Folder view ---------- */
+.gv-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nv-space-1);
+  margin-bottom: var(--nv-space-4);
+}
+
+.gv-crumbs__item {
+  min-height: calc(var(--nv-target) - 8px);
+  padding: 0 var(--nv-space-2);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-3);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+.gv-crumbs__item:hover,
+.gv-crumbs__item:focus-visible {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+}
+
+.gv-crumbs__item:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-crumbs__item[aria-current="page"] {
+  color: var(--nv-text);
+}
+
+.gv-crumbs__sep {
+  display: grid;
+  color: var(--nv-text-disabled);
+}
+
+/* Folder cards as albums (Google Photos): cover, name, count. */
+.gv-albums {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(190px * var(--nv-scale)), 1fr));
+  gap: var(--nv-space-5) var(--nv-space-4);
+}
+
+.gv-album {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--nv-space-1);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nv-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gv-album__cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  margin-bottom: var(--nv-space-2);
+  overflow: hidden;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+.gv-album:hover .gv-album__cover {
+  transform: scale(1.02);
+}
+
+.gv-album:active .gv-album__cover {
+  transform: scale(var(--nv-press-scale));
+}
+
+.gv-album:focus-visible {
+  outline: none;
+}
+
+.gv-album:focus-visible .gv-album__cover {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-album__glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--nv-text-3);
+}
+
+.gv-album__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-body);
+  font-weight: var(--nv-weight-semibold);
+}
+
+.gv-album__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--nv-size-caption);
+  color: var(--nv-text-3);
+}
+
+/* ---------- TV shelves (Apple TV / Google TV photos) ---------- */
+.gv-shelves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nv-space-6);
+  padding-top: var(--nv-space-3);
+}
+
+.gv-shelf__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nv-space-4);
+  margin-bottom: var(--nv-space-2);
+}
+
+.gv-shelf__title {
+  margin: 0;
+  font-family: var(--nv-font-display);
+  font-size: var(--nv-size-title);
+  font-weight: var(--nv-weight-bold);
+}
+
+.gv-shelf__all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nv-space-1);
+  min-height: var(--nv-target);
+  padding: 0 var(--nv-space-3);
+  border: 0;
+  border-radius: var(--nv-radius-action);
+  background: transparent;
+  color: var(--nv-text-2);
+  font: inherit;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  cursor: pointer;
+}
+
+.gv-shelf__all:hover,
+.gv-shelf__all:focus-visible {
+  background: var(--nv-surface);
+  color: var(--nv-text);
+  outline: none;
+}
+
+.gv-shelf__all:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+/* Room above and below for the focus lift; the row scrolls as focus moves. */
+.gv-shelf__row {
+  display: flex;
+  gap: var(--nv-space-4);
+  overflow-x: auto;
+  padding: var(--nv-space-4) var(--nv-space-2);
+  margin: calc(-1 * var(--nv-space-4)) calc(-1 * var(--nv-space-2));
+  scroll-padding-inline: var(--nv-space-6);
+  scrollbar-width: none;
+}
+
+.gv-shelf__row::-webkit-scrollbar {
+  display: none;
+}
+
+.gv-shelf__tile {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nv-radius-content);
+  background: var(--nv-surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--nv-dur-move) var(--nv-ease-out);
+}
+
+/* The home's focus grammar: lift and the ink ring. */
+.gv-shelf__tile:hover,
+.gv-shelf__tile:focus-visible {
+  z-index: 1;
+  transform: scale(1.06);
+}
+
+.gv-shelf__tile:focus-visible {
+  outline: var(--nv-focus-width) solid var(--nv-focus);
+  outline-offset: var(--nv-focus-offset);
+}
+
+.gv-shelf__tile:active {
+  transform: scale(var(--nv-press-scale));
+}
+
+/* A solid caption band (no gradient: the photo scrim is the only one). */
+.gv-shelf__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--nv-space-2) var(--nv-space-3);
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: var(--nv-size-label);
+  font-weight: var(--nv-weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gv-shelf__count {
+  font-size: var(--nv-size-caption);
+  font-weight: var(--nv-weight-regular, 400);
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-skeleton span {
+    animation: none;
+  }
+
+  .gv-shelf__tile,
+  .gv-album__cover {
+    transition: none;
+  }
+}

@@ -86,7 +86,8 @@ pub async fn get_image_thumbnail(
         .map(|time| time.as_nanos())
         .unwrap_or(0);
     let cache_key = format!(
-        "{}_{}_{}_v2",
+        // v3: thumbnails honour EXIF orientation.
+        "{}_{}_{}_v3",
         compute_hash(&file_path),
         metadata.len(),
         modified
@@ -105,7 +106,7 @@ pub async fn get_image_thumbnail(
     // Generate thumbnail in blocking threadpool to avoid freezing UI
     let file_path_clone = file_path.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let img = image::open(&file_path_clone).map_err(|e| e.to_string())?;
+        let img = super::image_meta::open_oriented(&file_path_clone)?;
 
         // Fast downsampling with triangle filter for low-spec Surface Pro 4
         let thumb = img.thumbnail(max_dim, max_dim);

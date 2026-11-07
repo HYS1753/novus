@@ -8,6 +8,9 @@
     "core:window:allow-close",
     "core:window:allow-is-fullscreen",
     "core:window:allow-set-fullscreen",
-    "opener:default"
+    "opener:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

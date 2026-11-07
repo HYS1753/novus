@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "novus-web", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 5173 },
+    {
+      "name": "novus-web-alt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "vite", "--port", "5175", "--strictPort"],
+      "port": 5175
+    }
+  ]
+}

@@ -18,17 +18,17 @@ Novus는 저사양 태블릿/PC(4GB RAM급) 환경에서 시동 시 즉시 실�
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                       pages                            │
-│           (DashboardPage, SettingsPage, etc.)          │
+│        (DashboardPage, HomeV2Screen, StyleGuideV2)     │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                      widgets                           │
-│     (QuickHeader, MediaShelf, WeatherClock, etc.)      │
+│   (HomeV2, SettingsV2, Onboarding, Gallery, Finder)    │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │                      features                          │
-│     (useLaunchApp, TouchNavigation, VirtualDPad)       │
+│  (useLaunchApp, useWeather, useAmbientPhoto, useIdle)  │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
@@ -87,33 +87,38 @@ src-tauri/
 
 프론트엔드는 Rust 커맨드를 직접 호출하지 않고, 반드시 `src/shared/api/tauri/` 래퍼 함수를 통해 통신합니다.
 
-| Tauri 커맨드명                    | 래퍼 함수 (`src/shared/api/tauri/`)               | 내부 동작 및 메커니즘                                                                                                                                                                                              |
-| :-------------------------------- | :------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `show_streaming_page`             | `showStreamingPage(id, url, bounds)`              | • **지연 생성**: 페이지 미존재 시 자식 웹뷰를 메인 창에 `add_child` 도킹<br>• **재진입**: 이미 존재할 경우 뷰포트 bounds 복원 및 `show()`<br>• **자동 스왑**: 이전에 표시되던 다른 페이지를 자동으로 `hide()` 처리 |
-| `hide_streaming_page`             | `hideStreamingPage(id)`                           | • **세션 보존**: 웹뷰를 파괴하지 않고 `hide()` 및 오프스크린 이동 처리<br>• 메모리 상에 DOM과 로그인 세션 쿠키를 유지하여 홈 복귀 지원                                                                             |
-| `update_streaming_page_bounds`    | `updateStreamingPageBounds(id, bounds, revision)` | • 태블릿 독 위치(`right` \| `left` \| `bottom`) 변경 시 리로드 없이 뷰포트 크기/위치만 즉시 갱신 (`set_bounds`, 이전 revision 제외)                                                                                |
-| `reload_streaming_page`           | `reloadStreamingPage(id)`                         | • 브라우저 프로세스 재시작 없이 웹뷰의 `reload()`만 실행                                                                                                                                                           |
-| `go_back_or_close_streaming_page` | `goBackOrCloseStreamingPage(id)`                  | • 브라우저 히스토리 이전 페이지로 뒤로가기 실행 (`history.back()`)<br>• 더 이상 뒤로갈 히스토리가 없는 경우 해당 페이지를 즉시 파괴(`discard`)하여 메모리를 반환하고 홈 복귀 신호(false) 전달                      |
-| `discard_streaming_page`          | `discardStreamingPage(id)`                        | • 저사양 메모리 압박 시 비활성 페이지 웹뷰 인스턴스 파괴 (`close()`)<br>• 공용 프로필 쿠키 DB는 유지되어 재오픈 시 즉시 로그인 복원                                                                                |
-| `get_system_locations`            | `getSystemLocations()`                            | • Windows 드라이브(`C:\`, `D:\`) / macOS 볼륨 및 주요 시스템 폴더(사진, 동영상, 다운로드, 문서, 홈) 목록 감지 반환                                                                                                 |
-| `scan_directory`                  | `scanDirectory(path, filterMode)`                 | • 파인더에서 쓰는 동기 디렉터리 스캔. `filterMode: "media"` 시 이미지/비디오만 추출, `"all"` 시 전체 시스템 파일 추출                                                                                              |
-| `get_media_page`                  | `getMediaPage(options)`                           | • 갤러리 전용: 백그라운드에서 폴더를 스캔·검색·정렬해 단일 스냅샷을 만들고, 스냅샷 ID와 오프셋으로 최대 120개씩 반환. 기본 요청 크기는 80개이며 새 검색·정렬·새로고침은 기존 스냅샷을 무효화                       |
-| `open_file_in_os`                 | `openFileInOs(path)`                              | • OS 기본 쉘/애플리케이션을 통해 지정된 파일 또는 폴더 열기 (`tauri_plugin_opener`)                                                                                                                                |
-| `get_image_thumbnail`             | `getImageThumbnail(filePath, maxDim)`             | • 블로킹 작업 풀에서 축소한 JPEG Base64 URI 반환. 파일 경로·크기·수정 시각·출력 크기 기반 앱 캐시 디렉터리에 저장하며 주기적으로 256MiB 초과분을 정리. 프런트엔드는 동시 요청을 2개로 제한                         |
-| `cleanup_thumbnail_cache`         | `cleanupThumbnailCache()`                         | • 명시적으로 호출될 때 앱 캐시 디렉터리의 썸네일 삭제. 앱 시작·종료에는 호출하지 않음                                                                                                                              |
-| `play_video_native`               | `playVideoNative(filePath)`                       | • 사용자가 외부 재생을 선택한 경우 MPV 설치 및 로컬 후보 경로를 탐색해 하드웨어 가속으로 구동하고, 없으면 OS 기본 플레이어로 폴백                                                                                  |
-| `get_device_profile`              | `getDeviceProfile()`                              | • 앱 시작 시 수집해 Tauri State에 보관한 운영체제·버전·기기명·제조사·모델·CPU·논리 코어·RAM·아키텍처를 반환. 프런트엔드는 동일 Promise를 공유해 다시 수집하지 않음                                                 |
-| `get_embedded_player_support`     | `getEmbeddedPlayerSupport()`                      | • Windows는 묶인 DLL 파일을, macOS는 dylib와 의존 파일의 실제 로딩·필수 심볼을 확인해 `available` 반환. macOS 결과는 세션 동안 캐시                                                                                |
-| `open_embedded_video`             | `openEmbeddedVideo(id, path, bounds)`             | • Windows 자식 HWND 또는 macOS NSView를 생성해 libmpv에 결합. 파일 경로를 정규화하고 OS별 단일 세션 유지. 엔진이 없으면 갤러리에서 WebView `<video>` 사용                                                          |
-| `update_embedded_video_bounds`    | `updateEmbeddedVideoBounds(id, bounds)`           | • 화면 영역을 Windows에서는 DPI 적용 HWND 좌표로, macOS에서는 상단 원점 CSS 좌표를 NSView 프레임으로 변환해 전달. 세션 ID가 다르면 갱신하지 않음                                                                   |
-| `close_embedded_video`            | `closeEmbeddedVideo(id)`                          | • 디코더 스레드를 종료하고 Win32 자식 창 또는 NSView를 UI 스레드에서 제거. 이미 바뀐 세션 ID의 닫기 요청은 무시                                                                                                    |
-| `control_embedded_video`          | `controlEmbeddedVideo(id, action)`                | • Windows/macOS 공통 재생·일시정지, 10초 앞뒤 이동, 절대 시간/퍼센트 탐색, 음량 조절, 음소거 토글을 해당 libmpv 세션 작업 스레드에 전달. 세션 ID를 확인하고 결과를 반환                                            |
-| `get_embedded_video_state`        | `getEmbeddedVideoState(id)`                       | • 현재 재생 위치(time-pos), 전체 길이(duration), 일시정지 여부(pause), 음량(volume), 음소거(mute) 상태를 libmpv C API 속성 조회를 통해 실시간 질의                                                                 |
-| `launch_native_app_mode`          | `launchNativeAppMode(url)`                        | • 시스템 Edge / Chrome PWA 앱 모드(`--app`) 외부 프로세스 런처 (비상 폴백용)                                                                                                                                       |
+| Tauri 커맨드명                    | 래퍼 함수 (`src/shared/api/tauri/`)               | 내부 동작 및 메커니즘                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| :-------------------------------- | :------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `show_streaming_page`             | `showStreamingPage(id, url, bounds)`              | • **지연 생성**: 페이지 미존재 시 자식 웹뷰를 메인 창에 `add_child` 도킹<br>• **재진입**: 이미 존재할 경우 뷰포트 bounds 복원 및 `show()`<br>• **자동 스왑**: 이전에 표시되던 다른 페이지를 자동으로 `hide()` 처리                                                                                                                                                                                                                                                                                                                                                 |
+| `hide_streaming_page`             | `hideStreamingPage(id)`                           | • **세션 보존**: 웹뷰를 파괴하지 않고 `hide()` 및 오프스크린 이동 처리<br>• 메모리 상에 DOM과 로그인 세션 쿠키를 유지하여 홈 복귀 지원                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `update_streaming_page_bounds`    | `updateStreamingPageBounds(id, bounds, revision)` | • 태블릿 독 위치(`right` \| `left` \| `bottom`) 변경 시 리로드 없이 뷰포트 크기/위치만 즉시 갱신 (`set_bounds`, 이전 revision 제외)                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `reload_streaming_page`           | `reloadStreamingPage(id)`                         | • 브라우저 프로세스 재시작 없이 웹뷰의 `reload()`만 실행                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `go_back_or_close_streaming_page` | `goBackOrCloseStreamingPage(id)`                  | • 브라우저 히스토리 이전 페이지로 뒤로가기 실행 (`history.back()`)<br>• 더 이상 뒤로갈 히스토리가 없는 경우 해당 페이지를 즉시 파괴(`discard`)하여 메모리를 반환하고 홈 복귀 신호(false) 전달                                                                                                                                                                                                                                                                                                                                                                      |
+| `discard_streaming_page`          | `discardStreamingPage(id)`                        | • 저사양 메모리 압박 시 비활성 페이지 웹뷰 인스턴스 파괴 (`close()`)<br>• 공용 프로필 쿠키 DB는 유지되어 재오픈 시 즉시 로그인 복원                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `get_system_locations`            | `getSystemLocations()`                            | • Windows 드라이브(`C:\`, `D:\`) / macOS 볼륨 및 주요 시스템 폴더(사진, 동영상, 다운로드, 문서, 홈) 목록 감지 반환                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `scan_directory`                  | `scanDirectory(path, filterMode)`                 | • 파인더에서 쓰는 동기 디렉터리 스캔. `filterMode: "media"` 시 이미지/비디오만 추출, `"all"` 시 전체 시스템 파일 추출                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `get_media_page`                  | `getMediaPage(options)`                           | • 갤러리 전용: 백그라운드에서 폴더를 스캔·검색·정렬해 단일 스냅샷을 만들고, 스냅샷 ID와 오프셋으로 최대 120개씩 반환. 기본 요청 크기는 80개이며 새 검색·정렬·새로고침은 기존 스냅샷을 무효화<br>• `kind`: `all`(폴더+미디어) · `media`(사진+동영상, 폴더 제외) · `image` · `video`<br>• `recursive`: 하위 폴더 전체(타임라인용). 숨김·심볼릭 링크·시스템 폴더(`$Recycle.Bin`, `Windows`, `AppData` 등) 제외, 최대 20,000개·8단계, 초과 시 `truncated`<br>• 반환하는 페이지의 사진마다 헤더만 읽어 `width`/`height`(EXIF 방향 반영)를 채움. 스냅샷 잠금 밖에서 읽음 |
+| `get_media_timeline`              | `getMediaTimeline(snapshotId)`                    | • 현재 스냅샷을 정렬 순서대로 훑어 연속된 같은 달(로컬 시간, 수정 시각 기준) 묶음 `{year, month, count, first_index}` 목록을 반환. 날짜 스크러버가 `first_index`를 오프셋으로 써서 해당 달로 이동                                                                                                                                                                                                                                                                                                                                                                  |
+| `get_folder_summaries`            | `getFolderSummaries(paths)`                       | • 폴더 카드용: 폴더마다 바로 아래의 사진·동영상 개수, 가장 최근 사진(표지), 하위 폴더 여부를 반환. 호출당 48개, 폴더당 5,000개 항목까지만 읽음                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `open_file_in_os`                 | `openFileInOs(path)`                              | • OS 기본 쉘/애플리케이션을 통해 지정된 파일 또는 폴더 열기 (`tauri_plugin_opener`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `get_image_thumbnail`             | `getImageThumbnail(filePath, maxDim)`             | • 블로킹 작업 풀에서 축소한 JPEG Base64 URI 반환. EXIF 방향을 적용해 디코딩합니다(`image_meta::open_oriented`, 캐시 키 v3). 파일 경로·크기·수정 시각·출력 크기 기반 앱 캐시 디렉터리에 저장하며 주기적으로 256MiB 초과분을 정리. 프런트엔드는 동시 요청을 2개로 제한                                                                                                                                                                                                                                                                                               |
+| `cleanup_thumbnail_cache`         | `cleanupThumbnailCache()`                         | • 명시적으로 호출될 때 앱 캐시 디렉터리의 썸네일 삭제. 앱 시작·종료에는 호출하지 않음                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `play_video_native`               | `playVideoNative(filePath)`                       | • 사용자가 외부 재생을 선택한 경우 MPV 설치 및 로컬 후보 경로를 탐색해 하드웨어 가속으로 구동하고, 없으면 OS 기본 플레이어로 폴백                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `get_device_profile`              | `getDeviceProfile()`                              | • 앱 시작 시 수집해 Tauri State에 보관한 운영체제·버전·기기명·제조사·모델·CPU·논리 코어·RAM·아키텍처를 반환. 프런트엔드는 동일 Promise를 공유해 다시 수집하지 않음                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `get_embedded_player_support`     | `getEmbeddedPlayerSupport()`                      | • Windows는 묶인 DLL 파일을, macOS는 dylib와 의존 파일의 실제 로딩·필수 심볼을 확인해 `available` 반환. macOS 결과는 세션 동안 캐시                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `open_embedded_video`             | `openEmbeddedVideo(id, path, bounds)`             | • Windows 자식 HWND 또는 macOS NSView를 생성해 libmpv에 결합. 파일 경로를 정규화하고 OS별 단일 세션 유지. 엔진이 없으면 갤러리에서 WebView `<video>` 사용                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `update_embedded_video_bounds`    | `updateEmbeddedVideoBounds(id, bounds)`           | • 화면 영역을 Windows에서는 DPI 적용 HWND 좌표로, macOS에서는 상단 원점 CSS 좌표를 NSView 프레임으로 변환해 전달. 세션 ID가 다르면 갱신하지 않음                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `close_embedded_video`            | `closeEmbeddedVideo(id)`                          | • 디코더 스레드를 종료하고 Win32 자식 창 또는 NSView를 UI 스레드에서 제거. 이미 바뀐 세션 ID의 닫기 요청은 무시                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `control_embedded_video`          | `controlEmbeddedVideo(id, action)`                | • Windows/macOS 공통 재생·일시정지, 10초 앞뒤 이동, 절대 시간/퍼센트 탐색, 음량 조절, 음소거 토글을 해당 libmpv 세션 작업 스레드에 전달. 세션 ID를 확인하고 결과를 반환                                                                                                                                                                                                                                                                                                                                                                                            |
+| `get_embedded_video_state`        | `getEmbeddedVideoState(id)`                       | • 현재 재생 위치(time-pos), 전체 길이(duration), 일시정지 여부(pause), 음량(volume), 음소거(mute) 상태를 libmpv C API 속성 조회를 통해 실시간 질의                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `launch_native_app_mode`          | `launchNativeAppMode(url)`                        | • 시스템 Edge / Chrome PWA 앱 모드(`--app`) 외부 프로세스 런처 (비상 폴백용)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 로컬 영상의 프런트엔드 계약은 운영체제에 관계없이 `src/shared/api/tauri/embeddedVideo.ts`를 사용합니다. 앱 시작 시 수집한 `DeviceProfile.os_family`는 지원 조회의 플랫폼 값으로 쓰고, 갤러리는 운영체제명을 직접 비교하지 않고 `available` 기능값으로 재생 경로를 선택합니다. Windows는 자식 HWND를, macOS는 메인 스레드에서 붙인 NSView를 libmpv의 `wid`로 넘깁니다. macOS 지원 조회는 묶인 dylib와 의존성을 실제로 동적 로딩하고 필수 심볼을 확인한 결과를 세션 동안 캐시합니다. 열기·크기 변경·닫기는 OS별 단일 세션을 관리하며 디코더 스레드와 네이티브 뷰를 종료 시 해제합니다. `control_embedded_video`와 `get_embedded_video_state`는 동일 세션 스레드에서 mpv 명령과 속성을 질의·실행하며, 프론트엔드의 `VideoPlayerControls`는 반응형 타임라인 진행 바, 10초 건너뛰기, 정밀 음량 조절, 재생 시간 표시, 모든 재생 경로에서 상·하단 조작 UI의 3초 무조작 자동 숨김과 키보드 단축키를 표준 제공합니다. Windows 네이티브 영상은 고정된 전체 클라이언트 영역에 렌더링하고, 재생 중에만 생성하는 투명 조작 웹뷰가 그 위에서 UI를 합성합니다. 웹뷰 영상도 고정된 캔버스 위 DOM 조작 UI를 사용합니다. 배포 번들은 `src-tauri/tauri.conf.json`의 `bundle.resources` 및 `macOS.files` 설정을 통해 `bin/mpv`의 라이브러리를 각각 Windows `Resources/mpv` 및 macOS `Contents/Frameworks/mpv`에 자동 패키징합니다. 이 폴더에 유효한 라이브러리가 없으면 WebView 재생을 사용합니다. 의존 바이너리는 `pnpm setup:mpv`(`scripts/setup_mpv.py`)를 통해 버전별로 일관되게 관리·다운로드됩니다.
 
 ---
+
+- **자동 시작 플러그인**: `tauri-plugin-autostart`를 `lib.rs`에서 등록하고 `capabilities/default.json`에 `autostart:allow-enable/disable/is-enabled`를 허용합니다. 프런트 래퍼는 `src/shared/api/tauri/autostart.ts`.
+- **외부 HTTP**: 날씨는 IPC가 아니라 웹뷰에서 직접 `https://api.open-meteo.com`, `https://geocoding-api.open-meteo.com`을 호출합니다(`src/shared/api/weather/`). 현재 CSP는 `null`입니다.
 
 ## 4. 디렉토리 구조 맵
 
@@ -125,18 +130,17 @@ novus/
 │   └── HANDOVER.md       # 인수인계 및 기능 구현 명세
 ├── src/                  # React 19 프론트엔드 소스
 │   ├── app/              # 앱 루트 & 글로벌 스타일
-│   ├── pages/            # 화면 (DashboardPage, StyleGuidePage 등)
+│   ├── pages/            # 화면 (DashboardPage + HomeV2Screen, Gallery, Finder, StyleGuideV2)
 │   ├── widgets/          # 모듈형 위젯
 │   ├── features/         # 비즈니스 기능
 │   ├── entities/         # 도메인 모델
 │   ├── shared/           # 공통 기반 인프라 (UI Kit, Tauri IPC, Hooks)
 │   │   ├── ui/           # 공통 UI 컴포넌트 (모든 화면 UI는 이 계층에서 재활용)
-│   │   │   ├── common/   # UI 코어 18종 (GlassCard, GlassButton, GlassSegmentedControl, etc.)
+│   │   │   ├── v2/       # v2 컴포넌트 (NvRoot, NvButton, NvGlyphButton, NvServicePlate, NvSheet, …)
 │   │   │   ├── media/    # GlassMediaTile (1:1 풀커버 타일 + GPU 저비용 하단 틴트 오버레이)
 │   │   │   ├── nav/      # SubpageDock (내부 서브페이지 표준 시스템 독)
-│   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons 및 공통 MotionIcon 모션 프리셋
-│   │   │   ├── button/   # TouchButton
-│   │   │   └── card/     # MediaCard
+│   │   │   ├── icons/    # BrandIcons, NovusLogo, SystemIcons
+│   │   │   └── button/   # TouchButton
 │   │   ├── api/          # Tauri IPC 래퍼 (mediaFs, mediaPlayer, window)
 │   │   ├── hooks/        # 저사양 최적화 훅 (useCurrentTime, useDockPosition, etc.)
 │   │   └── types/        # 공통 타입 (DockPosition, etc.)
@@ -151,7 +155,7 @@ novus/
 ### 아이콘 및 모션 경계
 
 - SVG 아이콘은 `src/shared/ui/icons/`에서만 정의하며 화면·위젯 내부에 개별 SVG나 문자형 닫기/정렬 아이콘을 만들지 않습니다.
-- 아이콘 애니메이션은 `MotionIcon`의 `pop`, `rotate`, `tilt`, `nudge-left`, `nudge-right`, `nudge-up`, `spin`, `pulse`, `breathe` 프리셋만 사용합니다.
+- 아이콘 애니메이션은 `shared/ui/v2/iconMotion.ts`가 아이콘 종류로 정하고(`NvIconMotion`, 글리프·버튼·독·뷰어·동영상 조작부), 버튼에 마우스를 올리거나 포커스·누를 때 한 번 transform으로 움직입니다. 동작 줄이기에서는 멈춥니다.
 - 상호작용 프리셋은 상위 버튼의 hover/focus에 반응합니다. 반복 프리셋은 실제 진행·연결 상태에서만 `active`로 실행하고 `prefers-reduced-motion`에서는 정지합니다.
 - 스트리밍 `InAppDock`은 별도 내비게이션 DOM을 만들지 않고 `SubpageDock`에 스트리밍 전용 액션 슬롯만 조합합니다.
 - 파일 탐색 화면은 `SubpageDock`의 방문 기록 뒤로가기와 `PathNavigation`의 상위 폴더·브레드크럼을 명확히 분리합니다.
@@ -160,28 +164,41 @@ novus/
 
 ## 5. 디자인 시스템 & Style Guide
 
-- **토큰**: `src/app/styles/variables.css` (색·타입·모션·머티리얼), 컴포넌트는 `src/shared/ui/common`
-- **머티리얼 모델**: 모든 면은 `틴트 + 헤어라인 엣지 + 상단 스펙큘러 + elevation`으로 구성되며, 여기에 역할별 블러가 더해집니다.
-  - **머티리얼 강도는 0–100 연속값 하나**입니다. 런타임이 `<html>`에 `--material-intensity`(0–1)를 씁니다.
-  - 역할별 블러는 강도에 비례하며 항상 `14 : 26 : 40` 비율을 유지합니다 (`--material-blur-control` / `-panel` / `-overlay`).
-  - 설계상 상한이 있습니다: 100에서도 틴트 알파는 `0.62`에서 멈추고(`--material-tint-alpha`), 엣지는 `--material-edge-boost`만큼 진해집니다. 값을 끝까지 올려도 면이 배경에 녹아 떠 보이지 않습니다.
-  - 기본값은 `0`(완전 불투명)이며, `html[data-frost]`가 없을 때는 `backdrop-filter`를 **한 선언도 출력하지 않습니다**. 저사양 타깃에서 합성 레이어가 생기지 않습니다.
-  - `backdrop-filter` 미지원 또는 `prefers-reduced-transparency: reduce`일 때 강도는 강제로 0으로 내려갑니다.
-- **런타임 제어**: `src/shared/lib/material.ts`(`applyMaterialIntensity`, `resolveMaterialIntensity`, `clampMaterialIntensity`, `describeMaterialIntensity`)와 `useMaterialIntensity` 훅. 향후 설정 화면이 이 API를 그대로 사용합니다.
-- **모션 시스템**: 인터랙션 → 레시피 매핑을 고정합니다. `press`(누름) · `lift`(호버) · `reveal`(제자리 등장) · `emerge`(트리거 기반 오버레이) · `enter`(가장자리 진입) · `pulse`(무한 진행). 컴포넌트는 duration/easing을 직접 쓰지 않고 `--motion-*`, `--ease-*`, `--press-scale`, `--lift-distance` 토큰과 `.motion-*` 클래스를 참조합니다. `prefers-reduced-motion: reduce`에서 이동은 제거되고 상태 변화만 남습니다.
-- **Style Guide 페이지** (`StyleGuidePage`): Vite 브라우저 DEV에서만 `/styleguide`로 접근. Tauri 런타임 및 프로덕션 빌드에서는 마운트되지 않음 (`isStyleGuideRouteEnabled`). 제품 설정 화면이 아니라 톤앤매너·토큰·컴포넌트 스펙시먼 문서입니다.
+디자인 시스템 명세(토큰 값, 형태·색 규칙, 금지 목록)는 루트의 [`DESIGN.md`](../DESIGN.md)와 `.impeccable/design.json`이 기준입니다. 이 절은 런타임 동작만 설명합니다.
+
+- **머티리얼 강도**: 0–100 값 하나(`useMaterialIntensity`, `src/shared/lib/material.ts`)가 `<html>`에 `--material-intensity`(0–1)를 씁니다. v2에서는 블러가 아니라 사진 스크림 농도(`--nv-scrim-strength`)로만 반영됩니다.
+- **Style Guide 페이지** (`StyleGuideV2Page`): Vite 브라우저 DEV에서만 `/styleguide`로 접근(`isStyleGuideRouteEnabled`). Tauri 런타임과 프로덕션 빌드에서는 마운트되지 않습니다. 실제 `HomeV2` 위젯을 예시 데이터로 1368×912에 렌더링하고, 언어·테마·보기 모드를 실시간으로 바꿉니다.
+
+### v2 디자인 시스템
+
+- **범위**: 모든 사용자 화면은 `.nv-root` 아래에서 Nv 토큰을 사용합니다. 구형 `html.dark` 테마 초기화와 별도 테마 훅은 사용하지 않습니다.
+- **토큰**: `src/app/styles/v2/tokens.css`. 중립 9단 램프(`--nv-n0`~`--nv-n8`) → 역할 토큰(`--nv-ground`, `--nv-surface`, `--nv-text` 등). 의미색은 `--nv-live`(실행 중), `--nv-attention`(확인 필요), `--nv-sun`/`--nv-sat`(달력 주말) 네 개뿐입니다.
+- **테마**: `data-theme` 없음 = OS 설정 추종, `light`/`dark` = 사용자 고정.
+- **보기 모드**: `data-posture="tablet"`(배율 1, 터치 48px) / `"tv"`(배율 1.25, 터치 64px). 모든 크기 토큰은 `--nv-scale`을 곱합니다.
+- **사진 위 크롬**: `.nv-on-media` 안에서는 테마와 무관하게 흰색. 유일한 반투명은 사진 하단 스크림(`--nv-scrim`)이며, 머티리얼 강도는 스크림 농도로만 반영됩니다. 블러는 쓰지 않습니다.
+- **컴포넌트**: `src/shared/ui/v2/` (`Nv*` 접두사). 원형 `NvGlyphButton` = 전역 동작, 사각 `NvButton`/`NvServicePlate` = 콘텐츠의 동작.
+- **터치 영역**: NvSegmented의 각 선택 버튼과 NvToggle 버튼은 `--nv-target` 이상의 가로·세로 영역을 가집니다(tablet 최소 48px, TV 최소 64px). 토글의 시각적 트랙은 별도 span으로 작게 유지해 창 배율을 줄여도 조작 영역은 줄지 않습니다.
+- **폴더 선택기**: `features/pick-folder`의 하위 폴더·빠른 위치 목록은 각각 4개씩 페이지를 교체합니다. 폴더 수에 비례해 홈 위의 DOM이 증가하지 않으며 경로 변경 시 하위 폴더의 첫 페이지로 돌아갑니다.
+- **`NvRoot`**: 모든 v2 화면의 루트. 저장된 테마·보기 모드·언어를 `data-theme`/`data-posture`/`lang`으로 적용하고, 시트·대화상자 포털(`data-nv-portal`)과 방향키 공간 탐색을 제공합니다.
+- **설정 저장소**: `src/shared/lib/preferences.ts` (`novus.v2.preferences` 한 레코드, localStorage 실패 시 메모리). 컴포넌트는 `usePreference(key)`로 읽고 씁니다. 키: `language`, `posture`, `theme`, `onboardingDone`, `ambientFolder`, `ambientDelayMinutes`, `weatherCity`.
+- **기존 설정 이주**: 시작 시 레코드의 값·형식을 검증합니다. 유효한 V2 theme(system/light/dark)가 우선이며 없으면 `novus-theme`의 light/dark를 이주하고, 둘 다 없으면 system입니다. 이주 저장이 실패해도 세션은 계속되며 구형 키는 지우지 않습니다. 독 위치·머티리얼 강도·미디어 방문 기록의 기존 키와 WebView2 로그인 프로필을 유지합니다. 자동 업데이트 설정은 네이티브 `updater.json`만 사용합니다.
+- **업데이트 시트**: `UpdateSettingsV2`는 기존 단일 controller를 구독합니다. 설치 확인이 동적으로 열리면 ‘나중에’에 포커스를 주고 취소하면 설치 버튼으로 돌려줍니다. 작업 오류와 설정 저장 오류를 별도로 표시하며 저장 오류로 중단한 자동 작업은 설정을 다시 저장해야 재개합니다. 시트를 닫으면 확인만 해제하고 진행 중 다운로드는 유지합니다.
+- **다국어**: `src/shared/lib/i18n/`. 한국어 카탈로그(`messages/ko.ts`)가 기준이고 `en`/`ja`/`zh-CN`은 같은 키를 타입으로 강제합니다. `useI18n()`이 `t(key, vars)`, 상대 시간, 목록, 시각 포맷(`Intl`)을 제공합니다. 언어 미설정 시 OS 언어에서 고르고, 없으면 한국어.
+- **방향키 공간 탐색**: `src/shared/lib/spatialNavigation.ts` + `useSpatialNavigation`. 누른 방향에서 가장 가까운 포커스 대상을 고르며, `[data-nav-scope]`(시트·대화상자) 밖으로 나가지 않습니다. 텍스트 입력·슬라이더·라디오 그룹은 좌우 키를 스스로 씁니다.
+- **세션 사용 시각**: `src/shared/lib/sessionActivity.ts`. 허브가 실제로 본 사실(서비스가 화면에 나타나고 떠난 시각)만 기록해 "12분 전 사용" 캡션에 씁니다.
+- **v1 제거 완료**: 모든 화면(홈·설정·온보딩·갤러리·파일·사진 뷰어·동영상 플레이어·독·스트리밍 로딩)이 v2 컴포넌트입니다. v1 토큰 브리지(`bridge.css`)·`global.css`·`variables.css`·`Glass*`·`MotionIcon`은 삭제했습니다. 앱 바깥 공통 규칙(리셋, 앱 셸, 서브페이지 틀과 독 위치, 스트리밍 로딩 표시/숨김, 창 모드 오류)은 `src/app/styles/v2/app.css` 한 곳에 있습니다. 서브페이지는 `NvRoot` 안에서 렌더링되고, 스트리밍만 자체 방향키를 쓰므로 공간 탐색을 끕니다. Windows 동영상 오버레이 창도 `NvRoot`로 감싸 v2 토큰을 받고 배경은 투명하게 둡니다.
+- **기본 앰비언트 아트워크**: `src/assets/ambient/*.jpg`(1600×1000 절차 생성 래스터, 생성기 `scripts/design/generate-ambient-art.py`). 각 이미지에 초점 높이(`focusY`)가 있어, 사진이 접힐 때 띠가 그 높이(수평선 등)를 중심으로 보입니다. 사용자 사진은 0.5.
+- **v2 Style Guide**: DEV 브라우저에서 `/styleguide`. 테마·보기 모드를 실시간으로 바꾸며 홈 패턴(사진 접힘 포함)을 1368×912 기준으로 확인합니다.
 
 ---
 
 ## 6. 로컬 미디어 및 파일 탐색 상태
 
-갤러리와 파인더는 `DashboardPage`가 전환하는 독립 화면입니다. 두 화면의 `useFileBrowser`는 `navigateTo`가 방문 경로를 최대 50개 쌓으며 `navigateBack`이 이를 역순으로 소비합니다. 각 화면의 현재 경로와 방문 기록은 `novus.browser.media` / `novus.browser.all` 키로 `localStorage`에 저장됩니다. 홈으로 이동하면 화면 컴포넌트와 파일 목록은 해제되고 재진입 시 저장된 경로를 다시 스캔합니다. 파인더는 `scan_directory`로 전체 목록을 읽고, 갤러리는 `get_media_page`로 Rust 메모리의 현재 폴더 스냅샷에서 80개씩 받습니다. 갤러리 검색은 입력 후 250ms 대기해 재스캔하고, 정렬·검색·새로고침은 새 스냅샷을 만듭니다. 검색과 정렬은 파일시스템을 변경하지 않습니다.
+갤러리와 파인더는 `DashboardPage`가 전환하는 독립 화면입니다. 파일 화면은 `useFileBrowser`의 현재 경로·최대 50개 방문 기록을 `novus.browser.all`에 저장하고 `FilesV2`가 `scan_directory` 결과 중 보이는 행·타일만 렌더링합니다. 갤러리는 `useGallery` + `useMediaCollection`을 사용하며 위치·탭·폴더·정렬을 `novus.gallery.v2`에 저장합니다. 구형 `novus.browser.media` 데이터는 삭제하지 않지만 V2의 위치/탭 모델과 별도입니다. 홈으로 이동하면 화면과 목록을 해제하고 재진입 시 저장된 위치를 다시 읽습니다. `get_media_page`의 슬롯별 스냅샷(`library`: 위치 전체 재귀, `folder`: 현재 폴더)에서 필요한 80개 페이지만 받고, 검색은 입력 후 250ms 대기합니다. 정렬·검색·새로고침은 새 스냅샷을 만들며 파일시스템을 변경하지 않습니다.
 
-독의 뒤로가기는 갤러리의 열린 뷰어, 방문 기록, 홈 순서로 동작합니다. 상위 폴더와 브레드크럼 이동은 `PathNavigation`의 별도 동작입니다. 갤러리는 현재 스크롤 위치와 뷰포트 크기에서 보이는 격자 행 및 양쪽 여유 행만 마운트하고, 스크롤 끝에 가까워지면 다음 묶음을 요청합니다. 파인더는 40개 단위 페이지로 DOM 수를 제한합니다. 정확한 전체 정렬을 위해 갤러리의 첫 요청은 폴더 전체 메타데이터를 Rust에서 스캔·정렬하지만 프런트엔드로는 필요한 묶음만 전달합니다. 뷰어는 아직 받지 않은 다음 사진에 도달하면 후속 묶음을 요청합니다. 썸네일은 2개 동시 요청 큐와 Base64 문자열 길이 기준 12MiB 프런트엔드 URI 캐시를 거쳐 Rust 영속 디스크 캐시에 저장됩니다. 뷰어는 1600px 화면 이미지를 디코딩한 뒤 표시하고 확대 시 3200px를 요청하며, 10/15/30초 자동 재생을 지원합니다.
+독의 뒤로가기는 열린 뷰어·현재 폴더 방문 기록·홈 순서로 동작합니다. 상위 폴더와 경로 버튼은 `FilesV2`/`GalleryV2`가 직접 렌더링합니다. 갤러리는 현재 스크롤 위치와 뷰포트 크기에서 보이는 격자 행 및 양쪽 여유 행만 마운트하고 필요한 페이지를 요청합니다. 파일 목록은 행 높이와 반 화면 overscan으로 가상화합니다. 갤러리의 정렬·타임라인·폴더 요약은 Rust에서 스캔·정렬한 스냅샷을 기준으로 하며 재귀 스캔은 깊이 8·파일 20,000개로 제한합니다. 뷰어는 아직 받지 않은 사진에 도달하면 후속 페이지를 요청합니다. 썸네일은 2개 동시 요청 큐와 Base64 문자열 길이 기준 12MiB 프런트엔드 URI 캐시를 거쳐 Rust 영속 디스크 캐시에 저장됩니다. 뷰어는 1600px 화면 이미지를 디코딩한 뒤 표시하고 확대 시 3200px를 요청하며, 10/15/30초 자동 재생을 지원합니다.
 
-긴 파일 경로는 `PathNavigation`에서 현재 폴더와 바로 위 폴더를 우선 표시하고 앞쪽 조상은 `…` 메뉴로 접습니다. `상위` 버튼은 고정 크기로 유지하며 긴 현재 이름은 앞쪽을 생략해 끝부분을 표시합니다.
-
-대시보드의 스크롤 안내 상태는 `DashboardPage`의 현재 스크롤 영역에만 대응합니다. 내부 앱에서 홈으로 돌아와 대시보드 DOM이 다시 생성되면 `useLayoutEffect`가 새 영역에 스크롤·크기 감시를 연결하고 상단/하단 그라데이션 표시 여부를 페인트 전에 다시 계산합니다.
+긴 경로·목록의 표시와 스크롤 감시는 각 Nv 화면이 관리합니다. 삭제된 `PathNavigation`이나 구형 대시보드의 스크롤 그라데이션 훅은 사용하지 않습니다.
 
 ## 7. 인앱 스트리밍 뷰 및 세션/쿠키 영속성 규약 (Streaming & Storage Architecture)
 
@@ -237,11 +254,11 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 
 ### 실행 중인 웹 앱과 공통 독
 
-- 홈 이동은 웹뷰를 숨겨 DOM·재생 상태를 유지합니다. 대시보드에는 실행 목록을 표시하지 않습니다.
-- 스트리밍 앱·갤러리·파인더의 공통 `SubpageDock`은 `RunningAppsContext`로 실행 아이콘 목록을 받습니다. 기본 우측 독 외에 좌측·하단 설정도 따릅니다.
+- 홈 이동은 웹뷰를 숨겨 DOM·재생 상태를 유지합니다. 홈 1화면 캡션 아래 "실행 중 N" 트레이와 2화면 서비스 타일의 닫기 버튼이 같은 목록을 씁니다.
+- 스트리밍 앱·갤러리·파인더의 공통 `SubpageDock`(`shared/ui/nav`, `dock.css`)은 테마와 무관하게 어두운 "시어터 레일"입니다. 위에서부터 시계·화면 이름, `RunningAppsContext`의 실행 목록(서비스별 16:9 플레이트 `NvBrandArt`, 현재 앱은 100% + 안쪽 가장자리 알약 표시, 나머지는 55%, 모서리 원형 ×로 종료), 평소엔 배경 없는 도구 글리프(`DockTool`: 새로고침·전체화면·외부로 열기·설정), 뒤로·홈(유일한 채운 원) 순입니다. 스트리밍 페이지는 네이티브 뷰라 위에 겹칠 수 없어 레일은 항상 옆에 붙습니다. 기본 우측 외에 좌측·하단(작업 표시줄 형태)도 따릅니다.
 - `list_streaming_pages` / `listStreamingPages()`는 PageManager에 등록되고 실제 웹뷰가 존재하는 앱 ID를 반환합니다. 웹뷰 생성·닫기·이전 탐색 완료 후 프론트엔드 이벤트로 목록을 갱신하며 폴링하지 않습니다.
 - 아이콘 선택은 기존 웹뷰를 다시 표시하고, 닫기는 `discard_streaming_page`로 웹뷰를 파괴합니다. 현재 앱을 닫으면 홈으로 이동합니다. 닫기 실패 시 목록을 유지하고 오류를 표시합니다. 로그인 프로필 쿠키는 유지됩니다.
-- 목록은 앱이 열려 있다는 표시이며 오디오 재생 여부를 감지하지 않습니다. 외부 브라우저 프로세스와 개발 모드 iframe은 추적하지 않습니다.
+- 목록은 앱이 열려 있다는 표시이며 오디오 재생 여부를 감지하지 않습니다. 외부 브라우저 프로세스는 추적하지 않습니다. 브라우저 개발 서버(`pnpm dev`)에서는 PageManager가 없으므로 `InAppPlayer`가 `markWebStreamingPageOpen`으로 메모리 목록에 등록하고, `listStreamingPages`/`discardStreamingPage`가 그 목록을 씁니다(다시 열면 iframe은 새로 로드됨). 넷플릭스 등은 iframe을 거부하므로 실제 재생 확인은 `pnpm tauri dev`로 합니다.
 
 ### 내장 영상 플레이어 입력·종료 안전성
 
@@ -255,7 +272,7 @@ Novus는 `incognito: false` (기본 영속 모드)로 구동되므로, 사용자
 
 - Windows open_embedded_video_overlay(sessionId, video)는 메인 클라이언트 영역에 투명한 세션 ID별 video-controls-* 투명 소유 창 하나를 만듭니다. App은 네이티브가 주입한 로컬 초기화 데이터가 있으면 대시보드 대신 기존 InAppVideoModal의 조작 UI만 렌더링합니다. 디코더와 영상 HWND는 메인 창에 유지하며, 이 창은 별도의 영상 세션을 생성하지 않습니다.
 - request_embedded_video_overlay_action은 갤러리 복귀·앱 종료·전체화면 요청을 세션 ID와 함께 메인 웹뷰로 전달합니다. 영상 닫기에서 소유 조작 창을 먼저 파괴하고 기존 디코더 정리를 이어갑니다. 메인 창 크기 변경 시 조작 창 크기도 맞춥니다. 네이티브 표면의 크기 갱신은 Z 순서를 변경하지 않습니다.
-- FullscreenImageViewer는 전체 화면 크기의 고정 img 박스에 object-fit: contain을 적용합니다. 1600px URI를 Image.decode()로 준비하는 동안 GlassProgress를 표시하며, 이전 사진이나 작은 미리보기를 새 사진으로 확대하지 않습니다. 다음 사진은 미리 요청하고, 확대용 3200px도 디코딩 후 교체합니다. 경로 전환 시 확대·이동을 초기화하고 새 사진에 이전 transform 애니메이션을 넘기지 않습니다.
+- `PhotoViewer`는 전체 화면 고정 박스에 `object-fit: contain`(채우기 시 `cover`)으로 사진을 놓습니다. 1600px URI를 `Image.decode()`로 준비한 뒤 보여 주고, 준비되는 동안 이전 사진을 아래 층에 남겨 두었다가 새 사진의 220ms 페이드가 끝나면 치웁니다. 다음 사진은 미리 요청하고 확대용 3200px도 디코딩 후 교체합니다. 경로 전환 시 확대·이동을 초기화합니다. 필름스트립은 앞뒤 7장(최대 15개 썸네일)만 DOM에 둡니다.
 
 ### 창 모드와 Windows 스트리밍 전체화면
 

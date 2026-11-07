@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Novus v2 — 카테고리 표준</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1368px;height:912px;overflow:hidden;background:#0F1115;color:#fff;font-family:"Noto Sans KR",system-ui,sans-serif}
+  header{height:88px;padding:0 48px;display:flex;align-items:center;gap:32px}
+  header .logo{font-weight:900;font-size:24px}
+  header nav{display:flex;gap:8px}
+  header nav a{height:44px;padding:0 20px;border-radius:22px;display:flex;align-items:center;font-size:16px;font-weight:700;color:#C4C7CE}
+  header nav a.on{background:#fff;color:#0F1115}
+  header .r{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:18px;font-weight:700}
+  header .r i{width:44px;height:44px;border-radius:50%;background:#1E2128;display:grid;place-items:center;font-style:normal}
+  .hero{margin:0 48px;height:360px;border-radius:24px;position:relative;overflow:hidden;background:linear-gradient(110deg,#000 0%,#2A0607 55%,#E50914 140%)}
+  .hero .txt{position:absolute;left:48px;bottom:44px}
+  .hero small{font-size:15px;color:#C4C7CE;font-weight:700}
+  .hero h1{font-size:60px;font-weight:900;letter-spacing:-.03em;margin:4px 0 18px}
+  .hero a{display:inline-flex;height:56px;padding:0 28px;border-radius:28px;background:#fff;color:#000;align-items:center;font-weight:700;font-size:18px}
+  .dots{position:absolute;right:40px;bottom:44px;display:flex;gap:8px}
+  .dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4)}
+  .dots span.on{width:24px;border-radius:4px;background:#fff}
+  .row{margin:28px 48px 0}
+  .row h2{font-size:20px;font-weight:700;margin-bottom:12px}
+  .tiles{display:flex;gap:16px}
+  .tile{width:220px;height:124px;border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:26px;flex:none}
+  .tile.f{transform:scale(1.06);box-shadow:0 0 0 4px #fff}
+  .tools .tile{width:180px;height:96px;background:#1E2128;font-size:17px;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">novus</span>
+  <nav><a class="on">홈</a><a>앱</a><a>미디어</a><a>도구</a></nav>
+  <div class="r"><span>20:41</span><i>⌕</i><i>⚙</i></div>
+</header>
+<section class="hero">
+  <div class="txt"><small>이어서 보기 · 12분 전</small><h1>Netflix</h1><a>▶ 계속 보기</a></div>
+  <div class="dots"><span class="on"></span><span></span></div>
+</section>
+<section class="row">
+  <h2>스트리밍</h2>
+  <div class="tiles">
+    <div class="tile f" style="background:#141414;color:#E50914">NETFLIX</div>
+    <div class="tile" style="background:#F9F9F9;color:#FF0000">YouTube</div>
+    <div class="tile" style="background:#0B2A6B">Disney+</div>
+    <div class="tile" style="background:#000;color:#FF153C">TVING</div>
+    <div class="tile" style="background:#004FFF">wavve</div>
+  </div>
+</section>
+<section class="row tools">
+  <h2>도구</h2>
+  <div class="tiles"><div class="tile">갤러리</div><div class="tile">파일 파인더</div><div class="tile">캘린더</div><div class="tile">라디오</div><div class="tile">검색</div><div class="tile">앰비언트</div></div>
+</section>
+</body>
+</html>

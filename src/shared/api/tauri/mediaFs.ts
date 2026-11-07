@@ -1,7 +1,22 @@
-import { invoke, convertFileSrc } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc as tauriConvertFileSrc } from "@tauri-apps/api/core";
 import { queueThumbnail } from "./thumbnailQueue";
+import { isTauriRuntime } from "../../lib/runtime";
 
-export { convertFileSrc };
+/** Dev-only browser stand-in for the media commands (opt-in, never in production builds). */
+async function devFixture() {
+  if (!import.meta.env.DEV || isTauriRuntime()) return null;
+  const fixture = await import("./devMediaFixture");
+  return fixture.devFixtureEnabled() ? fixture : null;
+}
+
+/**
+ * Local file → URL the webview can load. Outside Tauri (the browser dev
+ * server) there is no asset protocol, so the path is returned unchanged
+ * instead of throwing and taking the page down.
+ */
+export function convertFileSrc(path: string, protocol?: string): string {
+  return isTauriRuntime() ? tauriConvertFileSrc(path, protocol) : path;
+}
 
 export interface QuickLocation {
   name: string;
@@ -20,6 +35,9 @@ export interface FileItem {
   modified_ms: number;
   extension: string;
   media_type: MediaType;
+  /** Displayed image size (EXIF orientation applied); absent for folders, videos, unreadable formats. */
+  width?: number;
+  height?: number;
 }
 
 export interface DirectoryScanResult {
@@ -37,6 +55,19 @@ export interface MediaPageResult {
   video_count: number;
   items: FileItem[];
   has_more: boolean;
+  /** The recursive scan stopped at its 20,000-file limit. */
+  truncated: boolean;
+}
+
+/** "all": folders + media (folder view) · "media": images + videos · "image" · "video". */
+export type MediaKind = "all" | "media" | "image" | "video";
+
+/** A run of consecutive snapshot items in one calendar month (local time). */
+export interface TimelineBucket {
+  year: number;
+  month: number;
+  count: number;
+  first_index: number;
 }
 
 export async function getMediaPage(options: {
@@ -47,7 +78,16 @@ export async function getMediaPage(options: {
   snapshotId?: number;
   offset?: number;
   pageSize?: number;
+  kind?: MediaKind;
+  /** Walk every subfolder (timeline). Bounded to 20,000 files and 8 levels. */
+  recursive?: boolean;
+  /** Live snapshot to replace ("library" for the timeline, "folder" for the folder view). */
+  slot?: string;
+  /** Walk the disk again instead of reusing a walk from the last two minutes. */
+  rescan?: boolean;
 }): Promise<MediaPageResult> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devGetMediaPage(options);
   return await invoke<MediaPageResult>("get_media_page", {
     path: options.path,
     searchQuery: options.searchQuery,
@@ -56,6 +96,36 @@ export async function getMediaPage(options: {
     snapshotId: options.snapshotId ?? null,
     offset: options.offset ?? 0,
     pageSize: options.pageSize ?? 80,
+    kind: options.kind ?? "all",
+    recursive: options.recursive ?? false,
+    slot: options.slot ?? "default",
+    rescan: options.rescan ?? false,
+  });
+}
+
+/** A folder card: media held directly, the newest image as cover, and whether it nests. */
+export interface FolderSummary {
+  path: string;
+  media_count: number;
+  cover: FileItem | null;
+  has_subfolders: boolean;
+}
+
+/** Cover and count for up to 48 folders per call. */
+export async function getFolderSummaries(paths: string[]): Promise<FolderSummary[]> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devFolderSummaries(paths);
+  return await invoke<FolderSummary[]>("get_folder_summaries", { paths });
+}
+
+/** Month runs of the current snapshot, for the date scrubber. */
+export async function getMediaTimeline(snapshotId: number): Promise<TimelineBucket[]> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devGetMediaTimeline(snapshotId);
+  return await invoke<TimelineBucket[]>("get_media_timeline", {
+    snapshotId,
+    // getTimezoneOffset() is minutes *behind* UTC; the command wants minutes ahead.
+    utcOffsetMinutes: -new Date().getTimezoneOffset(),
   });
 }
 
@@ -69,6 +139,8 @@ export interface PlayResult {
  * Retrieve system drives and quick bookmark folders
  */
 export async function getSystemLocations(): Promise<QuickLocation[]> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devSystemLocations();
   return await invoke<QuickLocation[]>("get_system_locations");
 }
 
@@ -79,6 +151,8 @@ export async function scanDirectory(
   path: string,
   filterMode: "media" | "all" = "all",
 ): Promise<DirectoryScanResult> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devScanDirectory(path);
   return await invoke<DirectoryScanResult>("scan_directory", {
     path,
     filterMode,
@@ -100,6 +174,8 @@ export async function getImageThumbnail(
   signal?: AbortSignal,
   version?: string,
 ): Promise<string> {
+  const fixture = await devFixture();
+  if (fixture) return fixture.devThumbnail(filePath);
   return await queueThumbnail(filePath, maxDim, priority, signal, version);
 }
 

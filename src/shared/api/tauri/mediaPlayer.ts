@@ -42,8 +42,21 @@ function notifyStreamingPagesChanged() {
   window.dispatchEvent(new Event(STREAMING_PAGES_CHANGED));
 }
 
+/**
+ * Browser dev server only: there is no page manager, so the iframe fallback
+ * registers its sessions here and the running list / multitasking behave the
+ * same as in the app (a reopened session reloads its iframe).
+ */
+const webPages = new Set<string>();
+
+export function markWebStreamingPageOpen(id: string): void {
+  if (isTauriRuntime() || webPages.has(id)) return;
+  webPages.add(id);
+  notifyStreamingPagesChanged();
+}
+
 export async function listStreamingPages(): Promise<string[]> {
-  if (!isTauriRuntime()) return [];
+  if (!isTauriRuntime()) return [...webPages];
   return invoke<string[]>("list_streaming_pages");
 }
 
@@ -120,7 +133,10 @@ export async function reloadStreamingPage(id: string): Promise<void> {
  * The singleton browser profile remains intact.
  */
 export async function discardStreamingPage(id: string): Promise<void> {
-  if (!isTauriRuntime()) return;
+  if (!isTauriRuntime()) {
+    if (webPages.delete(id)) notifyStreamingPagesChanged();
+    return;
+  }
   await invoke("discard_streaming_page", { id });
   notifyStreamingPagesChanged();
 }

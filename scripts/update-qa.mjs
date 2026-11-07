@@ -171,9 +171,61 @@ function prepare() {
     `QA copies ready: ${baseline} → ${target}; identifier ${identifier}. No production files, keys or releases changed.`,
   );
 }
+/** Continue from an installed QA build, keeping its signing key and profile. */
+export function validateNextQaTarget(session, version) {
+  requireValue(
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version ?? ""),
+    "Supply a stable QA version",
+  );
+  requireValue(
+    version.split(".").every((part) => Number(part) <= 65535),
+    "QA version exceeds Windows limits",
+  );
+  requireValue(session.identifier === identifier && session.origin === origin, "Not a QA session");
+  requireValue(session.installers.target, "Build the previous target first");
+  requireValue(
+    version.localeCompare(session.target, undefined, { numeric: true }) > 0,
+    "Next QA version must be greater than the installed target",
+  );
+}
+function prepareNext(version) {
+  checkSigning(root);
+  requireValue(existsSync(join(root, "dist/index.html")), "Run pnpm build first");
+  const session = json(join(qa, "session.json"));
+  validateNextQaTarget(session, version);
+  const previous = session.installers.target;
+  requireValue(
+    digest(join(qa, "assets", previous.name)) === previous.sha256,
+    "Previous QA installer changed",
+  );
+  const destination = join(qa, version);
+  requireValue(!existsSync(destination), "QA target directory already exists; do not overwrite it");
+  const publicKey = readFileSync(join(qa, "disposable.key.pub"), "utf8");
+  copySource(destination);
+  configureCopy(destination, version, publicKey);
+  // Keep the previous session as evidence; never replace old installers or keys.
+  save(join(qa, `session-before-${version}.json`), session);
+  session.baseline = session.target;
+  session.target = version;
+  session.reusedBaseline = true;
+  session.installers = { baseline: previous };
+  session.sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: root,
+    encoding: "utf8",
+  }).trim();
+  session.sourceDirty = true; // This command intentionally supports a not-yet-committed integration.
+  save(join(qa, "session.json"), session);
+  console.log(
+    `QA upgrade prepared: ${session.baseline} → ${version}. Existing profile and key retained.`,
+  );
+}
 function build(which) {
   const session = json(join(qa, "session.json"));
   requireValue(["baseline", "target"].includes(which), "Choose baseline or target");
+  requireValue(
+    which !== "baseline" || !(session.reusedBaseline || session.sourceDirty),
+    "Use the existing baseline installer; rebuilding it with the current frontend would invalidate migration QA",
+  );
   const version = session[which];
   const destination = join(qa, version);
   requireValue(
@@ -339,11 +391,12 @@ if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
   try {
     const action = process.argv[2];
     if (action === "prepare") prepare();
+    else if (action === "prepare-next") prepareNext(process.argv[3]);
     else if (action === "build") build(process.argv[3]);
     else if (action === "serve") serve();
     else
       throw new Error(
-        "Usage: node scripts/update-qa.mjs prepare | build baseline | build target | serve",
+        "Usage: node scripts/update-qa.mjs prepare | prepare-next VERSION | build baseline | build target | serve",
       );
   } catch (error) {
     console.error(error.message);

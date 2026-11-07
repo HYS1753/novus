@@ -93,3 +93,11 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/tasks.json
+
+# ------------------------------------------------------------------------------
+# Impeccable design skill (engine binary is fetched & checksum-verified on first run)
+# ------------------------------------------------------------------------------
+.claude/skills/impeccable/scripts/bin/
+.impeccable/critique/
+.impeccable/hook.cache.json
+.impeccable/questions/
