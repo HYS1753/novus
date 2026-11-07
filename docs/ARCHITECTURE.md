@@ -171,6 +171,8 @@ novus/
 
 ### v2 디자인 시스템
 
+- **앱 아이콘**: `src/assets/novus-logo.png`의 NV 마크를 그대로 사용합니다. `pnpm icons:generate`가 공식 로고의 워드마크를 제외한 영역을 정사각 배경에 배치하고 Tauri CLI로 `src-tauri/icons/`의 데스크톱 PNG·ICO·ICNS를 생성합니다. Windows 실행 파일·창·바로가기는 bundle 아이콘을 사용하고 NSIS 설치/제거 파일도 `icons/icon.ico`를 명시합니다. 브라우저 favicon은 같은 도안의 `public/novus-icon.png`입니다. 로고 변경 후 아이콘을 다시 생성하고 네이티브 앱을 재빌드해야 합니다.
+
 - **범위**: 모든 사용자 화면은 `.nv-root` 아래에서 Nv 토큰을 사용합니다. 구형 `html.dark` 테마 초기화와 별도 테마 훅은 사용하지 않습니다.
 - **토큰**: `src/app/styles/v2/tokens.css`. 중립 9단 램프(`--nv-n0`~`--nv-n8`) → 역할 토큰(`--nv-ground`, `--nv-surface`, `--nv-text` 등). 의미색은 `--nv-live`(실행 중), `--nv-attention`(확인 필요), `--nv-sun`/`--nv-sat`(달력 주말) 네 개뿐입니다.
 - **테마**: `data-theme` 없음 = OS 설정 추종, `light`/`dark` = 사용자 고정.

@@ -304,6 +304,8 @@ pnpm build
 
 ### 배포 기반 및 자동 빌드
 
+- 앱·설치/제거 파일 아이콘은 Tauri 기본 이미지 대신 공식 NV 마크를 사용합니다. 원본은 `src/assets/novus-logo.png`이며 `pnpm icons:generate`로 데스크톱 ICO/ICNS/PNG와 브라우저 favicon을 함께 갱신합니다. 원본의 779×260 규격이 달라지면 생성기가 중단하므로 `scripts/app-icons.mjs`의 마크 영역을 검토해야 합니다. NSIS 설치·제거 아이콘 경로는 `tauri.windows.conf.json`에 명시합니다. 생성 결과를 소스와 함께 관리하며 기존 설치본에는 다음 설치/업데이트 때 반영됩니다.
+
 - 테마는 `novus.v2.preferences`에서 system/light/dark로 저장하고 모든 NvRoot가 같은 설정을 구독합니다. 유효한 V2 선택이 없을 때만 구형 `novus-theme`의 light/dark를 이주하며 구형 키는 삭제하지 않습니다. `useTheme`와 별도 초기화는 제거했습니다. 저장소 접근 오류는 세션 조작을 막지 않지만 재시작 사이의 저장을 보장하지 않습니다.
 
 - 현재 소스 버전은 0.2.0이며 이 디자인 통합은 새 버전·태그·Release를 만들지 않습니다. 이미 공개한 v0.2.0 태그와 산출물은 변경하지 않습니다. 일반 사용자 배포 형식은 Windows x64 NSIS EXE 하나입니다. 기존 EXE의 currentUser 설치·제품명 novus·식별자 com.novus.hub를 유지합니다.
