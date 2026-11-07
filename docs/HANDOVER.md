@@ -308,7 +308,7 @@ pnpm build
 
 - 테마는 `novus.v2.preferences`에서 system/light/dark로 저장하고 모든 NvRoot가 같은 설정을 구독합니다. 유효한 V2 선택이 없을 때만 구형 `novus-theme`의 light/dark를 이주하며 구형 키는 삭제하지 않습니다. `useTheme`와 별도 초기화는 제거했습니다. 저장소 접근 오류는 세션 조작을 막지 않지만 재시작 사이의 저장을 보장하지 않습니다.
 
-- 현재 소스 버전은 0.2.0이며 이 디자인 통합은 새 버전·태그·Release를 만들지 않습니다. 이미 공개한 v0.2.0 태그와 산출물은 변경하지 않습니다. 일반 사용자 배포 형식은 Windows x64 NSIS EXE 하나입니다. 기존 EXE의 currentUser 설치·제품명 novus·식별자 com.novus.hub를 유지합니다.
+- 현재 소스 버전은 1.0.0이며 공개 상태는 GitHub Releases를 기준으로 확인합니다. 이미 공개한 v0.2.0 태그와 산출물은 변경하지 않습니다. 일반 사용자 배포 형식은 Windows x64 NSIS EXE 하나입니다. 기존 EXE의 currentUser 설치·제품명 novus·식별자 com.novus.hub와 업데이트 서명 키를 유지합니다.
 - `pnpm release:version <버전>`으로 버전을 동기화하고 `pnpm release:check [--tag v<버전>]`으로 검사합니다. `release:test`는 잘못된 버전·태그·설치 계약 변경을 검증하며 `release:info`는 현재 체크아웃 추적 정보를 출력합니다. 자세한 절차는 RELEASING.md를 따릅니다.
 - 공개 저장소 HYS1753/novus를 소스와 배포 대상으로 사용합니다. 실제 기존 MSI 설치본이 있는지는 미확인으로, MSI에서 EXE로의 자동 이전을 보장하지 않습니다. 실제 설치·설정 보존 검증은 배포 전 검증 단계에서 수행합니다.
 - 암호화된 업데이트 키와 Windows EXE·서명·`latest.json` 구성을 사용합니다. `pnpm release:keygen`은 사용자 터미널에서 키를 생성하고 검증 파일에 서명하며, 이미 있는 키는 재생성하지 않습니다. 공개 키만 저장소에 복사합니다. `pnpm release:signing check` 및 `verify <파일>`로 구성과 서명을 검증하고 `manifest <설치파일>`로 메타데이터와 SHA256SUMS를 만듭니다.

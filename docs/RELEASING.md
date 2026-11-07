@@ -2,7 +2,7 @@
 
 ## 현재 범위
 
-- 앱 버전은 `0.2.0`이며 게시 상태의 기준은 [GitHub Releases](https://github.com/HYS1753/novus/releases)입니다. 소스 버전 표시는 배포 완료를 의미하지 않습니다.
+- 앱 버전은 `1.0.0`이며 게시 상태의 기준은 [GitHub Releases](https://github.com/HYS1753/novus/releases)입니다. 소스 버전 표시는 배포 완료를 의미하지 않습니다.
 - Windows 설치 규칙·서명 검증·GitHub Actions·updater와 자동 ON/OFF·수동 확인·진행률·설치 확인 UI를 제공합니다. 자동 업데이트는 조회·다운로드하며 설치·재시작은 사용자 확인 뒤에만 수행합니다. 런타임 계약은 [UPDATE_RUNTIME.md](UPDATE_RUNTIME.md)를 따릅니다.
 - 정식 배포 대상은 Windows x64입니다. macOS와 Linux의 정식 지원 여부는 각 플랫폼 실행 검증 이후 결정합니다.
 - 소스 및 배포 저장소는 공개 저장소 `HYS1753/novus`입니다. 공개 여부는 2026-11-04 인증 없는 GitHub 저장소 API에서 확인했습니다. 저장소 공개 범위는 변경하지 않았습니다.
@@ -22,14 +22,14 @@
 
 기존 로컬 `novus_0.1.0_x64-setup.exe`의 생성된 NSIS 템플릿에서도 제품명 `novus`, 식별자 `com.novus.hub`, `currentUser`를 확인했습니다. 새 설치본도 이 값을 유지합니다. 설치 경로를 강제로 바꾸는 커스텀 템플릿이나 설치 해제·앱 데이터 삭제 단계는 추가하지 않습니다.
 
-기존 MSI 산출물도 발견했지만 실제 배포·설치 여부는 확인되지 않았습니다. MSI에서 NSIS로의 자동 이전은 지원한다고 가정하지 않습니다. 기존 설치본이 MSI이거나 다른 사용자/관리자 범위에 설치되었다면 정식 배포 전에 별도 전환 절차와 데이터 보존을 검증해야 합니다. 현재 PC의 제거 프로그램 레지스트리에서는 Novus 설치 항목을 찾지 못했으므로 실제 업그레이드 호환성은 이후 설치 검증 단계에서 확인합니다.
+기존 MSI 산출물도 발견했지만 실제 배포·설치 여부는 확인되지 않았습니다. MSI에서 NSIS로의 자동 이전은 지원한다고 가정하지 않습니다. 기존 설치본이 MSI이거나 다른 사용자/관리자 범위에 설치되었다면 별도 전환 절차와 데이터 보존 검증이 필요합니다. 동일 currentUser NSIS의 실제 업데이트·재시작·로그인/설정 보존은 별도 QA 설치본으로 확인했으며 범위는 UPDATE_VALIDATION.md를 따릅니다.
 
 ## 버전 변경
 
 버전의 기준은 `package.json.version`입니다. 다음 명령은 네 파일을 함께 변경합니다.
 
 ```powershell
-pnpm release:version 0.2.0
+pnpm release:version 1.0.0
 ```
 
 동기화 대상:
@@ -41,7 +41,7 @@ pnpm release:version 0.2.0
 
 의존 패키지 버전과 `pnpm-lock.yaml`은 변경하지 않습니다. 동일 버전으로 실행하면 파일 간 버전 불일치를 복구합니다. 버전을 낮추는 변경은 거부합니다. 현재 채널은 선행 0, 접두사 `v`, prerelease, build metadata가 없는 `MAJOR.MINOR.PATCH`만 허용하며 Windows 버전 필드에 맞춰 각 숫자를 65535 이하로 제한합니다.
 
-버전 의미는 기능 추가 시 minor(`0.2.0`), 호환되는 수정 시 patch(`0.2.1`), 호환성을 깨는 정식 전환 시 major로 구분합니다. 재빌드한 다른 파일을 동일한 정식 버전으로 다시 배포하지 않고 새 버전을 부여합니다.
+버전 의미는 기능 추가 시 minor(`1.1.0`), 호환되는 수정 시 patch(`1.0.1`), 호환성을 깨는 변경 시 major(`2.0.0`)로 구분합니다. 재빌드한 다른 파일을 동일한 정식 버전으로 다시 배포하지 않고 새 버전을 부여합니다.
 
 ## 빌드 전 검사와 태그
 
@@ -49,7 +49,7 @@ pnpm release:version 0.2.0
 
 ```powershell
 pnpm release:check
-pnpm release:check --tag v0.2.0
+pnpm release:check --tag v1.0.0
 pnpm release:test
 ```
 
@@ -118,8 +118,8 @@ try {
 이 로컬 대화형 절차에서는 `CI`와 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 환경 변수를 설정하지 않습니다. 일반 Windows 빌드는 서명 키가 없으면 서명 단계에서 실패합니다. `--no-sign`은 로컬 검증용 EXE 생성에만 사용하며 이 상태로 정식 배포하지 않습니다. 따로 서명할 때는 Tauri signer에 `--app-version`을 반드시 전달합니다.
 
 ```powershell
-pnpm tauri signer sign --private-key-path "$env:USERPROFILE\.tauri\novus\updater.key" --app-version 0.2.0 src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/novus_0.2.0_x64-setup.exe
-pnpm release:signing manifest src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/novus_0.2.0_x64-setup.exe
+pnpm tauri signer sign --private-key-path "$env:USERPROFILE\.tauri\novus\updater.key" --app-version 1.0.0 src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/novus_1.0.0_x64-setup.exe
+pnpm release:signing manifest src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/novus_1.0.0_x64-setup.exe
 ```
 
 위 버전·파일명은 현재 준비 버전의 예시입니다. 버전을 바꾸면 새 버전으로 **다시 빌드**한 EXE를 사용합니다. 기존 설치 파일 이름만 바꾸고 새 버전으로 서명하면 안 됩니다.
@@ -165,9 +165,9 @@ Secrets 두 개는 Repository secrets에 등록합니다. 값은 서명 빌드 �
 ```powershell
 git switch main
 git pull --ff-only
-pnpm release:check --tag v0.2.0
-git tag -a v0.2.0 -m "Novus 0.2.0"
-git push origin v0.2.0
+pnpm release:check --tag v1.0.0
+git tag -a v1.0.0 -m "Novus 1.0.0"
+git push origin v1.0.0
 ```
 
 실패 시 로그에서 실패 단계를 확인합니다. Secrets 누락·잘못된 비밀번호·키 불일치·MPV 다운로드/해시 오류·서명 오류는 성공한 Release로 처리하지 않습니다. 이미 존재하는 공개/초안 Release는 덮어쓰지 않습니다. 업로드 도중 실패한 초안이 남았다면 담당자가 실패한 초안을 확인·정리한 뒤 재실행합니다. **Re-run all jobs**를 사용해 새 run attempt에서 전체 산출물을 다시 만들며, 이전 시도의 파일을 다음 시도에 섞지 않습니다. 공개한 버전은 재작성하지 않고 새 버전을 사용합니다.
@@ -176,15 +176,15 @@ git push origin v0.2.0
 
 ## 에이전트 실행 절차: 준비 → 태그 → 초안 → 공개 → 확인
 
-1. **승인 범위 확인**: 사용자의 “릴리즈 준비”, “빌드”, “초안” 요청은 공개 승인으로 취급하지 않습니다. “0.2.0 실제 릴리즈까지”처럼 버전과 공개 의도가 명시된 요청은 태그 Push·초안 생성·공개를 포함합니다. 같은 작업에서 이미 받은 공개 승인을 다시 요구하지 않습니다. 인증·로그인·사용자 계정 조작이 실제로 필요할 때만 HITL로 요청하고 키·비밀번호·토큰을 채팅에 요구하지 않습니다.
+1. **승인 범위 확인**: 사용자의 “릴리즈 준비”, “빌드”, “초안” 요청은 공개 승인으로 취급하지 않습니다. “1.0.0 실제 릴리즈까지”처럼 버전과 공개 의도가 명시된 요청은 태그 Push·초안 생성·공개를 포함합니다. 같은 작업에서 이미 받은 공개 승인을 다시 요구하지 않습니다. 인증·로그인·사용자 계정 조작이 실제로 필요할 때만 HITL로 요청하고 키·비밀번호·토큰을 채팅에 요구하지 않습니다.
 2. **버전·소스 준비**: 깨끗한 main에서 작업 브랜치를 만들고 `pnpm release:version <버전>`으로 네 파일을 맞춥니다. `docs/releases/v<버전>.md`에 사용자가 이해할 변경 내용·설치/이전 방법·지원 범위를 작성합니다. QA 앱·QA 키·로컬 target 산출물은 정식 배포에 사용하지 않습니다.
 3. **검증과 병합**: `pnpm typecheck` → `pnpm lint` → `pnpm format:check` → `pnpm build`, `pnpm release:test`, `pnpm update:test`와 변경에 필요한 네이티브/실설치 검증을 통과시킵니다. 커밋 후 main에 병합·Push합니다. `git status --short`가 비어 있고 HEAD와 origin/main이 같은지 확인합니다.
 4. **태그 Push**: `pnpm release:check --tag v<버전>`을 통과시킨 뒤 로컬/원격에 같은 태그가 없는지 확인합니다. 위의 annotated tag 명령으로 **main의 검증된 커밋**을 태깅하고 그 태그만 Push합니다. 태그는 움직이거나 강제 덮어쓰지 않습니다. 이미 존재하면 해당 커밋과 Actions/Release 상태를 조사해 이어갑니다.
 5. **태그 빌드 완료 대기**: 실행의 event가 `push`, head SHA가 태그 커밋인 `Windows signed release`를 선택합니다. build와 draft-release 작업이 모두 성공하고 파일 5개가 초안에 있는지 확인합니다. 과거 workflow_dispatch의 같은 버전 artifact와 혼합하지 않습니다.
-6. **승인된 초안 공개**: 인증된 `gh`가 있으면 아래 명령을 사용합니다. `gh auth status`로 인증 여부만 확인하며 토큰 값을 출력하지 않습니다. 없으면 Actions 페이지에서 **Run workflow → Branch main → publish_version에 버전만 입력(예: 0.2.0, v 제외) → Run workflow**를 사용자에게 HITL로 요청합니다. 빈 값은 게시가 아니라 검증 빌드입니다. 새 장기 토큰을 만들거나 개인 키를 가져올 필요가 없습니다.
+6. **승인된 초안 공개**: 인증된 `gh`가 있으면 아래 명령을 사용합니다. `gh auth status`로 인증 여부만 확인하며 토큰 값을 출력하지 않습니다. 없으면 Actions 페이지에서 **Run workflow → Branch main → publish_version에 버전만 입력(예: 1.0.0, v 제외) → Run workflow**를 사용자에게 HITL로 요청합니다. 빈 값은 게시가 아니라 검증 빌드입니다. 새 장기 토큰을 만들거나 개인 키를 가져올 필요가 없습니다.
 
    ```powershell
-   gh workflow run release-windows.yml --repo HYS1753/novus --ref main -f publish_version=0.2.0
+   gh workflow run release-windows.yml --repo HYS1753/novus --ref main -f publish_version=1.0.0
    ```
 
 7. **게시 성공 확인**: publish-release 작업 성공, Release의 draft=false/prerelease=false/published_at, `/releases/latest`의 tag_name을 확인합니다. 실제 `https://github.com/HYS1753/novus/releases/latest/download/latest.json`이 버전·Windows 서명·해당 태그 EXE URL을 반환하는지 확인합니다. 공개 asset 5개를 새 검증 디렉터리에 내려받아 EXE와 `.sig`를 `release:signing verify`로 검증하고 `SHA256SUMS`·`release-source.json`의 SHA256 및 태그 소스 SHA와 비교합니다. 다운로드 URL만 존재하는 것과 실제 설치 파일 검증을 구분합니다.

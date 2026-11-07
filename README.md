@@ -4,16 +4,22 @@
 > _Target Hardware: 4GB RAM class Tablets / PCs_
 
 Novus는 부팅 시 자동으로 실행되어 태블릿의 첫 홈 화면처럼 동작하는 크로스 플랫폼 데스크톱 애플리케이션입니다.  
-터치와 마우스 모두에 최적화된 반응성을 제공하며, 4GB 저사양 메모리 환경에서도 30MB 안팎의 초경량 메모리 점유율과 부드러운 60fps 대시보드 UX를 보장합니다.
+사진 중심의 홈, 미디어 갤러리, 파일 탐색기와 스트리밍 서비스 독을 제공합니다. 터치·마우스·키보드와 태블릿형/TV형 보기를 지원합니다. 저사양 기기의 메모리·렌더링 비용을 줄이는 것이 목표이며, 실제 Surface Pro 4 성능 측정 범위는 [성능 가이드](docs/PERFORMANCE_GUIDE.md)를 따릅니다.
+
+## Windows 설치
+
+[최신 GitHub Release](https://github.com/HYS1753/novus/releases/latest)의 Assets에서 `novus_<버전>_x64-setup.exe`를 실행하세요. 정식 배포 대상은 Windows x64 NSIS이며 현재 사용자 계정에 설치합니다. macOS/Linux 정식 설치 파일은 제공하지 않습니다.
+
+0.2.0 NSIS 설치본은 앱 설정에서 새 버전을 확인·다운로드할 수 있습니다. 설치와 재시작은 직접 선택합니다. updater가 없는 0.1.0은 새 EXE를 한 번 수동 설치해야 합니다. MSI 이전은 별도 검증 대상입니다.
 
 ---
 
 ## 🌟 핵심 특징
 
-- ⚡ **극저용량 메모리 점유 (RAM ~30MB)**: OS 내장 웹뷰(Windows WebView2 / macOS WebKit)를 활용하여 Chromium 전체를 싣는 Electron 대비 80% 이상의 메모리를 절약합니다.
+- ⚡ **시스템 웹뷰 사용**: OS 웹뷰를 사용하며, 서비스는 열 때 생성하고 홈 복귀 시 숨겨 세션을 유지합니다. DOM·이미지 캐시·타이머 예산으로 비용을 관리합니다.
 - 📺 **미디어 콘솔 대시보드**: 유튜브, 넷플릭스, 캘린더, 웹 검색 등 자주 쓰는 미디어와 도구를 한눈에 제어합니다.
-- 🪟 **머티리얼 강도 0–100**: 면의 투명도와 블러를 연속값 하나로 조절합니다. 기본값 `0`은 저사양에서 합성 비용이 전혀 없고, 최대값에서도 가독성 하한이 걸려 면이 배경에 녹지 않습니다.
-- 🎞️ **일관된 모션 문법**: 모든 인터랙션이 6개 모션 레시피(press · lift · reveal · emerge · enter · pulse)에 매핑되며, `prefers-reduced-motion`을 존중합니다.
+- 🪟 **사진 위 글자 배경 강도 0–100**: 사진 스크림의 농도를 조절합니다. GPU 비용이 큰 backdrop blur는 사용하지 않습니다.
+- 🎞️ **Nv 디자인**: 홈·설정·온보딩·사진/영상·파일·업데이트 화면을 같은 컴포넌트로 구성하고 `prefers-reduced-motion`을 존중합니다.
 - 👆 **터치 & 마우스 하이브리드 UI**: 48px 이상의 터치 타겟과 지연 없는 `:active` 피드백, 키보드/리모컨 포커스를 지원합니다.
 - 🛡️ **하네스 엔지니어링 (Harness Engineering)**: Feature-Sliced Design(FSD) 기반 계층 규칙이 린트와 Git Hook으로 자동 강제되어 장기적인 유지보수성을 보장합니다.
 
@@ -25,10 +31,10 @@ Novus는 부팅 시 자동으로 실행되어 태블릿의 첫 홈 화면처럼 
 src/
 ├── app/          # 앱 진입점, 글로벌 테마/스타일, 라우팅
 ├── pages/        # 최상위 화면 (DashboardPage 등)
-├── widgets/      # 독립형 대시보드 위젯 (QuickHeader, MediaShelf)
+├── widgets/      # 화면 위젯 (HomeV2, SettingsV2, GalleryV2 등)
 ├── features/     # 비즈니스 인터랙션 기능 (useLaunchApp 등)
 ├── entities/     # 도메인 모델 (AppItem, DeviceProfile)
-└── shared/       # 공통 UI(TouchButton, MediaCard), Tauri IPC, 유틸, 훅
+└── shared/       # 공통 Nv UI, Tauri IPC, 유틸, 훅
 ```
 
 _참조 방향_: `app` ➔ `pages` ➔ `widgets` ➔ `features` ➔ `entities` ➔ `shared`  
@@ -74,12 +80,11 @@ Rust 공식 도구체인 관리자인 `rustup`을 통해 최신 안정판을 설
 
 #### ③ Node.js & pnpm 설치
 
-- **Node.js (v20 이상 권장)**:
+- **Node.js (CI 기준 24)**:
   - [Node.js 공식 사이트](https://nodejs.org/) LTS 설치 또는 `nvm` / `fnm` / `brew install node`
 - **pnpm 설치**:
   ```bash
-  npm install -g pnpm
-  # 또는 macOS Homebrew
+  # macOS Homebrew 설치 예시
   brew install pnpm
   ```
 - **버전 확인**:
@@ -128,14 +133,16 @@ pnpm build
 
 ## 📦 빌드 및 배포
 
-Tauri v2를 통해 각 플랫폼별 독립 실행 파일 및 인스톨러를 생성할 수 있습니다:
+정식 배포는 검증된 main 커밋에 버전 태그를 붙여 GitHub Actions에서 Windows x64 NSIS를 빌드·서명하고, 초안을 확인한 뒤 공개합니다. 일반 main Push는 배포를 실행하지 않습니다. 서명 키 설정과 에이전트 실행 절차는 [배포 가이드](docs/RELEASING.md)를 따릅니다.
 
 ```bash
-# 데스크톱 배포 패키지 생성 (Windows: .msi/.exe, macOS: .dmg/.app)
-pnpm tauri build
+# 배포 구성·버전 확인 (태그 생성이나 공개를 수행하지 않음)
+pnpm release:check
+# 키가 설정된 환경에서 Windows 서명 패키지 빌드
+pnpm release:build:windows
 ```
 
-빌드 산출물은 `src-tauri/target/release/bundle/` 디렉토리에 생성됩니다.
+Windows 명시적 target 빌드의 산출물은 `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`에 생성됩니다. 앱 아이콘은 `pnpm icons:generate`로 공식 NV 마크에서 재생성합니다.
 
 ---
 
@@ -143,13 +150,14 @@ pnpm tauri build
 
 새로운 기능 개발이나 인수인계를 위해 아래 문서를 참고하십시오:
 
-| 문서                                                            | 설명                                                                                |
-| :-------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
-| 🤖 [**AI 에이전트 하네스**](AGENTS.md)                          | 모든 AI 코딩 에이전트(Claude, Cursor, Copilot 등)를 위한 행동 및 아키텍처 강제 규칙 |
-| 📐 [**아키텍처 명세서**](docs/ARCHITECTURE.md)                  | 프론트엔드/백엔드 계층 구조, 단방향 의존성 규칙, IPC 패턴                           |
-| ⚡ [**저사양 성능 가이드**](docs/PERFORMANCE_GUIDE.md)          | 4GB RAM급 저사양 기기를 위한 렌더링/메모리 최적화 원칙                              |
-| 🤝 [**인수인계 가이드**](docs/HANDOVER.md)                      | 신규 참여자를 위한 코드 맵, 새 위젯 추가 방법, 로드맵                               |
-| 📝 [**ADR 0001**](docs/adr/0001-foundation-and-architecture.md) | Tauri v2 및 FSD 레이어드 아키텍처 선정 의사결정 기록                                |
+| 문서                                                   | 설명                                                                                |
+| :----------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| 🤖 [**AI 에이전트 하네스**](AGENTS.md)                 | 모든 AI 코딩 에이전트(Claude, Cursor, Copilot 등)를 위한 행동 및 아키텍처 강제 규칙 |
+| 📐 [**아키텍처 명세서**](docs/ARCHITECTURE.md)         | 프론트엔드/백엔드 계층 구조, 단방향 의존성 규칙, IPC 패턴                           |
+| ⚡ [**저사양 성능 가이드**](docs/PERFORMANCE_GUIDE.md) | 4GB RAM급 저사양 기기를 위한 렌더링/메모리 최적화 원칙                              |
+| 🤝 [**인수인계 가이드**](docs/HANDOVER.md)             | 신규 참여자를 위한 코드 맵, 새 위젯 추가 방법, 로드맵                               |
+| 📦 [**배포 가이드**](docs/RELEASING.md)                | 버전 동기화·서명·태그·Release 공개와 에이전트 실행 절차                             |
+| 🔄 [**업데이트 검증**](docs/UPDATE_VALIDATION.md)      | 실제 설치·업데이트·재시작과 로그인·설정 보존 검증 범위                              |
 
 ---
 
